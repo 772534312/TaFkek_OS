@@ -2,6 +2,7 @@
   
     "name": "tafkek-os",
     "version": "1.0.0",
+  "type":"module",
     "description": "Cognitive Operating Station",
     "mian":"api/deconstruct.js",
     "dependencies": {
