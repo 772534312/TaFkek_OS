@@ -3,7 +3,6 @@
     "name": "tafkek-os-v2",
     "version": "1.0.0",
     "type": "module",
-    "description": "Cognitive Deconstruction Station",
     "main":"api/deconstruct.mjs",
     "dependencies": {
       "@google/generative-ai": "^0.21.0"
