@@ -1,0 +1,12 @@
+{
+  
+    "name": "tafkek-os",
+    "version": "1.0.0",
+    "description": "Cognitive Deconstruction Station",
+    "type": "module",
+    "dependencies": {
+      "@google/genai": "^0.1.1"
+    }
+}
+  
+    
