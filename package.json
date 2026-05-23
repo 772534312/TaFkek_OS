@@ -1,11 +1,12 @@
 {
   
-    "name": "tafkek-os",
+    "name": "tafkek-os-v2",
     "version": "1.0.0",
-    "description": "Cognitive Deconstruction Station",
     "type": "module",
+    "description": "Cognitive Deconstruction Station",
+    "main":"api/deconstruct.js",
     "dependencies": {
-      "@google/genai": "^0.1.1"
+      "@google/generative-ai": "^0.21.0"
     }
 }
   
