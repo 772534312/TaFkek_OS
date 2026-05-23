@@ -4,7 +4,7 @@
     "version": "1.0.0",
     "type": "module",
     "description": "Cognitive Deconstruction Station",
-    "main":"api/deconstruct.js",
+    "main":"api/deconstruct.mjs",
     "dependencies": {
       "@google/generative-ai": "^0.21.0"
     }
