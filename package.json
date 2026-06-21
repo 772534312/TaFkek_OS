@@ -5,7 +5,7 @@
     "type": "module",
     "main":"api/deconstruct.mjs",
     "dependencies": {
-      "@google/generative-ai": "^0.21.0"
+      "@google/genai": "^0.1.0"
     }
 }
   
