@@ -6,3 +6,5 @@
     "main":"api/deconstruct.mjs",
     "dependencies": {
       "@google/genai": "^0.1.0"
+    }
+}
