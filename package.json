@@ -1,10 +1,8 @@
 {
-  
-    "name": "tafkek-os-v2",
-    "version": "1.0.0",
-    "type": "module",
-    "main":"api/deconstruct.mjs",
-    "dependencies": {
-      "@google/genai": "^0.1.0"
-    }
+  "name":"ta-fkek-os",
+  "version":"1.0.0",
+  "type":"module",
+  "dependencies":{
+    "@google/genai":"latest"
+  }
 }
