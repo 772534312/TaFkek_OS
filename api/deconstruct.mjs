@@ -19,37 +19,23 @@ export default async function handler(req, res) {
         const ai = new GoogleGenAI({ apiKey });
 
         const response = await ai.models.generateContent({
-            // العودة إلى النموذج الأصلي المتوافق تماماً مع بنية المكتبة الجديدة
             model: 'gemini-2.5-flash', 
-            contents: `قم بتفكيك الفكرة التالية تفكيكاً استراتيجياً وعملياً: "${idea}"`,
+            contents: `قم بتفكيك الفكرة التالية إلى خطوات عمل تفصيلية ومنطقية جداً باللغة العربية: "${idea}"`,
             config: {
                 responseMimeType: "application/json",
-                systemInstruction: "أنت خبير تفكيك نظم ومحلل استراتيجي من الطراز الأول. مهمتك هي أخذ أي فكرة وتحليلها إلى خطوات عملية قابلة للتنفيذ فوراً. يجب أن تكون ردودك دائماً بصيغة JSON مطابقة تماماً للهيكل المطلوب، وأن تكون واقعية وبعيدة عن الإنشاء النظري.",
+                systemInstruction: "أنت خبير تفكيك نظم ومحلل استراتيجي من الطراز الأول. مهمتك هي أخذ أي فكرة وتحليلها إلى خطوات عملية متتالية. يجب أن تعيد النتيجة دائماً على شكل مصفوفة JSON مباشرة تحتوي على معرف وعنوان ووصف لكل خطوة، دون أي غلاف خارجي.",
+                // تعديل الهيكل ليكون مصفوفة مباشرة تطابق برمجة الواجهة الأمامية تماماً
                 responseSchema: {
-                    type: "OBJECT",
-                    properties: {
-                        steps: {
-                            type: "ARRAY",
-                            items: {
-                                type: "OBJECT",
-                                properties: {
-                                    id: { type: "STRING" },
-                                    title: { type: "STRING" },
-                                    description: { type: "STRING" },
-                                    priority: { type: "STRING", enum: ["عاجلة جداً", "استراتيجية", "مؤجلة"] },
-                                    difficulty: { type: "INTEGER", description: "مستوى الصعوبة من 1 إلى 5" },
-                                    estimated_time: { type: "STRING", description: "الوقت المتوقع للإنجاز" },
-                                    checklist: {
-                                        type: "ARRAY",
-                                        items: { type: "STRING" },
-                                        description: "3 مهام فرعية صغيرة جداً لتنفيذ هذه الخطوة الرئيسية"
-                                    }
-                                },
-                                required: ["id", "title", "description", "priority", "difficulty", "estimated_time", "checklist"]
-                            }
-                        }
-                    },
-                    required: ["steps"]
+                    type: "ARRAY",
+                    items: {
+                        type: "OBJECT",
+                        properties: {
+                            id: { type: "STRING" },
+                            title: { type: "STRING" },
+                            description: { type: "STRING" }
+                        },
+                        required: ["id", "title", "description"]
+                    }
                 }
             }
         });
