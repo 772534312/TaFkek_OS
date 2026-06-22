@@ -1,7 +1,6 @@
 import { GoogleGenAI } from '@google/genai';
 
 export default async function handler(req, res) {
-    // 1. تأمين وحماية نقطة النهاية (Security Controls)
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'الطريقة غير مسموح بها' });
     }
@@ -19,15 +18,13 @@ export default async function handler(req, res) {
     try {
         const ai = new GoogleGenAI({ apiKey });
 
-        // 2. استدعاء المحرك مع هندسة أوامر متقدمة (Advanced Prompt Engineering)
         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
+            // التعديل السحري: الانتقال إلى المحرك المستقر لتفادي زحام السيرفرات
+            model: 'gemini-1.5-flash', 
             contents: `قم بتفكيك الفكرة التالية تفكيكاً استراتيجياً وعملياً: "${idea}"`,
             config: {
                 responseMimeType: "application/json",
-                // حقن نظام التوجيه الصارم للمحرك
                 systemInstruction: "أنت خبير تفكيك نظم ومحلل استراتيجي من الطراز الأول. مهمتك هي أخذ أي فكرة وتحليلها إلى خطوات عملية قابلة للتنفيذ فوراً. يجب أن تكون ردودك دائماً بصيغة JSON مطابقة تماماً للهيكل المطلوب، وأن تكون واقعية وبعيدة عن الإنشاء النظري.",
-                // تحديد هيكل البيانات الصارم لضمان أعلى جودة تفاعلية
                 responseSchema: {
                     type: "OBJECT",
                     properties: {
@@ -57,7 +54,6 @@ export default async function handler(req, res) {
             }
         });
 
-        // 3. معالجة وتمرير البيانات النظيفة للواجهة الأمامية
         const data = JSON.parse(response.text);
         return res.status(200).json(data);
 
