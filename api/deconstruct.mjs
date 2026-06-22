@@ -19,8 +19,8 @@ export default async function handler(req, res) {
         const ai = new GoogleGenAI({ apiKey });
 
         const response = await ai.models.generateContent({
-            // التعديل السحري: الانتقال إلى المحرك المستقر لتفادي زحام السيرفرات
-            model: 'gemini-1.5-flash', 
+            // العودة إلى النموذج الأصلي المتوافق تماماً مع بنية المكتبة الجديدة
+            model: 'gemini-2.5-flash', 
             contents: `قم بتفكيك الفكرة التالية تفكيكاً استراتيجياً وعملياً: "${idea}"`,
             config: {
                 responseMimeType: "application/json",
