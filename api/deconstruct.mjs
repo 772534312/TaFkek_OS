@@ -24,7 +24,6 @@ export default async function handler(req, res) {
             config: {
                 responseMimeType: "application/json",
                 systemInstruction: "أنت النواة الإدراكية لـ (تفكيك OS)، خبير ومحلل استراتيجي راديكالي. مهمتك هي عدم إعطاء إجابات عادية أو إنشائية. قم بتحليل الأفكار بدقة تفكيكية متناهية، وصياغة جداول مقارنة متطورة، واستخلاص ملخصات تنفيذية مركّزة، وصياغة أسئلة استرجاعية حادة لتوجيه المستخدم في نهاية التحليل لتطوير فكرته.",
-                // هندسة الـ Schema الكلية لجمع كل متطلبات التفاعل والتحليل المتطور
                 responseSchema: {
                     type: "OBJECT",
                     properties: {
@@ -49,7 +48,7 @@ export default async function handler(req, res) {
                                     description: "صفوف البيانات التوضيحية داخل الجدول (يجب ألا تقل عن 3 صفوف مليئة بالتحليل المعمق)"
                                 }
                             },
-                            required: ["headers", ["rows"]]
+                            required: ["headers", "rows"] // تم إصلاح القوس الزائد هنا بنجاح
                         },
                         steps: {
                             type: "ARRAY",
