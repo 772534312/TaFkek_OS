@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TAFKEEK OS | Advanced Cognitive Station</title>
+    <title>TAFKEEK OS | Enterprise Cloud Station</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,76 +12,86 @@
         body { font-family: 'Cairo', sans-serif; background-color: #0b0f19; }
         .panel-bg { background-color: #141d2b; border: 1px solid #1e293b; }
         .sidebar-bg { background-color: #0f1622; border-left: 1px solid #1e293b; }
-        /* تخصيص شريط التمرير ليتوافق مع التصميم المظلم */
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: #0b0f19; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
     </style>
 </head>
-<body class="text-slate-200 h-screen overflow-hidden flex select-none">
+<body class="text-slate-200 h-screen overflow-hidden flex flex-col md:flex-row select-none">
 
-    <aside class="w-64 sidebar-bg p-6 flex flex-col justify-between hidden md:flex shrink-0">
-        <div class="space-y-8">
-            <div>
-                <h1 class="text-2xl font-bold tracking-wider text-cyan-400 flex items-center gap-2">
-                    TAFKEEK <span class="text-[10px] bg-cyan-500/10 text-cyan-400 px-2 py-0.5 rounded border border-cyan-500/20 font-mono">PRO</span>
-                </h1>
-                <p class="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">Hybrid Intelligence Engine</p>
+    <div class="md:hidden bg-[#0f1622] border-b border-slate-800 p-4 flex justify-between items-center w-full z-30 shrink-0">
+        <div>
+            <h1 class="text-xl font-bold tracking-wider text-cyan-400">TAFKEEK</h1>
+            <p class="text-[8px] text-slate-500 font-mono">Cloud Architecture v3.0</p>
+        </div>
+        <button onclick="toggleMobileSidebar()" class="text-slate-200 bg-slate-900 border border-slate-800 hover:border-cyan-500 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all">
+            ☰ القائمة والسجلات
+        </button>
+    </div>
+
+    <aside id="sidebar" class="w-64 sidebar-bg p-4 flex flex-col justify-between hidden md:flex shrink-0 h-full fixed md:static inset-y-0 right-0 z-40">
+        <div class="space-y-6 overflow-hidden flex flex-col h-full">
+            <div class="hidden md:block">
+                <h1 class="text-2xl font-bold tracking-wider text-cyan-400">TAFKEEK</h1>
+                <p class="text-[9px] text-slate-500 font-mono tracking-widest uppercase mt-1">Cloud Architecture v3.0</p>
+            </div>
+
+            <div id="auth-zone" class="p-3 bg-slate-950/60 rounded-xl border border-slate-900 shrink-0">
+                </div>
+            
+            <button id="btn-new-chat" onclick="createNewChatSession()" class="w-full hidden bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2.5 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-2 shrink-0">
+                <span>➕</span> محادثة جديدة
+            </button>
+
+            <div class="flex-1 overflow-hidden flex flex-col min-h-0">
+                <div class="text-[11px] text-slate-500 font-mono mb-2 uppercase tracking-wider">📜 سجلات المحادثات الحالية:</div>
+                <div id="chat-history-list" class="flex-1 overflow-y-auto space-y-1.5 pr-1 text-xs text-slate-400">
+                    </div>
             </div>
             
-            <nav class="space-y-2">
-                <button class="w-full bg-cyan-600/10 text-cyan-400 border border-cyan-500/20 font-semibold px-4 py-2.5 rounded-xl text-xs flex items-center gap-3 text-right">
-                    <span>🔮</span> Cognitive Core
-                </button>
-                <button onclick="resetSession()" class="w-full text-slate-400 hover:bg-slate-800/40 hover:text-slate-200 px-4 py-2.5 rounded-xl text-xs flex items-center gap-3 transition-all text-right">
-                    <span>🔄</span> تفريغ الذاكرة (Reset)
-                </button>
-            </nav>
-        </div>
-        
-        <div class="p-3 bg-slate-950/40 rounded-xl border border-slate-900 text-[11px]">
-            <div class="text-slate-500 font-mono mb-1">SESSION_MEMORY:</div>
-            <div id="memory-counter" class="text-emerald-400 font-bold font-mono">0 ACTIVE_NODES</div>
+            <div class="space-y-2 pt-3 border-t border-slate-900 shrink-0">
+                <div id="badge-lvl1" class="p-2 rounded-xl text-[11px] font-semibold bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">🟢 1. التبسيط الإدراكي</div>
+                <div id="badge-lvl2" class="p-2 rounded-xl text-[11px] font-semibold bg-slate-950/40 text-slate-600">⚫ 2. التحليل التكتيكي</div>
+                <div id="badge-lvl3" class="p-2 rounded-xl text-[11px] font-semibold bg-slate-950/40 text-slate-600">⚫ 3. الهندسة العميقة</div>
+            </div>
         </div>
     </aside>
 
-    <main class="flex-1 flex flex-col md:flex-row overflow-hidden">
+    <main class="flex-1 flex flex-col md:flex-row overflow-hidden w-full">
         
-        <div class="flex-1 p-6 space-y-6 overflow-y-auto flex flex-col">
+        <div class="flex-1 p-4 md:p-6 space-y-6 overflow-y-auto flex flex-col h-full">
             
             <div class="panel-bg p-4 rounded-2xl relative overflow-hidden shrink-0">
-                <div class="flex justify-between items-center mb-2">
-                    <h2 class="text-xs font-bold text-slate-400 tracking-wider flex items-center gap-2">
-                        🖥️ CORE LOGIC PROCESSING UNIT
-                    </h2>
-                    <div class="text-[10px] font-mono text-slate-500">
-                        ENGINE: <span class="text-cyan-400 font-bold">HYBRID_AI (G-2.5+GPT)</span>
-                    </div>
+                <div class="flex justify-between items-center mb-2 relative z-10">
+                    <h2 id="current-stage-title" class="text-xs font-bold text-cyan-400 tracking-wider">💡 المرحلة 1: تبسيط وتوضيح الفكرة بالكامل</h2>
+                    <div class="text-[10px] font-mono text-slate-500" id="nodes-counter">SESSION: NO_ACTIVE_LEAF</div>
                 </div>
-                <div class="h-24 bg-slate-950/80 rounded-xl border border-slate-900 overflow-hidden relative">
-                    <canvas id="particles-canvas" class="w-full h-full opacity-50"></canvas>
+                <div class="h-20 bg-slate-950/80 rounded-xl border border-slate-900 overflow-hidden relative">
+                    <canvas id="particles-canvas" class="w-full h-full opacity-30"></canvas>
                     <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div id="processor-status-text" class="text-[11px] font-mono text-slate-400 tracking-wider">SYSTEM_READY // INGESTION_STREAM_OPEN</div>
+                        <div id="processor-status-text" class="text-[10px] font-mono text-slate-500 tracking-wider">AWAITING_AUTHENTICATION // KEY_LOCK</div>
                     </div>
                 </div>
             </div>
 
             <div class="panel-bg p-4 rounded-2xl shrink-0">
-                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase tracking-wide">ادخل فكرتك، أو أجب على أسئلة النظام لتوسيع التفكيك البنيوي:</label>
                 <div class="flex flex-col sm:flex-row gap-3">
                     <textarea 
                         id="idea-input"
                         rows="1"
-                        class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all text-right resize-none"
-                        placeholder="اكتب فكرة مشروعك، أو لخص مشكلتك البرمجية..."
+                        disabled
+                        class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 placeholder-slate-600 focus:outline-none focus:border-cyan-500/50 transition-all text-right resize-none opacity-50"
+                        placeholder="يرجى تسجيل الدخول أولاً لتفعيل محرك التفكيك وحفظ سجلاتك..."
                         oninput="this.rows = this.value.split('\n').length || 1"
                     ></textarea>
                     <button 
+                        id="btn-submit"
+                        disabled
                         onclick="processCognitiveSignal()" 
-                        class="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-8 py-3 rounded-xl text-xs tracking-wider transition-all transform active:scale-95 shrink-0"
+                        class="bg-slate-800 text-slate-500 font-bold px-8 py-3 rounded-xl text-xs tracking-wider transition-all cursor-not-allowed shrink-0"
                     >
-                        تفكيك ومعالجة
+                        معالجة وتفكيك
                     </button>
                 </div>
                 <div id="error-banner" class="hidden mt-3 p-3 rounded-xl bg-red-950/20 border border-red-500/30 text-center text-red-400 text-xs"></div>
@@ -89,13 +99,13 @@
 
             <div id="dynamic-matrices-container" class="space-y-6 flex-1 hidden">
                 <div class="panel-bg p-5 rounded-2xl bg-cyan-950/5 border-cyan-500/10">
-                    <h3 class="text-cyan-400 font-bold text-sm mb-2 flex items-center gap-2">⚡ التحليل الاستراتيجي التراكمي</h3>
-                    <p id="executive-summary-text" class="text-slate-300 leading-relaxed text-xs md:text-sm text-right"></p>
+                    <h3 class="text-cyan-400 font-bold text-sm mb-2">✨ الشرح والتوضيح التدريجي</h3>
+                    <p id="executive-summary-text" class="text-slate-300 leading-relaxed text-xs md:text-sm text-right font-normal"></p>
                 </div>
                 
                 <div class="panel-bg rounded-2xl overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="w-full text-xs text-slate-300 border-collapse">
+                        <table class="w-full text-xs text-slate-300 border-collapse min-w-[500px]">
                             <thead>
                                 <tr id="matrix-headers" class="bg-slate-900/60 border-b border-slate-800 text-cyan-400 font-semibold"></tr>
                             </thead>
@@ -108,216 +118,249 @@
             </div>
         </div>
 
-        <div class="w-full md:w-96 sidebar-bg p-6 border-r-0 md:border-r border-slate-800 flex flex-col h-full overflow-hidden">
-            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2 shrink-0">
-                📊 Execution Roadmap
-            </h2>
+        <div class="w-full md:w-80 sidebar-bg p-6 border-r-0 md:border-r border-slate-800 flex flex-col h-full overflow-hidden shrink-0">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">🗺️ خطة العمل التدريجية</h2>
             <div id="roadmap-steps-list" class="flex-1 overflow-y-auto space-y-4 pr-1">
-                <div class="text-center py-12 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl">
-                    في انتظار معالجة النواة لبناء خطة العمل التفكيكية...
+                <div id="roadmap-placeholder" class="text-center py-12 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl">
+                    سجل دخولك وابدأ التفكيك لبناء مسارات خريطة الطريق...
                 </div>
             </div>
         </div>
     </main>
 
-    <script>
-    // ذاكرة المحادثة التراكمية لتوفير ميزة الشات والمتابعة المستمرة
-    let conversationHistory = [];
+    <div id="login-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="panel-bg p-6 rounded-2xl w-full max-w-sm space-y-4 shadow-2xl relative">
+            <button onclick="toggleLoginModal(false)" class="absolute top-4 left-4 text-slate-500 hover:text-slate-300 text-sm font-mono">✕</button>
+            <div class="text-center">
+                <h3 class="text-lg font-bold text-cyan-400">بوابة الولوج الآمنة</h3>
+                <p class="text-[11px] text-slate-500 mt-1">قم بتسجيل الدخول لحفظ سياق محادثاتك وسجلاتك</p>
+            </div>
+            <div class="space-y-3 pt-2">
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1 font-mono">USER_EMAIL / البريد الإلكتروني</label>
+                    <input id="auth-email" type="email" value="demo@tafkeek.os" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500" placeholder="name@domain.com">
+                </div>
+                <div>
+                    <label class="block text-[11px] text-slate-400 mb-1 font-mono">PASSWORD / كلمة المرور</label>
+                    <input id="auth-password" type="password" value="123456" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500" placeholder="••••••••">
+                </div>
+                <button onclick="executeMockLogin()" class="w-full bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-all tracking-wider mt-2">
+                    تأكيد شفرة الدخول
+                </button>
+            </div>
+        </div>
+    </div>
 
-    // 1. تشغيل وتأثير حركة مصفوفة الجزيئات التفاعلية على الـ Canvas
+    <script>
+    // 🧠 المتغيرات الحيوية لإدارة الجلسات والحسابات والتزامن
+    let currentUser = null;
+    let allUserChats = []; 
+    let currentChatId = null; 
+    let conversationHistory = []; 
+
+    // Canvas Background Engine
     const canvas = document.getElementById('particles-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
-    
-    function resizeCanvas() {
-        if(canvas.parentElement) {
-            canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = canvas.parentElement.offsetHeight;
-        }
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
+    function resizeCanvas() { if(canvas.parentElement) { canvas.width = canvas.parentElement.offsetWidth; canvas.height = canvas.parentElement.offsetHeight; } }
+    window.addEventListener('resize', resizeCanvas); resizeCanvas();
     class Particle {
-        constructor() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height;
-            this.vx = (Math.random() - 0.5) * 0.8;
-            this.vy = (Math.random() - 0.5) * 0.8;
-            this.radius = Math.random() * 2 + 0.5;
-        }
-        update() {
-            this.x += this.vx; this.y += this.vy;
-            if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
-            if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
-        }
-        draw() {
-            ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-            ctx.fillStyle = '#06b6d4'; ctx.fill();
-        }
+        constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.vx = (Math.random() - 0.5) * 0.4; this.vy = (Math.random() - 0.5) * 0.4; this.radius = Math.random() * 1.2 + 0.5; }
+        update() { this.x += this.vx; this.y += this.vy; if (this.x < 0 || this.x > canvas.width) this.vx *= -1; if (this.y < 0 || this.y > canvas.height) this.vy *= -1; }
+        draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2); ctx.fillStyle = '#06b6d4'; ctx.fill(); }
     }
-    for(let i=0; i<40; i++) particles.push(new Particle());
-    function animateParticles() {
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        particles.forEach(p => { p.update(); p.draw(); });
-        requestAnimationFrame(animateParticles);
-    }
+    for(let i=0; i<25; i++) particles.push(new Particle());
+    function animateParticles() { ctx.clearRect(0,0,canvas.width,canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animateParticles); }
     animateParticles();
 
-    // 2. دالة إرسال الإشارة الإدراكية ومعالجة البيانات مع الحفاظ على الذاكرة المستمرة
+    // 📱 دالة التحكم في إظهار وإخفاء القائمة الجانبية للجوال
+    function toggleMobileSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('hidden');
+        if (!sidebar.classList.contains('hidden')) {
+            sidebar.classList.add('flex', 'fixed', 'top-[57px]', 'bottom-0', 'right-0', 'w-64');
+        } else {
+            sidebar.classList.remove('flex', 'fixed', 'top-[57px]', 'bottom-0', 'right-0', 'w-64');
+        }
+    }
+
+    // 🔑 1. إدارة جلسات الهوية والـ Auth
+    window.onload = function() {
+        const savedUser = localStorage.getItem('tafkeek_user');
+        if (savedUser) {
+            loginUser(savedUser);
+        } else {
+            renderGuestState();
+        }
+    };
+
+    if (window.innerWidth >= 768) {
+        window.addEventListener('resize', () => {
+            const sidebar = document.getElementById('sidebar');
+            if(window.innerWidth >= 768) {
+                sidebar.classList.remove('fixed', 'top-[57px]', 'bottom-0', 'right-0');
+                sidebar.classList.add('flex');
+                sidebar.classList.remove('hidden');
+            }
+        });
+    }
+
+    function toggleLoginModal(show) {
+        document.getElementById('login-modal').classList.toggle('hidden', !show);
+    }
+
+    function executeMockLogin() {
+        const email = document.getElementById('auth-email').value.trim();
+        if(!email) return alert('يرجى كتابة البريد الإلكتروني');
+        
+        localStorage.setItem('tafkeek_user', email);
+        loginUser(email);
+        toggleLoginModal(false);
+    }
+
+    function loginUser(email) {
+        currentUser = email;
+        renderLoggedInState();
+        loadUserChatsFromStorage();
+        createNewChatSession(); 
+    }
+
+    function logoutUser() {
+        currentUser = null;
+        currentChatId = null;
+        conversationHistory = [];
+        allUserChats = [];
+        localStorage.removeItem('tafkeek_user');
+        renderGuestState();
+        document.getElementById('dynamic-matrices-container').classList.add('hidden');
+        document.getElementById('chat-history-list').innerHTML = '';
+        document.getElementById('roadmap-steps-list').innerHTML = `<div id="roadmap-placeholder" class="text-center py-12 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl">سجل دخولك وابدأ التفكيك لبناء مسارات خريطة الطريق...</div>`;
+    }
+
+    function renderGuestState() {
+        document.getElementById('auth-zone').innerHTML = `
+            <button onclick="toggleLoginModal(true)" class="w-full bg-slate-900 border border-slate-800 hover:border-cyan-500/40 text-cyan-400 font-bold py-2 px-3 rounded-xl text-xs transition-all">
+                🔐 تسجيل الدخول بالإيميل
+            </button>
+        `;
+        document.getElementById('idea-input').disabled = true;
+        document.getElementById('idea-input').placeholder = "يرجى تسجيل الدخول أولاً لتفعيل محرك التفكيك وحفظ سجلاتك...";
+        document.getElementById('idea-input').classList.add('opacity-50');
+        document.getElementById('btn-submit').disabled = true;
+        document.getElementById('btn-submit').className = "bg-slate-800 text-slate-500 font-bold px-8 py-3 rounded-xl text-xs cursor-not-allowed shrink-0";
+        document.getElementById('btn-new-chat').classList.add('hidden');
+        document.getElementById('processor-status-text').innerText = "AWAITING_AUTHENTICATION // KEY_LOCK";
+    }
+
+    function renderLoggedInState() {
+        document.getElementById('auth-zone').innerHTML = `
+            <div class="flex justify-between items-center text-[11px]">
+                <span class="text-slate-400 truncate max-w-[130px]" title="${currentUser}">👤 ${currentUser}</span>
+                <button onclick="logoutUser()" class="text-red-400 font-bold hover:underline">خروج</button>
+            </div>
+        `;
+        document.getElementById('idea-input').disabled = false;
+        document.getElementById('idea-input').placeholder = "اكتب فكرة مشروعك، أو أجب عن أسئلة النظام الموجهة بالأسفل...";
+        document.getElementById('idea-input').classList.remove('opacity-50');
+        document.getElementById('btn-submit').disabled = false;
+        document.getElementById('btn-submit').className = "bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold px-8 py-3 rounded-xl text-xs tracking-wider transition-all transform active:scale-95 shrink-0";
+        document.getElementById('btn-new-chat').classList.remove('hidden');
+        document.getElementById('processor-status-text').innerText = "SYSTEM_READY // INGESTION_STREAM_OPEN";
+    }
+
+    // 💾 2. محرك إدارة السجلات والذاكرة الذكية المستمرة لكل إيميل منفصل
+    function loadUserChatsFromStorage() {
+        const storageKey = `tafkeek_chats_${currentUser}`;
+        const savedChats = localStorage.getItem(storageKey);
+        allUserChats = savedChats ? JSON.parse(savedChats) : [];
+        renderChatHistorySidebar();
+    }
+
+    function saveUserChatsToStorage() {
+        const storageKey = `tafkeek_chats_${currentUser}`;
+        localStorage.setItem(storageKey, JSON.stringify(allUserChats));
+        renderChatHistorySidebar();
+    }
+
+    function createNewChatSession() {
+        currentChatId = 'chat_' + Date.now();
+        conversationHistory = [];
+        
+        document.getElementById('dynamic-matrices-container').classList.add('hidden');
+        document.getElementById('idea-input').value = '';
+        updateDepthBadges("LEVEL_1_SIMPLE");
+        document.getElementById('nodes-counter').innerText = "SESSION: NEW_LEAF";
+        document.getElementById('roadmap-steps-list').innerHTML = `<div class="text-center py-12 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl">محادثة جديدة فارغة. ابدأ في كتابة فكرتك لتوليد خريطة الطريق...</div>`;
+        
+        renderChatHistorySidebar();
+        
+        // إغلاق السايدبار تلقائياً على الجوال عند فتح محادثة جديدة لتوفير المساحة
+        if (window.innerWidth < 768) {
+            const sidebar = document.getElementById('sidebar');
+            if(!sidebar.classList.contains('hidden')) toggleMobileSidebar();
+        }
+    }
+
+    function renderChatHistorySidebar() {
+        const container = document.getElementById('chat-history-list');
+        container.innerHTML = '';
+        
+        if (allUserChats.length === 0) {
+            container.innerHTML = `<div class="text-center text-slate-600 py-4 text-[10px]">لا توجد سجلات سابقة لهذا الحساب</div>`;
+            return;
+        }
+
+        allUserChats.forEach(chat => {
+            const isActive = chat.id === currentChatId;
+            const item = document.createElement('div');
+            item.className = `p-2 rounded-lg cursor-pointer transition-all truncate text-right ${isActive ? 'bg-slate-800 text-cyan-400 border border-slate-700' : 'hover:bg-slate-900/60 text-slate-400 hover:text-slate-200'}`;
+            item.innerText = `💬 ${chat.title}`;
+            item.onclick = () => loadSpecificChatSession(chat.id);
+            container.appendChild(item);
+        });
+    }
+
+    function loadSpecificChatSession(id) {
+        const targetChat = allUserChats.find(c => c.id === id);
+        if (!targetChat) return;
+
+        currentChatId = targetChat.id;
+        conversationHistory = targetChat.history;
+        
+        document.getElementById('nodes-counter').innerText = `NODES: ${conversationHistory.length} ACTIVE`;
+        
+        if (targetChat.lastServerData) {
+            document.getElementById('dynamic-matrices-container').classList.remove('hidden');
+            renderDataToUI(targetChat.lastServerData);
+        } else {
+            document.getElementById('dynamic-matrices-container').classList.add('hidden');
+        }
+        
+        renderChatHistorySidebar();
+
+        // إغلاق السايدبار تلقائياً على الجوال بعد الاختيار لعرض النتيجة الفورية
+        if (window.innerWidth < 768) {
+            toggleMobileSidebar();
+        }
+    }
+
+    // 🧠 3. إرسال الإشارات ومعالجة البيانات المتدرجة
     async function processCognitiveSignal() {
         const input = document.getElementById('idea-input');
         const errBanner = document.getElementById('error-banner');
         const statusText = document.getElementById('processor-status-text');
-        const dynamicContainer = document.getElementById('dynamic-matrices-container');
         const stepsList = document.getElementById('roadmap-steps-list');
-        const memoryCounter = document.getElementById('memory-counter');
         
         const currentText = input.value.trim();
-        if (!currentText) {
-            alert('يرجى صياغة نص أو إجابة أولاً لبدء التفكيك.');
-            return;
-        }
+        if (!currentText) { alert('يرجى صياغة نص لبدء التفكيك.'); return; }
 
         errBanner.classList.add('hidden');
-        statusText.innerText = "PROCESSING_HYBRID_CORE // ANALYZING_CONTEXT_AND_DATA...";
+        statusText.innerText = "PROGRESSIVE_GEAR_SHIFT // INGESTING_CONTEXT_DATA...";
         statusText.classList.add('animate-pulse', 'text-cyan-400');
         
-        stepsList.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-12 space-y-3">
-                <div class="animate-spin rounded-full h-5 w-5 border-b-2 border-cyan-400"></div>
-                <p class="text-[10px] text-slate-500 font-mono animate-pulse">GENERATING_ROADMAP...</p>
-            </div>
-        `;
+        stepsList.innerHTML = `<div class="text-center py-12 text-slate-500 text-xs animate-pulse font-mono">LOADING_STEPS...</div>`;
 
         try {
-            // إرسال الطلب للسيرفر متضمناً النص الحالي بالإضافة لتاريخ الجلسة بالكامل للربط الذكي
             const response = await fetch('/api/deconstruct', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    idea: currentText,
-                    history: conversationHistory 
-                })
-            });
-
-            if (!response.ok) throw new Error(`HTTP_ERROR_STATUS: ${response.status}`);
-            
-            const data = await response.json();
-            
-            // تحديث حالة المعالج وإظهار لوحات عرض البيانات الفنية
-            statusText.innerText = "STREAM_STABLE // INGESTION_COMPLETED";
-            statusText.classList.remove('animate-pulse', 'text-cyan-400');
-            dynamicContainer.classList.remove('hidden');
-
-            // حفظ التفاعل الحالي في الذاكرة الممتدة للجلسة (ميزة الذكاء المتسلسل كالشات)
-            conversationHistory.push({ role: 'user', text: currentText });
-            conversationHistory.push({ role: 'system', text: data.executive_summary });
-            memoryCounter.innerText = `${conversationHistory.length} ACTIVE_NODES`;
-
-            // أ- تفريغ وعرض الملخص التنفيذي الاستراتيجي
-            document.getElementById('executive-summary-text').innerText = data.executive_summary || '';
-
-            // ب- بناء ورسم جدول البيانات التحليلي الديناميكي
-            const headersRow = document.getElementById('matrix-headers');
-            const rowsContainer = document.getElementById('matrix-rows');
-            headersRow.innerHTML = ''; rowsContainer.innerHTML = '';
-
-            if (data.table_headers && data.table_rows) {
-                data.table_headers.forEach(h => {
-                    headersRow.innerHTML += `<th class="p-3 text-right font-semibold select-none">${h}</th>`;
-                });
-
-                data.table_rows.forEach(r => {
-                    rowsContainer.innerHTML += `
-                        <tr class="border-b border-slate-800/40 hover:bg-slate-900/30 transition-colors">
-                            <td class="p-3 font-semibold text-slate-200">${r.col1 || ''}</td>
-                            <td class="p-3 text-slate-400 leading-relaxed">${r.col2 || ''}</td>
-                            <td class="p-3 text-cyan-400/90 leading-relaxed">${r.col3 || ''}</td>
-                            <td class="p-3 text-emerald-400/90 leading-relaxed">${r.col4 || ''}</td>
-                        </tr>
-                    `;
-                });
-            }
-
-            // جـ- بناء خريطة الخطوات الجانبية (Execution Roadmap)
-            stepsList.innerHTML = '';
-            if (data.steps) {
-                data.steps.forEach(s => {
-                    stepsList.innerHTML += `
-                        <div class="p-4 rounded-xl bg-slate-900/40 border border-slate-800/60 hover:border-slate-700/40 transition-all text-right">
-                            <div class="flex items-start gap-3">
-                                <div class="text-cyan-400 font-mono text-xs font-bold bg-cyan-500/10 px-2.5 py-1 rounded-lg border border-cyan-500/15 shrink-0">
-                                    ${s.id}
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <h4 class="text-slate-200 font-bold text-xs md:text-sm mb-1">${s.title}</h4>
-                                    <p class="text-slate-400 text-[11px] leading-relaxed">${s.description}</p>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-            }
-
-            // د- بناء الأسئلة الاسترجاعية التفاعلية الحية لتعميق الحوار
-            const questionsBox = document.getElementById('interactive-questions-box');
-            questionsBox.innerHTML = '';
-            if (data.interactive_questions && data.interactive_questions.length > 0) {
-                let qHTML = `
-                    <h3 class="text-blue-400 font-bold text-sm mb-2 flex items-center gap-2">🤖 أسئلة استرجاعية لتوسيع النطاق</h3>
-                    <p class="text-slate-400 text-[11px] mb-3">النظام حلل فكرتك ويسألك التالي لمتابعة هندسة الفكرة، انقر فوق أي سؤال للإجابة عليه:</p>
-                    <div class="space-y-2">
-                `;
-                data.interactive_questions.forEach(q => {
-                    qHTML += `
-                        <div class="bg-slate-950/80 p-3 rounded-xl border border-slate-900 text-xs text-slate-300 hover:border-blue-500/30 hover:text-white transition-all cursor-pointer"
-                             onclick="injectQuestionToConsole('${q}')">
-                            💡 ${q}
-                        </div>
-                    `;
-                });
-                qHTML += `</div>`;
-                questionsBox.innerHTML = qHTML;
-            }
-
-            // تنظيف الحقل استعداداً للمدخل التالي ومتابعة النقاش
-            input.value = ''; input.rows = 1;
-
-        } catch (err) {
-            statusText.innerText = "CORE_ERROR // STREAM_TERMINATED";
-            statusText.classList.remove('animate-pulse');
-            errBanner.innerText = `❌ خطأ في معالجة النواة: فشل استدعاء البيانات (500). يرجى التأكد من صياغة المدخل بشكل مباشر لضمان المعالجة السريعة.`;
-            errBanner.classList.remove('hidden');
-            stepsList.innerHTML = `<div class="text-center py-12 text-red-500/60 text-xs font-mono">EXECUTION_FAILED</div>`;
-        }
-    }
-
-    // دالة لحقن السؤال في حقل النصوص لتبسيط الرد والمتابعة المتسلسلة
-    function injectQuestionToConsole(q) {
-        const input = document.getElementById('idea-input');
-        if (input) {
-            input.value = `إجابة وتوسيع بناءً على نقطة (${q}): \n`;
-            input.focus();
-            input.rows = 2;
-        }
-    }
-
-    // دالة لتفريغ الذاكرة وبدء جلسة تفكيك جديدة تماماً
-    function resetSession() {
-        conversationHistory = [];
-        document.getElementById('memory-counter').innerText = "0 ACTIVE_NODES";
-        document.getElementById('dynamic-matrices-container').classList.add('hidden');
-        document.getElementById('idea-input').value = '';
-        document.getElementById('roadmap-steps-list').innerHTML = `
-            <div class="text-center py-12 text-slate-600 text-xs border border-dashed border-slate-800 rounded-xl">
-                تم تفريغ الذاكرة بنجاح. في انتظار إشارة إدخال جديدة...
-            </div>
-        `;
-        document.getElementById('processor-status-text').innerText = "SYSTEM_RESET_COMPLETE // MEMORY_EMPTY";
-        alert('تم تصفية وتفريغ ذاكرة النظام الإدراكية بنجاح.');
-    }
-    </script>
-</body>
-</html>
-
+                heade
