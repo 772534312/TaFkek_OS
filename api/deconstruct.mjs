@@ -20,30 +20,56 @@ export default async function handler(req, res) {
 
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash', 
-            contents: `قم بتفكيك الفكرة التالية تفكيكاً استراتيجياً وعملياً بالكامل: "${idea}"`,
+            contents: `قم بإجراء تفكيك استراتيجي شامل وعميق جداً للفكرة التالية: "${idea}"`,
             config: {
                 responseMimeType: "application/json",
-                systemInstruction: "أنت خبير تفكيك نظم ومحلل استراتيجي من الطراز الأول. مهمتك هي أخذ أي فكرة وتحليلها إلى خطوات عملية. يجب أن تعيد النتيجة دائماً على شكل مصفوفة JSON مباشرة تحتوي على تفاصيل غنية جداً وعملية لكل خطوة.",
-                // هنا التكتيك الذكي: مصفوفة مباشرة لكنها غنية بالبيانات الداخلية!
+                systemInstruction: "أنت النواة الإدراكية لـ (تفكيك OS)، خبير ومحلل استراتيجي راديكالي. مهمتك هي عدم إعطاء إجابات عادية أو إنشائية. قم بتحليل الأفكار بدقة تفكيكية متناهية، وصياغة جداول مقارنة متطورة، واستخلاص ملخصات تنفيذية مركّزة، وصياغة أسئلة استرجاعية حادة لتوجيه المستخدم في نهاية التحليل لتطوير فكرته.",
+                // هندسة الـ Schema الكلية لجمع كل متطلبات التفاعل والتحليل المتطور
                 responseSchema: {
-                    type: "ARRAY",
-                    items: {
-                        type: "OBJECT",
-                        properties: {
-                            id: { type: "STRING" },
-                            title: { type: "STRING" },
-                            description: { type: "STRING" },
-                            priority: { type: "STRING", enum: ["عاجلة جداً", "استراتيجية", "مؤجلة"] },
-                            difficulty: { type: "INTEGER", description: "مستوى الصعوبة من 1 إلى 5" },
-                            estimated_time: { type: "STRING", description: "الوقت المتوقع لإنجاز الخطوة" },
-                            checklist: {
-                                type: "ARRAY",
-                                items: { type: "STRING" },
-                                description: "3 مهام فرعية تنفيذية دقيقة جداً لهذه الخطوة"
+                    type: "OBJECT",
+                    properties: {
+                        executive_summary: { 
+                            type: "STRING", 
+                            description: "ملخص تنفيذي عميق ومركز يشرح الجدوى والعمق الاستراتيجي للفكرة بأسلوب احترافي." 
+                        },
+                        analysis_table: {
+                            type: "OBJECT",
+                            properties: {
+                                headers: { 
+                                    type: "ARRAY", 
+                                    items: { type: "STRING" },
+                                    description: "عناوين الأعمدة الأربعة للجدول التوضيحي (مثال: الجانب المستهدف، التحدي الجذري، الحل المفكك، الأثر الاستراتيجي)"
+                                },
+                                rows: {
+                                    type: "ARRAY",
+                                    items: {
+                                        type: "ARRAY",
+                                        items: { type: "STRING" }
+                                    },
+                                    description: "صفوف البيانات التوضيحية داخل الجدول (يجب ألا تقل عن 3 صفوف مليئة بالتحليل المعمق)"
+                                }
+                            },
+                            required: ["headers", ["rows"]]
+                        },
+                        steps: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    id: { type: "STRING" },
+                                    title: { type: "STRING" },
+                                    description: { type: "STRING", description: "شرح مطول، منظم، غني بالمعلومات العميقة جداً لهذه الخطوة." }
+                                },
+                                required: ["id", "title", "description"]
                             }
                         },
-                        required: ["id", "title", "description", "priority", "difficulty", "estimated_time", "checklist"]
-                    }
+                        interactive_questions: {
+                            type: "ARRAY",
+                            items: { type: "STRING" },
+                            description: "3 أسئلة تفاعلية ذكية وحاسمة للمستخدم لتوسيع أبعاد فكرته في المحادثة القادمة."
+                        }
+                    },
+                    required: ["executive_summary", "analysis_table", "steps", "interactive_questions"]
                 }
             }
         });
@@ -53,7 +79,7 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error("سجل الأخطاء الفني:", error);
-        return res.status(500).json({ error: 'فشلت معالجة الإشارة الإدراكية: ' + error.message });
+        return res.status(500).json({ error: 'فشلت معالجة الإشارة الإدراكية العميقة: ' + error.message });
     }
 }
 
