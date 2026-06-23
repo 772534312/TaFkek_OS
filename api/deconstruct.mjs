@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-    // 1. استقبال طلبات POST فقط
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
@@ -9,23 +8,23 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Missing idea payload' });
     }
 
-    // 2. التحقق من وجود مفتاح الـ API
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         return res.status(200).json({
             current_level: "LEVEL_1_SIMPLE",
-            executive_summary: "⚠️ خطأ في الإعدادات: مفتاح الـ GEMINI_API_KEY غير مضاف في متغيرات البيئة (Environment Variables) داخل موقع Vercel.",
+            executive_summary: "⚠️ خطأ: مفتاح الـ GEMINI_API_KEY غير مضاف في إعدادات Vercel.",
             table_headers: ["الحالة"],
-            table_rows: [{"col1": "مفتاح مفقود", "col2": "يرجى إضافة المفتاح السري في إعدادات Vercel ثم عمل Redeploy."}],
+            table_rows: [{"col1": "مفتاح مفقود", "col2": "يرجى إضافة المفتاح السري في Vercel."}],
             steps: [],
             interactive_questions: []
         });
     }
 
-    // 3. مصفوفة المحركات السحابية المتاحة (الأساسي ثم الاحتياطي المستقر)
     const modelsToTry = ['gemini-2.5-flash', 'gemini-1.5-flash'];
+    
+    // مصفوفة لتجميع الأخطاء الحقيقية وعرضها للمستخدم عند الفشل دائمًا
+    let debugErrors = [];
 
-    // توجيهات النظام الصارمة لإجبار جمناي على إرجاعโครงสร้าง JSON نقي ومحدد
     const systemInstruction = `You are the core expert system of TAFKEEK OS. Analyze the user's idea and deconstruct it. You MUST strictly respond with a valid JSON object matching this structure exactly, with no markdown formatting outside the JSON, no backticks, just raw JSON:
     {
         "current_level": "LEVEL_1_SIMPLE",
@@ -38,7 +37,6 @@ export default async function handler(req, res) {
 
     for (const modelName of modelsToTry) {
         try {
-            // الاتصال المباشر بـ API جوجل بدون مكتبات وسيطة
             const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
             
             const response = await fetch(url, {
@@ -54,19 +52,21 @@ export default async function handler(req, res) {
                 })
             });
 
-            // إذا واجه هذا الموديل خطأ (مثل 503)، ننتقل فوراً للموديل التالي في اللوب
+            const responseTextRaw = await response.text();
+
+            // إذا رفضت جوجل الطلب، نقوم بتخزين نص الرفض الصريح القادم منها
             if (!response.ok) {
-                console.warn(`المحرك ${modelName} مستقطع أو مزدحم حالياً. جاري التحويل...`);
+                debugErrors.push(`[${modelName}]: كود ${response.status} - ${responseTextRaw}`);
                 continue;
             }
 
-            const data = await response.json();
-            
-            // استخراج النص المسترجع من الهيكل الرسمي لردود جوجل
+            const data = JSON.parse(responseTextRaw);
             let responseText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!responseText) continue;
+            if (!responseText) {
+                debugErrors.push(`[${modelName}]: استجابة فارغة بدون نصوص تفكيك.`);
+                continue;
+            }
 
-            // تنظيف النص من أي علامات اقتباس زائدة قد يضعها السيرفر
             responseText = responseText.trim();
             if (responseText.startsWith("```json")) {
                 responseText = responseText.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
@@ -75,41 +75,30 @@ export default async function handler(req, res) {
             }
 
             const parsedData = JSON.parse(responseText);
-            
-            // إرسال النتيجة الناجحة فوراً وإنهاء العملية
             return res.status(200).json(parsedData);
 
         } catch (error) {
-            console.error(`عطل عابر في الاتصال بالموديل ${modelName}:`, error);
-            // الاستمرار في اللوب وتجربة المحرك الآخر
+            debugErrors.push(`[${modelName} انهيار]: ${error.message}`);
         }
     }
 
-    // 🛡️ صمام الأمان الأخير (حالة الازدحام المطلق لجميع سيرفرات جوجل مجتمعة):
-    // بدلاً من إرجاع كود 500، نرسل رد كود 200 يحتوي على شرح تفاعلي لطيف ويهبط داخل مربعات الموقع بسلاسة
+    // 🔍 طباعة الأخطاء الحقيقية داخل مربعات الموقع وجداوله بدلاً من الرسالة العامة
     return res.status(200).json({
         current_level: "LEVEL_1_SIMPLE",
-        executive_summary: `⏳ سيرفرات الذكاء الاصطناعي التابعة لجوجل عالمياً تواجه ضغطاً مكثفاً جداً الآن (High Demand).
-
-لحماية نظامك من الانهيار، قام درع Tafkek OS بحظر الخطأ 500 وتأمين الواجهة. 
-
-💡 كل ما عليك فعله هو الانتظار 5 ثوانٍ فقط، ثم اضغط على زر "معالجة وتفكيك" مرة أخرى ليمر طلبك بسلام عبر عنق الزجاجة العالمي.`,
-        table_headers: ["حالة الاتصال السحابي", "الآلية الأمنية النشطة"],
-        table_rows: [
-            {
-                "col1": "ازدحام مؤقت (503)",
-                "col2": "تم صد العطل وتأمين ثبات واجهات موقعك بنجاح دون انكسار البرمجية."
-            }
-        ],
+        executive_summary: "🔍 تم تفعيل نظام تشخيص الأعطال الذكي لـ Tafkek OS.\n\nالسيرفر مستقر ويعمل بنجاح، ولكن سيرفرات Google ترفض تمرير فكرتك لسبب فني صريح ومكتوب في الجدول بالأسفل الآون. اقرأ الرسالة لمعرفة السبب.",
+        table_headers: ["المحاولة", "الرسالة الفنية الحقيقية القادمة من سيرفر Google"],
+        table_rows: debugErrors.map((err, index) => ({
+            "col1": `محرك رقم ${index + 1}`,
+            "col2": err.substring(0, 300) // عرض أول 300 حرف من الخطأ لمنع تشويه الواجهة
+        })),
         steps: [
             {
-                "id": "⌛",
-                "title": "أعد المحاولة الآن",
-                "description": "اضغط على زر التفكيك مجدداً لإرسال طلبك في الطابور المحدث."
+                "id": "🛠️",
+                "title": "خطوة الإصلاح",
+                "description": "انظر للخطأ في الجدول؛ إذا كان يحتوي على API_KEY_INVALID فالمفتاح خاطئ تماماً ويجب تغييره."
             }
         ],
         interactive_questions: []
     });
 }
-
 
