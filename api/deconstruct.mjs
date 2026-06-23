@@ -2,12 +2,13 @@ import { GoogleGenAI } from '@google/genai';
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'الطريقة غير مسموح بها' });
+        return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { idea } = req.body;
+    // استقبال الفكرة الحالية مع الذاكرة التاريخية للجلسة
+    const { idea, history } = req.body;
     if (!idea) {
-        return res.status(400).json({ error: 'يرجى كتابة الفكرة لتفكيكها' });
+        return res.status(400).json({ error: 'يرجى كتابة المدخلات البدء التفكيك' });
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
@@ -18,37 +19,43 @@ export default async function handler(req, res) {
     try {
         const ai = new GoogleGenAI({ apiKey });
 
+        // بناء سياق المحادثة التاريخي لتغذية النموذج به (ميزة ChatGPT)
+        let contextPrompt = "";
+        if (history && history.length > 0) {
+            contextPrompt = "سياق النقاش التاريخي الممتد في الجلسة الحالية:\n";
+            history.forEach(msg => {
+                contextPrompt += `- ${msg.role === 'user' ? 'المستخدم' : 'النظام'}: ${msg.text}\n`;
+            });
+            contextPrompt += `\nالمطلوب الآن معالجة المدخل الجديد بناءً على هذا السياق والتاريخ أعلاه:\n`;
+        }
+
         const response = await ai.models.generateContent({
             model: 'gemini-2.5-flash', 
-            contents: `قم بإجراء تفكيك استراتيجي شامل وعميق جداً للفكرة التالية: "${idea}"`,
+            contents: `${contextPrompt} المدخل الحالي للتفكيك: "${idea}"`,
             config: {
                 responseMimeType: "application/json",
-                systemInstruction: "أنت النواة الإدراكية لـ (تفكيك OS)، خبير ومحلل استراتيجي راديكالي. مهمتك هي عدم إعطاء إجابات عادية أو إنشائية. قم بتحليل الأفكار بدقة تفكيكية متناهية، وصياغة جداول مقارنة متطورة، واستخلاص ملخصات تنفيذية مركّزة، وصياغة أسئلة استرجاعية حادة لتوجيه المستخدم في نهاية التحليل لتطوير فكرته.",
+                systemInstruction: "أنت النواة الإدراكية الخارقة لـ (تفكيك OS). تجمع بين عمق التفكير المنطقي لـ ChatGPT وسرعة التوليد الهيكلية لـ Gemini. مهمتك هي تفكيك مدخلات المستخدم هندسياً واستراتيجياً. صغ الإجابة بنصوص مكثفة، غنية بالمعلومات الفنية، وبدون حشو لتجنب بطء الخادم الفيدرالي. املأ الجدول بـ 3 صفوف ذكية، والخطوات بـ 3 مراحل عملية حاسمة.",
                 responseSchema: {
                     type: "OBJECT",
                     properties: {
-                        executive_summary: { 
-                            type: "STRING", 
-                            description: "ملخص تنفيذي عميق ومركز يشرح الجدوى والعمق الاستراتيجي للفكرة بأسلوب احترافي." 
+                        executive_summary: { type: "STRING", description: "تحليل استراتيجي وتنفيذي عميق جداً للمدخل الحالي سياق الجلسة." },
+                        table_headers: { 
+                            type: "ARRAY", 
+                            items: { type: "STRING" },
+                            description: "4 عناوين لأعمدة مصفوفة التحليل العميقة"
                         },
-                        analysis_table: {
-                            type: "OBJECT",
-                            properties: {
-                                headers: { 
-                                    type: "ARRAY", 
-                                    items: { type: "STRING" },
-                                    description: "عناوين الأعمدة الأربعة للجدول التوضيحي (مثال: الجانب المستهدف، التحدي الجذري، الحل المفكك، الأثر الاستراتيجي)"
+                        table_rows: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    col1: { type: "STRING", description: "المكون التقني/الاستراتيجي" },
+                                    col2: { type: "STRING", description: "التحدي أو الثغرة" },
+                                    col3: { type: "STRING", description: "الهندسة العكسية والحل" },
+                                    col4: { type: "STRING", description: "مؤشر النجاح أو الأثر" }
                                 },
-                                rows: {
-                                    type: "ARRAY",
-                                    items: {
-                                        type: "ARRAY",
-                                        items: { type: "STRING" }
-                                    },
-                                    description: "صفوف البيانات التوضيحية داخل الجدول (يجب ألا تقل عن 3 صفوف مليئة بالتحليل المعمق)"
-                                }
-                            },
-                            required: ["headers", "rows"] // تم إصلاح القوس الزائد هنا بنجاح
+                                required: ["col1", "col2", "col3", "col4"]
+                            }
                         },
                         steps: {
                             type: "ARRAY",
@@ -57,7 +64,7 @@ export default async function handler(req, res) {
                                 properties: {
                                     id: { type: "STRING" },
                                     title: { type: "STRING" },
-                                    description: { type: "STRING", description: "شرح مطول، منظم، غني بالمعلومات العميقة جداً لهذه الخطوة." }
+                                    description: { type: "STRING", description: "شرح تقني دقيق ومباشر لتنفيذ الخطوة." }
                                 },
                                 required: ["id", "title", "description"]
                             }
@@ -65,10 +72,10 @@ export default async function handler(req, res) {
                         interactive_questions: {
                             type: "ARRAY",
                             items: { type: "STRING" },
-                            description: "3 أسئلة تفاعلية ذكية وحاسمة للمستخدم لتوسيع أبعاد فكرته في المحادثة القادمة."
+                            description: "3 أسئلة استرجاعية فائقة الذكاء لدفع المستخدم لتطوير النظام في الرد القادم."
                         }
                     },
-                    required: ["executive_summary", "analysis_table", "steps", "interactive_questions"]
+                    required: ["executive_summary", "table_headers", "table_rows", "steps", "interactive_questions"]
                 }
             }
         });
@@ -77,8 +84,8 @@ export default async function handler(req, res) {
         return res.status(200).json(data);
 
     } catch (error) {
-        console.error("سجل الأخطاء الفني:", error);
-        return res.status(500).json({ error: 'فشلت معالجة الإشارة الإدراكية العميقة: ' + error.message });
+        console.error("خطأ فني في محرك التفكيك:", error);
+        return res.status(500).json({ error: 'فشلت النواة في معالجة الإشارة الرقمية: ' + error.message });
     }
 }
 
