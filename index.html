@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - المتكامل</title>
+    <title>Tafkek OS</title>
     <style>
         :root {
             --bg-main: #131314;
@@ -20,7 +20,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Google Sans', system-ui, -apple-system, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
         }
 
         body {
@@ -31,7 +31,7 @@
             overflow: hidden;
         }
 
-        /* ------------------ الشريط الجانبي (Sidebar) ------------------ */
+        /* ------------------ الشريط الجانبي ------------------ */
         .sidebar {
             width: 260px;
             background-color: var(--bg-sidebar);
@@ -40,7 +40,6 @@
             justify-content: space-between;
             padding: 20px 12px;
             transition: all 0.3s ease;
-            z-index: 10;
         }
 
         .sidebar.collapsed {
@@ -62,8 +61,6 @@
             align-items: center;
             gap: 12px;
             font-size: 0.95rem;
-            font-weight: 500;
-            transition: background 0.2s;
             width: 100%;
         }
 
@@ -89,14 +86,13 @@
             cursor: pointer;
             color: var(--text-main);
             font-size: 0.9rem;
-            transition: background 0.2s;
         }
 
         .menu-item:hover {
             background-color: var(--bg-hover);
         }
 
-        /* ------------------ مساحة العمل الرئيسية ------------------ */
+        /* ------------------ المساحة الرئيسية ------------------ */
         .main-chat {
             flex: 1;
             display: flex;
@@ -105,19 +101,11 @@
             position: relative;
         }
 
-        /* الشريط العلوي المضاف إليه ميزة تسجيل الدخول */
         .top-bar {
             padding: 15px 25px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .top-bar-right {
-            display: flex;
-            align-items: center;
-            gap: 15px;
         }
 
         .toggle-sidebar-btn {
@@ -140,30 +128,6 @@
             color: var(--text-sub);
         }
 
-        /* زر تسجيل الدخول الاحترافي في أعلى اليسار */
-        .login-btn {
-            background: var(--gemini-gradient);
-            color: white;
-            border: none;
-            padding: 8px 18px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: opacity 0.2s;
-        }
-
-        .login-btn:hover {
-            opacity: 0.9;
-        }
-
-        .user-profile {
-            display: none; /* يظهر بعد تسجيل الدخول */
-            align-items: center;
-            gap: 10px;
-        }
-
-        /* حاوية المحادثات */
         .chat-container {
             flex: 1;
             overflow-y: auto;
@@ -175,11 +139,11 @@
 
         /* واجهة الترحيب الافتراضية */
         .welcome-view {
-            margin-top: 6vh;
+            margin-top: 8vh;
         }
 
         .greeting {
-            font-size: 3.2rem;
+            font-size: 3.5rem;
             font-weight: 500;
             margin-bottom: 10px;
         }
@@ -191,10 +155,10 @@
         }
 
         .sub-greeting {
-            font-size: 3.2rem;
+            font-size: 3.5rem;
             color: #444746;
             font-weight: 500;
-            margin-bottom: 40px;
+            margin-bottom: 50px;
         }
 
         .suggestions-grid {
@@ -205,12 +169,11 @@
 
         .suggestion-card {
             background-color: var(--bg-sidebar);
-            padding: 20px;
+            padding: 22px;
             border-radius: 16px;
             cursor: pointer;
             font-size: 0.95rem;
-            transition: background 0.2s;
-            min-height: 120px;
+            min-height: 140px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
@@ -220,9 +183,9 @@
             background-color: var(--bg-hover);
         }
 
-        /* مجرى المحادثة الفعلي للرسائل الديناميكية */
+        /* ------------------ شريط تدفق الرسائل الحقيقي ------------------ */
         .conversation-flow {
-            display: flex;
+            display: none;
             flex-direction: column;
             gap: 30px;
             padding-bottom: 40px;
@@ -232,12 +195,6 @@
             display: flex;
             gap: 20px;
             align-items: flex-start;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .avatar {
@@ -263,14 +220,22 @@
             flex: 1;
         }
 
-        /* خط التحميل الحقيقي اللامع */
+        .message-content img {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 12px;
+            margin-top: 12px;
+            border: 1px solid var(--border);
+        }
+
+        /* أنيميشن التحميل الخاص بـ Gemini */
         .shimmer-line {
             display: none;
             width: 100%;
             height: 4px;
             background: linear-gradient(90deg, #4285f4, #9b51e0, #e91e63, #4285f4);
             background-size: 300% 100%;
-            animation: shimmerAnimation 1.5s infinite linear;
+            animation: shimmerAnimation 2s infinite linear;
             border-radius: 2px;
             margin-top: 15px;
         }
@@ -280,27 +245,23 @@
             100% { background-position: 100% 50%; }
         }
 
-        /* ------------------ معاينة الصور المرفقة قبل الإرسال ------------------ */
-        .attachment-preview-area {
+        /* منطقة معاينة الصورة المرفقة قبل الإرسال */
+        .preview-box {
             display: none;
-            gap: 10px;
-            padding: 10px 20px;
-            background-color: #1e1e20;
-            border-radius: 12px;
-            margin-bottom: 10px;
-            align-items: center;
-            max-width: 200px;
             position: relative;
+            margin-bottom: 10px;
+            width: fit-content;
         }
 
-        .attachment-preview-area img {
-            width: 50px;
-            height: 50px;
+        .preview-box img {
+            width: 60px;
+            height: 60px;
             object-fit: cover;
             border-radius: 8px;
+            border: 1px solid var(--border);
         }
 
-        .remove-attachment {
+        .preview-box .remove-btn {
             position: absolute;
             top: -5px;
             left: -5px;
@@ -308,13 +269,13 @@
             color: white;
             border: none;
             border-radius: 50%;
-            width: 20px;
-            height: 20px;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 10px;
         }
 
-        /* ------------------ صندوق الإدخال السفلي الذكي ------------------ */
+        /* ------------------ صندوق الإدخال السفلي ------------------ */
         .input-area-wrapper {
             padding: 10px 60px 25px 60px;
             background: linear-gradient(transparent, var(--bg-main) 40%);
@@ -328,11 +289,6 @@
             padding: 8px 22px;
             display: flex;
             flex-direction: column;
-            border: 1px solid transparent;
-        }
-
-        .input-box-container:focus-within {
-            border-color: #4285f4;
         }
 
         .input-row {
@@ -357,7 +313,7 @@
         .input-actions {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
         }
 
         .action-icon-btn {
@@ -372,7 +328,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s;
         }
 
         .action-icon-btn:hover {
@@ -385,99 +340,76 @@
 </head>
 <body>
 
-    <!-- شريط جانبي مدمج -->
     <aside class="sidebar" id="sidebar">
         <div>
             <button class="new-chat-btn" onclick="resetToHome()">
                 <span>＋</span>
                 <span class="hide-text">محادثة جديدة</span>
             </button>
-            <ul class="sidebar-menu" id="historyList">
-                <!-- أرشفة المحادثات السابقة تولد برمجياً هنا -->
-            </ul>
         </div>
         <div>
             <ul class="sidebar-menu">
-                <li class="menu-item" onclick="alert('الإعدادات قيد التطوير')">
-                    <span>⚙️</span>
-                    <span class="hide-text">الإعدادات</span>
+                <li class="menu-item" onclick="alert('عبدالله بن وهلان - Tafkek OS')">
+                    <span>👤</span>
+                    <span class="hide-text">الحساب</span>
                 </li>
             </ul>
         </div>
     </aside>
 
     <main class="main-chat">
-        <!-- الشريط العلوي مع ميزة تسجيل الدخول والربط البرمجي -->
         <div class="top-bar">
-            <div class="top-bar-right">
-                <button class="toggle-sidebar-btn" onclick="toggleSidebar()">☰</button>
-                <div class="brand-name">Tafkek OS</div>
-            </div>
-            
-            <!-- قسم التوثيق والحساب -->
-            <div id="authSection">
-                <button class="login-btn" onclick="handleLogin()">تسجيل الدخول</button>
-                <div class="user-profile" id="userProfile">
-                    <span id="userName" style="font-size: 0.9rem; color: var(--text-sub);"></span>
-                    <div class="avatar user-avatar" style="background-color: #4285f4;">ع</div>
-                </div>
-            </div>
+            <button class="toggle-sidebar-btn" onclick="toggleSidebar()">☰</button>
+            <div class="brand-name">Tafkek OS</div>
+            <div style="width: 40px;"></div>
         </div>
 
         <div class="chat-container">
-            <!-- واجهة الترحيب -->
             <div class="welcome-view" id="welcomeView">
                 <h1 class="greeting"><span class="gradient-text">مرحباً بك،</span></h1>
                 <h2 class="sub-greeting">كيف يمكنني مساعدتك اليوم؟</h2>
                 
                 <div class="suggestions-grid">
-                    <div class="suggestion-card" onclick="selectSuggestion('قم بإنشاء متجر لبيع الهواتف')">
-                        <span>قم بإنشاء متجر لبيع الهواتف الذكية مع هيكلية البيانات</span>
-                        <div class="card-icon">🧠</div>
+                    <div class="suggestion-card" onclick="selectSuggestion('قم بإنشاء متجر لبيع الهواتف الذكية')">
+                        <span>قم بإنشاء متجر لبيع الهواتف الذكية مع الهيكلية</span>
+                        <div class="card-icon">💻</div>
                     </div>
-                    <div class="suggestion-card" onclick="selectSuggestion('توليد صورة احترافية لكوكب المريخ مستقبلي وعالي الدقة')">
-                        <span>ميزة توليد صور ذكية فائقة الدقة</span>
+                    <div class="suggestion-card" onclick="selectSuggestion('توليد صورة واقعية لكوكب المريخ مستقبلي وعالي الدقة')">
+                        <span>اطلب توليد صور ذكية فائقة الدقة بأسلوب فني</span>
                         <div class="card-icon">🎨</div>
                     </div>
                 </div>
             </div>
 
-            <!-- مجرى تدفق الرسائل الفعلي -->
             <div class="conversation-flow" id="conversationFlow"></div>
             <div class="shimmer-line" id="shimmerLine"></div>
         </div>
 
-        <!-- منطقة الإدخال الموحدة والمطورة لدعم الصور والملفات -->
         <div class="input-area-wrapper">
             <div class="input-box-container">
                 
-                <!-- منطقة معاينة الصورة المرفقة قبل رفعها أو إرسالها للـ API -->
-                <div class="attachment-preview-area" id="previewArea">
-                    <button class="remove-attachment" onclick="clearAttachment()">×</button>
-                    <img id="previewImg" src="" alt="Preview">
-                    <span style="font-size: 0.8rem; color: var(--text-sub)">صورة جاهزة للتحليل</span>
+                <div class="preview-box" id="previewBox">
+                    <button class="remove-btn" onclick="clearImage()">×</button>
+                    <img id="previewImg" src="">
                 </div>
 
                 <div class="input-row">
-                    <input type="file" id="fileUpload" class="hidden-file-input" accept="image/*" onchange="handleFileSelected(this)">
-                    <button class="action-icon-btn" onclick="document.getElementById('fileUpload').click()" title="إرفاق صورة لتحليلها">📎</button>
+                    <input type="file" id="fileUpload" class="hidden-file-input" accept="image/*" onchange="previewImage(this)">
+                    <button class="action-icon-btn" onclick="document.getElementById('fileUpload').click()" title="إرفاق صورة">📎</button>
                     
-                    <textarea id="chatInput" rows="1" placeholder="اسأل Tafkek OS عن أي شيء أو اطلب توليد صورة..." oninput="autoGrow(this)" onkeydown="handleKeyDown(event)"></textarea>
+                    <textarea id="chatInput" rows="1" placeholder="اسأل تفكيك أو اطلب توليد صورة..." oninput="autoGrow(this)" onkeydown="handleKeyDown(event)"></textarea>
                     
                     <div class="input-actions">
-                        <!-- ميزة توليد الصور المباشرة (Text-to-Image) -->
-                        <button class="action-icon-btn" onclick="triggerImageGeneration()" title="توليد صورة برمجياً">🖼️</button>
-                        <button class="action-icon-btn" style="color: #8ab4f8;" onclick="sendMessage()" title="إرسال">✦</button>
+                        <button class="action-icon-btn" style="color: #8ab4f8;" onclick="sendMessage()" title="إرسال الطلب">✦</button>
                     </div>
                 </div>
             </div>
-            <div class="disclaimer">منصة تفكيك مدمجة مع الأنظمة السحابية. يرجى التحقق من المخرجات الهامة.</div>
+            <div class="disclaimer">مربوط حياً مع خوادم معالجة البيانات السحابية لـ Tafkek OS.</div>
         </div>
     </main>
 
     <script>
-        let attachedFileBase64 = null;
-        let isLoggedIn = false;
+        let base64Image = null;
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
@@ -500,152 +432,122 @@
             sendMessage();
         }
 
-        // --- ميزة تسجيل الدخول الفعلي (تستبدل بـ Firebase / Supabase الخاص بك) ---
-        function handleLogin() {
-            // محاكاة سريعة لتسجيل الدخول، ضع هنا كود التوثيق الخاص بك
-            isLoggedIn = true;
-            document.querySelector('.login-btn').style.display = 'none';
-            document.getElementById('userProfile').style.display = 'flex';
-            document.getElementById('userName').innerText = 'عبدالله بن وهلان';
-            alert('تم تسجيل الدخول بنجاح إلى معمل تفكيك العصبوني!');
-        }
-
-        // --- ميزة إرفاق الصور ومعاينتها ---
-        function handleFileSelected(input) {
+        // تحويل الصورة المرفقة ومعاينتها
+        function previewImage(input) {
             const file = input.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    attachedFileBase64 = e.target.result;
-                    document.getElementById('previewImg').src = attachedFileBase64;
-                    document.getElementById('previewArea').style.display = 'flex';
+                    base64Image = e.target.result;
+                    document.getElementById('previewImg').src = base64Image;
+                    document.getElementById('previewBox').style.display = 'block';
                 }
                 reader.readAsDataURL(file);
             }
         }
 
-        function clearAttachment() {
-            attachedFileBase64 = null;
+        function clearImage() {
+            base64Image = null;
             document.getElementById('fileUpload').value = '';
-            document.getElementById('previewArea').style.display = 'none';
+            document.getElementById('previewBox').style.display = 'none';
         }
 
-        // --- ميزة توليد الصور (Text-to-Image) عبر استدعاء الـ API الفعلي ---
-        async function triggerImageGeneration() {
-            const prompt = document.getElementById('chatInput').value.trim();
-            if (!prompt) {
-                alert("يرجى كتابة وصف الصورة في صندوق النص أولاً (مثال: كوكب المريخ في المستقبل).");
-                return;
-            }
-
-            appendUserMessage(prompt);
-            document.getElementById('chatInput').value = '';
-            document.getElementById('shimmerLine').style.display = 'block';
-
-            try {
-                // ⚠️ استبدل هذا الرابط بمسار الدالة السحابية الخاصة بك لتوليد الصور (Vercel serverless function / DALL-E / Flux API)
-                // const response = await fetch('/api/generate-image', { method: 'POST', body: JSON.stringify({ prompt }) });
-                // const data = await response.json();
-                
-                // محاكاة مؤقتة للاستجابة السحابية الحقيقية:
-                setTimeout(() => {
-                    document.getElementById('shimmerLine').style.display = 'none';
-                    appendAIMessage(`✦ **تم توليد الصورة المطلوبة بناءً على وصفك:**`, "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?auto=format&fit=crop&w=600&q=80");
-                }, 3000);
-
-            } catch (error) {
-                console.error(error);
-                document.getElementById('shimmerLine').style.display = 'none';
-                appendAIMessage("❌ عذراً، فشل استدعاء خادم توليد الصور المحمل على Vercel.");
-            }
-        }
-
-        // --- محرك توليد النصوص واستدعاء الـ API الحقيقي (Gemini / Groq) ---
+        // 🚀 محرك الإرسال الحقيقي والربط الفعلي مع Vercel
         async function sendMessage() {
             const inputEl = document.getElementById('chatInput');
             const query = inputEl.value.trim();
-            if (!query && !attachedFileBase64) return;
-
-            appendUserMessage(query);
             
-            // تصفير الإدخال
+            if (!query && !base64Image) return;
+
+            // إخفاء الترحيب وعرض صندوق الدردشة
+            document.getElementById('welcomeView').style.display = 'none';
+            const flow = document.getElementById('conversationFlow');
+            flow.style.display = 'flex';
+
+            // إضافة رسالة المستخدم مع الصورة إن وجدت
+            let userContent = `<div>${query}</div>`;
+            if (base64Image) {
+                userContent += `<img src="${base64Image}" style="max-width:150px; border-radius:8px; margin-top:5px;">`;
+            }
+            
+            flow.innerHTML += `
+                <div class="chat-row user-row">
+                    <div class="avatar user-avatar">ع</div>
+                    <div class="message-content">${userContent}</div>
+                </div>
+            `;
+
+            // حفظ الصورة الحالية وإعادة تهيئة الحقول لإدخال جديد
+            const activeImage = base64Image;
             inputEl.value = '';
             inputEl.style.height = 'auto';
+            clearImage();
 
-            // إظهار شريط التحميل المتلألئ
+            // تشغيل شريط التحميل المتلألئ
             document.getElementById('shimmerLine').style.display = 'block';
             const container = document.querySelector('.chat-container');
             container.scrollTop = container.scrollHeight;
 
-            // الاحتفاظ ببيانات الصورة لإرسالها
-            const currentImg = attachedFileBase64;
-            clearAttachment(); 
-
             try {
-                /* 
-                ⚠️ هنا تقوم بربط الـ Endpoint الحقيقي الخاص بك والذي يحتوي على مفاتيح الـ API السرية والمستضافة على Vercel:
-                
-                const response = await fetch('/api/chat', {
+                // 🔗 الاتصال المباشر بـ API الحقيقي الخاص بك على Vercel
+                const response = await fetch('/api/deconstruct', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: query, image: currentImg })
+                    body: JSON.stringify({ 
+                        prompt: query,        // تأكد من مطابقة المسمى (prompt أو message) حسب ما يتوقعه السيرفر لديك
+                        image: activeImage    // إرسال الصورة للسيرفر إذا كان يدعم نظام الرؤية (Vision)
+                    })
                 });
-                const data = await response.json();
-                const replyText = data.choices[0].message.content;
-                */
 
-                // محاكاة استجابة الخادم الحقيقية الديناميكية لربطها بملفاتك السحابية:
-                setTimeout(() => {
-                    document.getElementById('shimmerLine').style.display = 'none';
-                    
-                    let replyText = `✦ **نتيجة معالجة خادم التفكيك (Tafkek OS Engine):**\n\n`;
-                    if (currentImg) {
-                        replyText += `📸 [نظام الرؤية الحاسوبية]: تم فحص وتفكيك عناصر الصورة المرفقة بنجاح واستخلاص الأنماط البرمجية منها.\n\n`;
-                    }
-                    replyText += `لقد استقبلنا عبارة الحث الخاصة بك: "${query}". نظام توليد النصوص متصل الآن بالكامل ببيئتك الإنتاجية.`;
-                    
-                    appendAIMessage(replyText);
-                }, 1500);
+                if (!response.ok) {
+                    throw new Error(`السيرفر استجاب بخطأ: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // استخراج النصوص أو الصور بناءً على هيكلة الـ JSON الراجع من السيرفر لديك
+                // (قم بتعديل الحقول data.text أو data.imageUrl حسب تصميم السيرفر الخلفي)
+                const replyText = data.text || data.reply || data.content || "تمت المعالجة بنجاح.";
+                const replyImage = data.imageUrl || data.image || null;
+
+                // إخفاء الشريان اللامع وإضافة رد الذكاء الاصطناعي الفعلي
+                document.getElementById('shimmerLine').style.display = 'none';
+                
+                let aiContent = `<div>${replyText}</div>`;
+                if (replyImage) {
+                    aiContent += `<img src="${replyImage}" alt="Generated Image">`;
+                }
+
+                flow.innerHTML += `
+                    <div class="chat-row ai-row">
+                        <div class="avatar ai-avatar">✦</div>
+                        <div class="message-content">${aiContent}</div>
+                    </div>
+                `;
 
             } catch (error) {
+                // في حال وجود خطأ حقيقي، سيتم قذفه هنا وسيظهر فوراً في تفاعلات السيرفر وواجهتك!
                 document.getElementById('shimmerLine').style.display = 'none';
-                appendAIMessage("❌ حدث خطأ أثناء الاتصال بـ API الخاص بالنظام المطور.");
+                flow.innerHTML += `
+                    <div class="chat-row ai-row">
+                        <div class="avatar ai-avatar" style="background:#ff4a4a;">❌</div>
+                        <div class="message-content" style="color:#ff4a4a;">
+                            فشل الاتصال بالخادم الخلفي لموقعك.<br>
+                            <strong>السبب:</strong> ${error.message}<br>
+                            تأكد من رفع الكود الخلفي بشكل سليم ومطابقة مسميات المتغيرات المرسلة.
+                        </div>
+                    </div>
+                `;
             }
-        }
 
-        function appendUserMessage(text) {
-            document.getElementById('welcomeView').style.display = 'none';
-            const flow = document.getElementById('conversationFlow');
-            flow.innerHTML += `
-                <div class="chat-row user-row">
-                    <div class="avatar user-avatar">ع</div>
-                    <div class="message-content">${text}</div>
-                </div>
-            `;
-        }
-
-        function appendAIMessage(text, imageUrl = null) {
-            const flow = document.getElementById('conversationFlow');
-            let content = `<div class="message-content">${text}`;
-            if (imageUrl) {
-                content += `<br><br><img src="${imageUrl}" style="max-width:100%; border-radius:12px; margin-top:10px; border:1px solid #444746;">`;
-            }
-            content += `</div>`;
-
-            flow.innerHTML += `
-                <div class="chat-row ai-row">
-                    <div class="avatar ai-avatar">✦</div>
-                    ${content}
-                </div>
-            `;
-            const container = document.querySelector('.chat-container');
             container.scrollTop = container.scrollHeight;
         }
 
         function resetToHome() {
             document.getElementById('conversationFlow').innerHTML = '';
+            document.getElementById('conversationFlow').style.display = 'none';
             document.getElementById('welcomeView').style.display = 'block';
-            clearAttachment();
+            clearImage();
         }
     </script>
 </body>
