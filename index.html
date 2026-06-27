@@ -3,440 +3,619 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - محطة التفكيك المعرفي الذكية</title>
+    <title>Tafkek OS - منصة الذكاء الاصطناعي الإدراكية</title>
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: #131c2e;
-            --accent-color: #2563eb;
-            --accent-hover: #1d4ed8;
-            --text-color: #f3f4f6;
-            --text-muted: #9ca3af;
-            --border-color: #1e293b;
-            --success-color: #10b981;
+            --bg-main: #0e1117;
+            --bg-sidebar: #161b22;
+            --bg-card: #21262d;
+            --bg-input: #0d1117;
+            --accent: #388bfd;
+            --accent-glow: rgba(56, 139, 253, 0.15);
+            --text-main: #c9d1d9;
+            --text-bright: #f0f6fc;
+            --text-muted: #8b949e;
+            --border: #30363d;
+            --success: #238636;
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding: 20px;
-            line-height: 1.6;
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
+        /* ------------------ الشريط الجانبي (Sidebar) ------------------ */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-sidebar);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 15px;
+            z-index: 10;
         }
 
-        header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 20px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        header h1 {
-            font-size: 2.5rem;
-            color: var(--text-color);
-            margin-bottom: 10px;
-        }
-
-        header p {
-            color: var(--text-muted);
-        }
-
-        /* نظام شبكة الميزات */
-        .grid-layout {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 25px;
-        }
-
-        @media (max-width: 900px) {
-            .grid-layout {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
-
-        .card-title {
-            font-size: 1.3rem;
-            margin-bottom: 15px;
+        .brand h1 {
+            font-size: 1.4rem;
+            color: var(--text-bright);
+            letter-spacing: 1px;
             display: flex;
             align-items: center;
             gap: 10px;
-            color: var(--text-color);
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 10px;
+            margin-bottom: 30px;
+            padding: 0 10px;
         }
 
-        /* أدوات الإدخال والتحكم */
-        .form-group {
-            margin-bottom: 20px;
+        .nav-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
 
-        label {
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            color: var(--text-main);
+            text-decoration: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            background-color: var(--bg-card);
+            color: var(--text-bright);
+        }
+
+        .nav-item.active {
+            border-right: 4px solid var(--accent);
+        }
+
+        .sidebar-footer {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+
+        /* ------------------ مساحة العمل الرئيسية ------------------ */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            background-color: var(--bg-main);
+            position: relative;
+        }
+
+        /* نافذة العرض العلوية المتغيرة */
+        .workspace-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 40px;
+            display: none; /* يتم التحكم بالظهور عبر JS */
+        }
+
+        .workspace-panel.active-panel {
             display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .panel-header {
+            margin-bottom: 30px;
+        }
+
+        .panel-header h2 {
+            font-size: 1.8rem;
+            color: var(--text-bright);
             margin-bottom: 8px;
+        }
+
+        .panel-header p {
             color: var(--text-muted);
             font-size: 0.95rem;
         }
 
-        textarea, select, input[type="text"], input[type="file"] {
-            width: 100%;
-            background-color: var(--bg-color);
-            border: 1px solid var(--border-color);
-            color: var(--text-color);
-            padding: 12px;
-            border-radius: 8px;
-            font-size: 1rem;
-            outline: none;
-            transition: border-color 0.3s;
+        /* ------------------ تصميم تدفق المخرجات (Gemini Style) ------------------ */
+        .output-flow {
+            margin-top: 25px;
         }
 
-        textarea:focus, select:focus, input[type="text"]:focus {
-            border-color: var(--accent-color);
-        }
-
-        .btn {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1rem;
-            font-weight: 600;
-            width: 100%;
-            transition: background-color 0.3s;
-        }
-
-        .btn:hover {
-            background-color: var(--accent-hover);
-        }
-
-        .btn-success {
-            background-color: var(--success-color);
-        }
-
-        /* لوحة عرض النتائج وجداول التفكيك */
-        .result-section {
-            margin-top: 20px;
-            display: none; /* تظهر عند جلب البيانات */
-        }
-
-        .summary-box {
-            background: rgba(37, 99, 235, 0.1);
-            border-right: 4px solid var(--accent-color);
-            padding: 15px;
-            border-radius: 4px;
+        .response-bubble {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 25px;
             margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .response-section-title {
+            font-size: 1.1rem;
+            color: var(--accent);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .executive-box {
+            font-size: 1.05rem;
+            line-height: 1.7;
+            color: var(--text-bright);
             white-space: pre-line;
+        }
+
+        /* جداول Gemini الأنيقة */
+        .table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid var(--border);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        th, td {
-            border: 1px solid var(--border-color);
-            padding: 12px;
             text-align: right;
+            font-size: 0.95rem;
         }
 
         th {
-            background-color: rgba(255, 255, 255, 0.05);
-            color: var(--text-muted);
+            background-color: var(--bg-sidebar);
+            color: var(--text-bright);
+            padding: 14px;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border);
         }
 
-        .step-item {
-            background-color: var(--bg-color);
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border: 1px solid var(--border-color);
+        td {
+            padding: 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
         }
 
-        .step-header {
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(255,255,255,0.02);
+        }
+
+        /* مسار الخطوات التتابعي */
+        .flow-step {
+            border-right: 3px solid var(--border);
+            padding-right: 20px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .flow-step:hover {
+            border-right-color: var(--accent);
+        }
+
+        .flow-step-num {
             font-weight: bold;
-            color: var(--accent-color);
-            margin-bottom: 5px;
+            color: var(--accent);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            margin-bottom: 4px;
         }
 
-        /* نظام الصور والوثائق */
-        .image-preview-container {
-            text-align: center;
-            margin-top: 15px;
+        .flow-step-title {
+            font-size: 1.1rem;
+            color: var(--text-bright);
+            margin-bottom: 6px;
         }
 
-        .image-preview-container img {
-            max-width: 100%;
+        /* ------------------ شريط المدخلات السفلي (Chat Input Style) ------------------ */
+        .input-dock {
+            padding: 20px 40px 30px 40px;
+            background: linear-gradient(transparent, var(--bg-main) 20%);
+        }
+
+        .input-container-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .input-container-wrapper:focus-within {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+
+        .input-container-wrapper textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-bright);
+            font-size: 1rem;
+            resize: none;
+            outline: none;
+            padding: 10px 0;
+            max-height: 150px;
+        }
+
+        .model-pill-select {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .send-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: background-color 0.2s;
+        }
+
+        .send-btn:hover {
+            background-color: #58a6ff;
+        }
+
+        /* التنسيقات الخاصة بـالأزرار والقوائم داخل الألواح */
+        .action-card {
+            background-color: var(--bg-sidebar);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .custom-button {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
             border-radius: 8px;
-            border: 1px solid var(--border-color);
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .custom-button:hover { background-color: #58a6ff; }
+
+        .image-output-frame {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .image-output-frame img {
+            max-width: 100%;
+            max-height: 500px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             display: none;
         }
 
-        .loading-spinner {
+        .spinner {
             display: none;
-            text-align: center;
             color: var(--text-muted);
-            margin: 15px 0;
             font-style: italic;
+            margin: 15px 0;
+            text-align: center;
         }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>TAFKEEK OS</h1>
-        <p>المنصة الإدراكية الشاملة لتفكيك الأفكار، توليد الصور، وقراءة المستندات بالذكاء الاصطناعي متعدد المصادر</p>
-    </header>
+    <nav class="sidebar">
+        <div class="sidebar-top">
+            <div class="brand">
+                <h1>⚡ Tafkek OS</h1>
+            </div>
+            <ul class="nav-links">
+                <li class="nav-item active" onclick="switchPanel('deconstruct-panel', this)">🧠 تفكيك الأفكار والنصوص</li>
+                <li class="nav-item" onclick="switchPanel('image-panel', this)">🎨 محرك توليد الصور</li>
+                <li class="nav-item" onclick="switchPanel('document-panel', this)">📂 قراءة وتحليل المستندات</li>
+            </ul>
+        </div>
+        <div class="sidebar-footer">
+            الإصدار الإدراكي v2.0.0
+        </div>
+    </nav>
 
-    <div class="grid-layout">
-        <main>
-            <div class="card">
-                <div class="card-title">🧠 نظام التفكيك والتحليل الهيكلي</div>
-                
-                <div class="form-group">
-                    <label for="aiModelSelect">اختر محرك المعالجة الحركي:</label>
-                    <select id="aiModelSelect">
-                        <option value="gemini">Google Gemini 1.5 Flash (مستقر وفائق الدقة)</option>
-                        <option value="groq">Meta Llama 3.1 عبر Groq (سرعة استجابة خارقة)</option>
-                    </select>
+    <main class="main-content">
+        
+        <section id="deconstruct-panel" class="workspace-panel active-panel">
+            <div class="panel-header">
+                <h2>تفكيك الأفكار الهيكلي</h2>
+                <p>قم بتشريح المشاريع، المفاهيم البرمجية، والأفكار المعقدة إلى مصفوفات وجداول معرفية قابلة للتنفيذ المباشر.</p>
+            </div>
+            
+            <div class="spinner" id="textLoader">✨ جاري تحليل فكرتك وبناء الهيكل المعرفي...</div>
+
+            <div class="output-flow" id="textResults" style="display: none;">
+                <div class="response-bubble">
+                    <div class="response-section-title">✨ الخلاصة التنفيذية (Executive Summary)</div>
+                    <div class="executive-box" id="executiveSummary"></div>
                 </div>
 
-                <div class="form-group">
-                    <label for="ideaInput">اطرح فكرتك، مشروعك، أو الشي المراد تفكيكه برمجياً ومعرفياً:</label>
-                    <textarea id="ideaInput" rows="5" placeholder="اكتب فكرتك هنا بالتفصيل..."></textarea>
+                <div class="response-bubble">
+                    <div class="response-section-title">📊 الهيكلة التشريحية للمفهوم</div>
+                    <div class="table-container">
+                        <table>
+                            <thead id="tableHeader"></thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
 
-                <button class="btn" id="deconstructBtn" onclick="runDeconstruct()">💡 معالجة وتفكيك الفكرة</button>
-                
-                <div class="loading-spinner" id="textLoader">جاري الاتصال بالسيرفر السحابي المختار وتفكيك مصفوفات البيانات...</div>
-
-                <div class="result-section" id="textResults">
-                    <h3 style="margin-bottom: 10px;">📋 نتائج التشريح المعرفي:</h3>
-                    <div class="summary-box" id="executiveSummary"></div>
-                    
-                    <table id="dynamicTable">
-                        <thead id="tableHeader"></thead>
-                        <tbody id="tableBody"></tbody>
-                    </table>
-
+                <div class="response-bubble">
+                    <div class="response-section-title">🛠️ خطة العمل والمراحل التنفيذية</div>
                     <div id="stepsContainer"></div>
                 </div>
             </div>
+        </section>
 
-            <div class="card">
-                <div class="card-title">📂 قراءة وتحليل المستندات والصور (Multimodal Reader)</div>
-                <div class="form-group">
-                    <label for="fileInput">اختر ملف مستند (PDF) أو صورة تحليلية (PNG/JPG):</label>
-                    <input type="file" id="fileInput" accept="image/*,application/pdf">
-                </div>
-                <div class="form-group">
-                    <label for="filePrompt">ماذا تريد من الذكاء الاصطناعي أن يستخرج أو يقرأ من هذا الملف؟</label>
-                    <input type="text" id="filePrompt" placeholder="مثال: لخص هذا المستند، أو حل هذه المسألة البرمجية في الصورة..." value="قم بقراءة هذا المستند أو الصورة بدقة واشرح محتوياته بالتفصيل باللغة العربية.">
-                </div>
-                <button class="btn btn-success" onclick="runDocumentAnalysis()">🔍 إرسال وتحليل الملف المرفوع</button>
-                
-                <div class="loading-spinner" id="fileLoader">جاري تشفير الملف كـ Base64 وتمريره لمعالجات الرؤية الحسابية بجوجل...</div>
-                
-                <div class="result-section" id="fileResults">
-                    <h3 style="margin-bottom: 10px;">📄 التقرير المستخرج من المستند:</h3>
-                    <div class="summary-box" id="fileAnalysisOutput" style="background: rgba(16, 185, 129, 0.1); border-right-color: var(--success-color);"></div>
-                </div>
+        <section id="image-panel" class="workspace-panel">
+            <div class="panel-header">
+                <h2>ابتكار وتوليد الصور الخيالية</h2>
+                <p>حول الأوصاف والسيناريوهات المكتوبة إلى صور رقمية وبصرية عالية الدقة وفورية عبر خوادم البكسل الذكية.</p>
             </div>
-        </main>
-
-        <aside>
-            <div class="card">
-                <div class="card-title">🎨 توليد الصور الخيالية الفوري</div>
-                <div class="form-group">
-                    <label for="imagePrompt">اكتب وصفاً دقيقاً للصورة التي تريد ابتكارها من العدم:</label>
-                    <textarea id="imagePrompt" rows="4" placeholder="مثال: رائد فضاء عربي يجلس على كوكب المريخ يبرمج على كمبيوتر محمول، أسلوب سايبربانك..."></textarea>
+            <div class="action-card">
+                <div style="margin-bottom: 15px;">
+                    <label style="margin-bottom: 8px; display: block; color: var(--text-muted);">اكتب سيناريو الصورة الفنية:</label>
+                    <textarea id="imagePrompt" rows="3" style="width:100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: white; padding: 12px;" placeholder="مثال: مدينة مستقبلية عائمة في الفضاء بأسلوب السايبربانك، إضاءة نيون زرقاء..."></textarea>
                 </div>
-                <button class="btn" style="background-color: #8b5cf6;" onclick="runImageGeneration()">✨ إطلاق محرك التوليد الفني</button>
-                
-                <div class="loading-spinner" id="imageLoader">جاري نسج مصفوفات البكسلات وتوليد الصورة الخيالية الحصرية...</div>
-
-                <div class="image-preview-container">
-                    <img id="generatedImage" src="" alt="الصورة الذكية المولدة">
-                </div>
+                <button class="custom-button" onclick="runImageGeneration()">🎨 توليد الصورة الفنية</button>
             </div>
-        </aside>
-    </div>
-</div>
-
-<script>
-    // 1️⃣ منطق تشغيل وتفكيك النصوص والأفكار (Gemini / Groq)
-    async function runDeconstruct() {
-        const idea = document.getElementById('ideaInput').value.trim();
-        const modelSource = document.getElementById('aiModelSelect').value;
-        
-        if (!idea) return alert('يرجى كتابة فكرة أولاً لتفكيكها.');
-
-        const loader = document.getElementById('textLoader');
-        const resultsSection = document.getElementById('textResults');
-        
-        loader.style.display = 'block';
-        resultsSection.style.display = 'none';
-
-        // تحديد المسار السحابي ديناميكياً بناءً على اختيار المستخدم
-        const endpoint = modelSource === 'groq' ? '/api/deconstruct-groq' : '/api/deconstruct';
-
-        try {
-            const response = await fetch(endpoint, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ idea: idea })
-            });
-
-            const data = await response.json();
             
-            // تعبئة البيانات الهيكلية والـ JSON المنظم داخل الواجهة
-            document.getElementById('executiveSummary').innerText = data.executive_summary || "لا يوجد ملخص متاح.";
+            <div class="spinner" id="imageLoader">🎨 جاري غزل البكسلات الفنية الرقمية...</div>
+
+            <div class="image-output-frame">
+                <img id="generatedImage" src="" alt="الصورة المولدة بالذكاء الاصطناعي">
+            </div>
+        </section>
+
+        <section id="document-panel" class="workspace-panel">
+            <div class="panel-header">
+                <h2>القارئ والمحلل متعدد القدرات (Multimodal)</h2>
+                <p>ارفع ملفات PDF، صور الأكواد، أو المخططات البيانية ليقوم الذكاء الاصطناعي بفحصها، قراءتها، وتفكيك محتواها بالكامل.</p>
+            </div>
+            <div class="action-card">
+                <div style="margin-bottom: 15px;">
+                    <label style="margin-bottom: 8px; display: block; color: var(--text-muted);">اختر الملف من جهازك (صورة أو مستند PDF):</label>
+                    <input type="file" id="fileInput" accept="image/*,application/pdf" style="margin-bottom: 15px;">
+                    
+                    <label style="margin-bottom: 8px; display: block; color: var(--text-muted);">توجيهات القراءة والتحليل:</label>
+                    <input type="text" id="filePrompt" style="width:100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; color: white; padding: 12px;" value="قم بقراءة هذا المستند أو الصورة بدقة واشرح محتوياته بالتفصيل باللغة العربية.">
+                </div>
+                <button class="custom-button" style="background-color: var(--success);" onclick="runDocumentAnalysis()">📂 تحليل وقراءة الملف</button>
+            </div>
+
+            <div class="spinner" id="fileLoader">📂 جاري تشريح السند وحساب الرؤية البصرية الفورية...</div>
+
+            <div class="response-bubble" id="fileResults" style="display: none;">
+                <div class="response-section-title">📄 التقرير التحليلي الصادر عن المستند</div>
+                <div class="executive-box" id="fileAnalysisOutput"></div>
+            </div>
+        </section>
+
+        <footer class="input-dock" id="bottomInputDock">
+            <div class="input-container-wrapper">
+                <select id="aiModelSelect" class="model-pill-select">
+                    <option value="gemini">Google Gemini 1.5</option>
+                    <option value="groq">Meta Llama 3.1</option>
+                </select>
+                <textarea id="ideaInput" rows="1" placeholder="اطرح فكرتك البرمجية أو المعرفية لتفكيكها هنا..." oninput="autoGrow(this)"></textarea>
+                <button class="send-btn" id="deconstructBtn" onclick="runDeconstruct()">✦</button>
+            </div>
+        </footer>
+
+    </main>
+
+    <script>
+        // التبديل السلس بين ألواح الخدمات (Sidebar Navigation)
+        function switchPanel(panelId, element) {
+            document.querySelectorAll('.workspace-panel').forEach(p => p.classList.remove('active-panel'));
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             
-            // بناء جدران الجدول الديناميكي
-            const tHead = document.getElementById('tableHeader');
-            const tBody = document.getElementById('tableBody');
-            tHead.innerHTML = '';
-            tBody.innerHTML = '';
+            document.getElementById(panelId).classList.add('active-panel');
+            element.classList.add('active');
 
-            if (data.table_headers && data.table_rows) {
-                let headerRow = '<tr>';
-                data.table_headers.forEach(h => headerRow += `<th>${h}</th>`);
-                headerRow += '</tr>';
-                tHead.innerHTML = headerRow;
-
-                data.table_rows.forEach(row => {
-                    let bodyRow = '<tr>';
-                    Object.keys(row).forEach(key => bodyRow += `<td>${row[key]}</td>`);
-                    bodyRow += '</tr>';
-                    tBody.innerHTML += bodyRow;
-                });
-            }
-
-            // بناء خطوات المسار التنفيذي
-            const stepsContainer = document.getElementById('stepsContainer');
-            stepsContainer.innerHTML = '';
-            if (data.steps) {
-                data.steps.forEach(step => {
-                    stepsContainer.innerHTML += `
-                        <div class="step-item">
-                            <div class="step-header">الخطوة ${step.id}: ${step.title}</div>
-                            <div>${step.description}</div>
-                        </div>
-                    `;
-                });
-            }
-
-            resultsSection.style.display = 'block';
-        } catch (error) {
-            alert('حدث خطأ فني أثناء المعالجة: ' + error.message);
-        } finally {
-            loader.style.display = 'none';
-        }
-    }
-
-    // 2️⃣ منطق توليد الصور الفوري
-    async function runImageGeneration() {
-        const prompt = document.getElementById('imagePrompt').value.trim();
-        if (!prompt) return alert('يرجى كتابة وصف للصورة أولاً.');
-
-        const loader = document.getElementById('imageLoader');
-        const imgElement = document.getElementById('generatedImage');
-
-        loader.style.display = 'block';
-        imgElement.style.display = 'none';
-
-        try {
-            const response = await fetch('/api/generate-image', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ prompt: prompt })
-            });
-
-            const data = await response.json();
-            if (data.success && data.url) {
-                imgElement.src = data.url;
-                imgElement.style.display = 'block';
+            // إخفاء أو إظهار شريط الكتابة السفلي بناءً على التبويب المختار (يظهر فقط في التفكيك النصي)
+            const dock = document.getElementById('bottomInputDock');
+            if (panelId === 'deconstruct-panel') {
+                dock.style.display = 'block';
             } else {
-                alert('فشل السيرفر في توليد الصورة المحددة.');
+                dock.style.display = 'none';
             }
-        } catch (error) {
-            alert('خطأ في الاتصال بمحرك الصور: ' + error.message);
-        } finally {
-            loader.style.display = 'none';
-        }
-    }
-
-    // 3️⃣ منطق معالجة وقراءة المستندات والصور المتعددة القدرات
-    async function runDocumentAnalysis() {
-        const fileInput = document.getElementById('fileInput');
-        const prompt = document.getElementById('filePrompt').value.trim();
-        const loader = document.getElementById('fileLoader');
-        const resultsSection = document.getElementById('fileResults');
-
-        if (!fileInput.files || fileInput.files.length === 0) {
-            return alert('يرجى اختيار ملف مستند أو صورة من جهازك أولاً.');
         }
 
-        const file = fileInput.files[0];
-        loader.style.display = 'block';
-        resultsSection.style.display = 'none';
+        // زيادة طول مربع الكتابة تلقائياً كـ شات جي بي تي
+        function autoGrow(element) {
+            element.style.height = "5px";
+            element.style.height = (element.scrollHeight) + "px";
+        }
 
-        const reader = new FileReader();
-        reader.onloadend = async () => {
-            // استخلاص شفرة الملف الصافية وتجريد الترويسة الافتراضية
-            const base64Data = reader.result.split(',')[1];
-            const mimeType = file.type;
+        // 🧠 1. استدعاء تفكيك النصوص والأفكار
+        async function runDeconstruct() {
+            const idea = document.getElementById('ideaInput').value.trim();
+            const modelSource = document.getElementById('aiModelSelect').value;
+            if (!idea) return alert('يرجى كتابة فكرة برمجية أولاً لتفكيكها.');
+
+            const loader = document.getElementById('textLoader');
+            const resultsSection = document.getElementById('textResults');
+            
+            loader.style.display = 'block';
+            resultsSection.style.display = 'none';
+
+            const endpoint = modelSource === 'groq' ? '/api/deconstruct-groq' : '/api/deconstruct';
 
             try {
-                const response = await fetch('/api/analyze-document', {
+                const response = await fetch(endpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        prompt: prompt,
-                        mimeType: mimeType,
-                        base64Data: base64Data
-                    })
+                    body: JSON.stringify({ idea: idea })
                 });
 
                 const data = await response.json();
-                if (data.success) {
-                    document.getElementById('fileAnalysisOutput').innerText = data.analysis;
-                    resultsSection.style.display = 'block';
-                } else {
-                    alert('تعذر على محرك الرؤية تحليل هذا الملف الحجمي.');
+                
+                document.getElementById('executiveSummary').innerText = data.executive_summary || "لا يوجد ملخص متاح.";
+                
+                const tHead = document.getElementById('tableHeader');
+                const tBody = document.getElementById('tableBody');
+                tHead.innerHTML = '';
+                tBody.innerHTML = '';
+
+                if (data.table_headers && data.table_rows) {
+                    let headerRow = '<tr>';
+                    data.table_headers.forEach(h => headerRow += `<th>${h}</th>`);
+                    headerRow += '</tr>';
+                    tHead.innerHTML = headerRow;
+
+                    data.table_rows.forEach(row => {
+                        let bodyRow = '<tr>';
+                        Object.keys(row).forEach(key => bodyRow += `<td>${row[key]}</td>`);
+                        bodyRow += '</tr>';
+                        tBody.innerHTML += bodyRow;
+                    });
                 }
+
+                const stepsContainer = document.getElementById('stepsContainer');
+                stepsContainer.innerHTML = '';
+                if (data.steps) {
+                    data.steps.forEach(step => {
+                        stepsContainer.innerHTML += `
+                            <div class="flow-step">
+                                <div class="flow-step-num">الخطوة التتابعية ${step.id}</div>
+                                <div class="flow-step-title">${step.title}</div>
+                                <div style="color: var(--text-main); font-size: 0.95rem;">${step.description}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                resultsSection.style.display = 'block';
             } catch (error) {
-                alert('خطأ أثناء رفع وتحليل المستند السحابي: ' + error.message);
+                alert('حدث خلل برمي سحابي: ' + error.message);
             } finally {
                 loader.style.display = 'none';
             }
-        };
+        }
 
-        reader.readAsDataURL(file);
-    }
-</script>
+        // 🎨 2. استدعاء محرك توليد الصور
+        async function runImageGeneration() {
+            const prompt = document.getElementById('imagePrompt').value.trim();
+            if (!prompt) return alert('اكتب وصفاً كاملاً للمشهد الصوري المراد ابتكاره.');
 
+            const loader = document.getElementById('imageLoader');
+            const imgElement = document.getElementById('generatedImage');
+
+            loader.style.display = 'block';
+            imgElement.style.display = 'none';
+
+            try {
+                const response = await fetch('/api/generate-image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                const data = await response.json();
+                if (data.success && data.url) {
+                    imgElement.src = data.url;
+                    imgElement.style.display = 'block';
+                } else {
+                    alert('فشلت محركات البكسل التوليدية في محاكاة الصورة.');
+                }
+            } catch (error) {
+                alert('خطأ اتصالي بالمخدم الفني: ' + error.message);
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        // 📂 3. تحليل وقراءة المستندات والوثائق المرفوعة
+        async function runDocumentAnalysis() {
+            const fileInput = document.getElementById('fileInput');
+            const prompt = document.getElementById('filePrompt').value.trim();
+            const loader = document.getElementById('fileLoader');
+            const resultsSection = document.getElementById('fileResults');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                return alert('يرجى اختيار وتعيين ملف أو صورة من جهازك أولاً للقراءة.');
+            }
+
+            const file = fileInput.files[0];
+            loader.style.display = 'block';
+            resultsSection.style.display = 'none';
+
+            const reader = new FileReader();
+            reader.onloadend = async () => {
+                const base64Data = reader.result.split(',')[1];
+                const mimeType = file.type;
+
+                try {
+                    const response = await fetch('/api/analyze-document', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            prompt: prompt,
+                            mimeType: mimeType,
+                            base64Data: base64Data
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.success) {
+                        document.getElementById('fileAnalysisOutput').innerText = data.analysis;
+                        resultsSection.style.display = 'block';
+                    } else {
+                        alert('تعذر استخراج المحتويات النصية من الوثيقة الحالية.');
+                    }
+                } catch (error) {
+                    alert('خطأ أثناء فحص البيانات الثنائية: ' + error.message);
+                } finally {
+                    loader.style.display = 'none';
+                }
+            };
+
+            reader.readAsDataURL(file);
+        }
+    </script>
 </body>
 </html>
