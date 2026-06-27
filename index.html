@@ -69,29 +69,6 @@
             color: var(--text-main);
         }
 
-        .sidebar-menu {
-            list-style: none;
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px;
-            border-radius: 50px;
-            cursor: pointer;
-            color: var(--text-main);
-            font-size: 0.9rem;
-        }
-
-        .menu-item:hover {
-            background-color: var(--bg-hover);
-        }
-
         /* ------------------ المساحة الرئيسية ------------------ */
         .main-chat {
             flex: 1;
@@ -137,7 +114,7 @@
             margin: 0 auto;
         }
 
-        /* واجهة الترحيب الافتراضية */
+        /* واجهة الترحيب */
         .welcome-view {
             margin-top: 8vh;
         }
@@ -183,11 +160,11 @@
             background-color: var(--bg-hover);
         }
 
-        /* ------------------ شريط تدفق الرسائل الحقيقي ------------------ */
+        /* ------------------ تصميم الرسائل ومخرجات التفكيك المستلمة ------------------ */
         .conversation-flow {
             display: none;
             flex-direction: column;
-            gap: 30px;
+            gap: 35px;
             padding-bottom: 40px;
         }
 
@@ -216,19 +193,74 @@
             font-size: 1.05rem;
             line-height: 1.7;
             color: var(--text-main);
-            white-space: pre-wrap;
             flex: 1;
         }
 
-        .message-content img {
-            max-width: 100%;
-            max-height: 350px;
-            border-radius: 12px;
-            margin-top: 12px;
+        /* تجميل الجداول المستلمة ديناميكياً من السيرفر الخلفي */
+        .deconstructed-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 0.95rem;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .deconstructed-table th {
+            background-color: #202124;
+            color: #8ab4f8;
+            padding: 12px;
+            text-align: right;
             border: 1px solid var(--border);
         }
 
-        /* أنيميشن التحميل الخاص بـ Gemini */
+        .deconstructed-table td {
+            padding: 12px;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            background-color: #1e1e20;
+        }
+
+        /* تصميم الخطوات التنفيذية */
+        .steps-wrapper {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .step-card-item {
+            background-color: #1e1e20;
+            border-right: 4px solid #9b51e0;
+            padding: 12px 18px;
+            border-radius: 4px 12px 12px 4px;
+        }
+
+        /* الأزرار التفاعلية المستلمة (Chips) */
+        .interactive-chips-wrapper {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .chip-question-btn {
+            background-color: #1e1e20;
+            border: 1px solid var(--border);
+            color: #8ab4f8;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .chip-question-btn:hover {
+            background-color: var(--bg-hover);
+            border-color: #8ab4f8;
+        }
+
+        /* أنيميشن التحميل اللامع لـ Gemini */
         .shimmer-line {
             display: none;
             width: 100%;
@@ -243,36 +275,6 @@
         @keyframes shimmerAnimation {
             0% { background-position: 0% 50%; }
             100% { background-position: 100% 50%; }
-        }
-
-        /* منطقة معاينة الصورة المرفقة قبل الإرسال */
-        .preview-box {
-            display: none;
-            position: relative;
-            margin-bottom: 10px;
-            width: fit-content;
-        }
-
-        .preview-box img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
-
-        .preview-box .remove-btn {
-            position: absolute;
-            top: -5px;
-            left: -5px;
-            background: #ff4a4a;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            font-size: 10px;
         }
 
         /* ------------------ صندوق الإدخال السفلي ------------------ */
@@ -310,12 +312,6 @@
             max-height: 150px;
         }
 
-        .input-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
         .action-icon-btn {
             background: none;
             border: none;
@@ -330,11 +326,7 @@
             justify-content: center;
         }
 
-        .action-icon-btn:hover {
-            background-color: var(--bg-hover);
-        }
-
-        .hidden-file-input { display: none; }
+        .action-icon-btn:hover { background-color: var(--bg-hover); }
         .disclaimer { text-align: center; font-size: 0.75rem; color: #727575; margin-top: 10px; }
     </style>
 </head>
@@ -348,12 +340,7 @@
             </button>
         </div>
         <div>
-            <ul class="sidebar-menu">
-                <li class="menu-item" onclick="alert('عبدالله بن وهلان - Tafkek OS')">
-                    <span>👤</span>
-                    <span class="hide-text">الحساب</span>
-                </li>
-            </ul>
+            <div style="padding: 10px; font-size: 0.85rem; color: var(--text-sub);" class="hide-text">Tafkek OS v2.0</div>
         </div>
     </aside>
 
@@ -365,52 +352,41 @@
         </div>
 
         <div class="chat-container">
+            <!-- واجهة الترحيب والبطاقات الافتراضية -->
             <div class="welcome-view" id="welcomeView">
                 <h1 class="greeting"><span class="gradient-text">مرحباً بك،</span></h1>
                 <h2 class="sub-greeting">كيف يمكنني مساعدتك اليوم؟</h2>
                 
                 <div class="suggestions-grid">
-                    <div class="suggestion-card" onclick="selectSuggestion('قم بإنشاء متجر لبيع الهواتف الذكية')">
-                        <span>قم بإنشاء متجر لبيع الهواتف الذكية مع الهيكلية</span>
+                    <div class="suggestion-card" onclick="selectSuggestion('قم بإنشاء متجر لبيع الهواتف')">
+                        <span>قم بإنشاء متجر لبيع الهواتف الذكية وتفكيك متطلباته</span>
                         <div class="card-icon">💻</div>
                     </div>
-                    <div class="suggestion-card" onclick="selectSuggestion('توليد صورة واقعية لكوكب المريخ مستقبلي وعالي الدقة')">
-                        <span>اطلب توليد صور ذكية فائقة الدقة بأسلوب فني</span>
-                        <div class="card-icon">🎨</div>
+                    <div class="suggestion-card" onclick="selectSuggestion('حل مصفوفة تجارية لمشروع ملابس وطباعة عند الطلب')">
+                        <span>تحليل مصفوفة تجارية وهيكلة الأفكار الريادية</span>
+                        <div class="card-icon">📈</div>
                     </div>
                 </div>
             </div>
 
+            <!-- حاوية الدردشة الفعلية -->
             <div class="conversation-flow" id="conversationFlow"></div>
             <div class="shimmer-line" id="shimmerLine"></div>
         </div>
 
+        <!-- منطقة الإدخال -->
         <div class="input-area-wrapper">
             <div class="input-box-container">
-                
-                <div class="preview-box" id="previewBox">
-                    <button class="remove-btn" onclick="clearImage()">×</button>
-                    <img id="previewImg" src="">
-                </div>
-
                 <div class="input-row">
-                    <input type="file" id="fileUpload" class="hidden-file-input" accept="image/*" onchange="previewImage(this)">
-                    <button class="action-icon-btn" onclick="document.getElementById('fileUpload').click()" title="إرفاق صورة">📎</button>
-                    
-                    <textarea id="chatInput" rows="1" placeholder="اسأل تفكيك أو اطلب توليد صورة..." oninput="autoGrow(this)" onkeydown="handleKeyDown(event)"></textarea>
-                    
-                    <div class="input-actions">
-                        <button class="action-icon-btn" style="color: #8ab4f8;" onclick="sendMessage()" title="إرسال الطلب">✦</button>
-                    </div>
+                    <textarea id="chatInput" rows="1" placeholder="أدخل فكرتك هنا لتفكيكها بالكامل..." oninput="autoGrow(this)" onkeydown="handleKeyDown(event)"></textarea>
+                    <button class="action-icon-btn" style="color: #8ab4f8;" onclick="sendMessage()" title="إرسال الفكرة">✦</button>
                 </div>
             </div>
-            <div class="disclaimer">مربوط حياً مع خوادم معالجة البيانات السحابية لـ Tafkek OS.</div>
+            <div class="disclaimer">نظام التفكيك متصل مباشرة بـ Gemini API. يرجى التحقق من الخطوات الهامة.</div>
         </div>
     </main>
 
     <script>
-        let base64Image = null;
-
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
         }
@@ -432,109 +408,115 @@
             sendMessage();
         }
 
-        // تحويل الصورة المرفقة ومعاينتها
-        function previewImage(input) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    base64Image = e.target.result;
-                    document.getElementById('previewImg').src = base64Image;
-                    document.getElementById('previewBox').style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function clearImage() {
-            base64Image = null;
-            document.getElementById('fileUpload').value = '';
-            document.getElementById('previewBox').style.display = 'none';
-        }
-
-        // 🚀 محرك الإرسال الحقيقي والربط الفعلي مع Vercel
+        // 🚀 محرك الاتصال المباشر المتوافق 100% مع مخرجات السيرفر الخلفي المخصص لك
         async function sendMessage() {
             const inputEl = document.getElementById('chatInput');
             const query = inputEl.value.trim();
-            
-            if (!query && !base64Image) return;
+            if (!query) return;
 
-            // إخفاء الترحيب وعرض صندوق الدردشة
+            // عرض رسالة المستخدم
             document.getElementById('welcomeView').style.display = 'none';
             const flow = document.getElementById('conversationFlow');
             flow.style.display = 'flex';
 
-            // إضافة رسالة المستخدم مع الصورة إن وجدت
-            let userContent = `<div>${query}</div>`;
-            if (base64Image) {
-                userContent += `<img src="${base64Image}" style="max-width:150px; border-radius:8px; margin-top:5px;">`;
-            }
-            
             flow.innerHTML += `
                 <div class="chat-row user-row">
                     <div class="avatar user-avatar">ع</div>
-                    <div class="message-content">${userContent}</div>
+                    <div class="message-content">${query}</div>
                 </div>
             `;
 
-            // حفظ الصورة الحالية وإعادة تهيئة الحقول لإدخال جديد
-            const activeImage = base64Image;
             inputEl.value = '';
             inputEl.style.height = 'auto';
-            clearImage();
 
-            // تشغيل شريط التحميل المتلألئ
+            // تشغيل أنيميشن التحميل اللامع لـ Gemini
             document.getElementById('shimmerLine').style.display = 'block';
             const container = document.querySelector('.chat-container');
             container.scrollTop = container.scrollHeight;
 
             try {
-                // 🔗 الاتصال المباشر بـ API الحقيقي الخاص بك على Vercel
+                // 🔗 الاتصال وإرسال حقل الـ "idea" الذي يبحث عنه سيرفرك الخلفي!
                 const response = await fetch('/api/deconstruct', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        prompt: query,        // تأكد من مطابقة المسمى (prompt أو message) حسب ما يتوقعه السيرفر لديك
-                        image: activeImage    // إرسال الصورة للسيرفر إذا كان يدعم نظام الرؤية (Vision)
-                    })
+                    body: JSON.stringify({ idea: query }) 
                 });
 
                 if (!response.ok) {
-                    throw new Error(`السيرفر استجاب بخطأ: ${response.status}`);
+                    throw new Error(`استجاب السيرفر بخطأ كوده: ${response.status}`);
                 }
 
                 const data = await response.json();
-                
-                // استخراج النصوص أو الصور بناءً على هيكلة الـ JSON الراجع من السيرفر لديك
-                // (قم بتعديل الحقول data.text أو data.imageUrl حسب تصميم السيرفر الخلفي)
-                const replyText = data.text || data.reply || data.content || "تمت المعالجة بنجاح.";
-                const replyImage = data.imageUrl || data.image || null;
-
-                // إخفاء الشريان اللامع وإضافة رد الذكاء الاصطناعي الفعلي
                 document.getElementById('shimmerLine').style.display = 'none';
-                
-                let aiContent = `<div>${replyText}</div>`;
-                if (replyImage) {
-                    aiContent += `<img src="${replyImage}" alt="Generated Image">`;
+
+                // 🏗️ بناء واجهة الرد بأسلوب غني ومقسم بناءً على الـ JSON المستلم من السيرفر
+                let aiHTML = `<div class="message-content">`;
+
+                // 1. عرض الملخص التنفيذي النصي
+                if (data.executive_summary) {
+                    aiHTML += `<div style="white-space: pre-wrap; margin-bottom: 15px;">${data.executive_summary}</div>`;
                 }
 
+                // 2. بناء وعرض الجدول برمجياً إذا وجد في الرد
+                if (data.table_headers && data.table_rows && data.table_rows.length > 0) {
+                    aiHTML += `<table class="deconstructed-table"><thead><tr>`;
+                    data.table_headers.forEach(header => {
+                        aiHTML += `<th>${header}</th>`;
+                    });
+                    aiHTML += `</tr></thead><tbody>`;
+                    
+                    data.table_rows.forEach(row => {
+                        aiHTML += `<tr>`;
+                        // استخراج القيم بالترتيب من col1 حتى col4
+                        for (let i = 1; i <= data.table_headers.length; i++) {
+                            aiHTML += `<td>${row['col' + i] || ''}</td>`;
+                        }
+                        aiHTML += `</tr>`;
+                    });
+                    aiHTML += `</tbody></table>`;
+                }
+
+                // 3. بناء وعرض الخطوات التنفيذية المخصصة
+                if (data.steps && data.steps.length > 0) {
+                    aiHTML += `<div class="steps-wrapper">`;
+                    data.steps.forEach(step => {
+                        aiHTML += `
+                            <div class="step-card-item">
+                                <span style="color:#8ab4f8; font-weight:bold;">الخطوة ${step.id}: ${step.title}</span>
+                                <p style="font-size:0.9rem; color:var(--text-sub); margin-top:4px;">${step.description}</p>
+                            </div>
+                        `;
+                    });
+                    aiHTML += `</div>`;
+                }
+
+                // 4. بناء أزرار الأسئلة التفاعلية الجاهزة للضغط الفوري (مثل الأسلوب المتقدم)
+                if (data.interactive_questions && data.interactive_questions.length > 0) {
+                    aiHTML += `<div class="interactive-chips-wrapper">`;
+                    data.interactive_questions.forEach(question => {
+                        aiHTML += `<button class="chip-question-btn" onclick="selectSuggestion('${question}')">${question}</button>`;
+                    });
+                    aiHTML += `</div>`;
+                }
+
+                aiHTML += `</div>`;
+
+                // حقن مخرجات السيرفر الكاملة في مجرى الدردشة
                 flow.innerHTML += `
                     <div class="chat-row ai-row">
                         <div class="avatar ai-avatar">✦</div>
-                        <div class="message-content">${aiContent}</div>
+                        ${aiHTML}
                     </div>
                 `;
 
             } catch (error) {
-                // في حال وجود خطأ حقيقي، سيتم قذفه هنا وسيظهر فوراً في تفاعلات السيرفر وواجهتك!
                 document.getElementById('shimmerLine').style.display = 'none';
                 flow.innerHTML += `
                     <div class="chat-row ai-row">
                         <div class="avatar ai-avatar" style="background:#ff4a4a;">❌</div>
                         <div class="message-content" style="color:#ff4a4a;">
-                            فشل الاتصال بالخادم الخلفي لموقعك.<br>
-                            <strong>السبب:</strong> ${error.message}<br>
-                            تأكد من رفع الكود الخلفي بشكل سليم ومطابقة مسميات المتغيرات المرسلة.
+                            <strong>فشل معالجة التفكيك:</strong><br>
+                            السبب: ${error.message}
                         </div>
                     </div>
                 `;
@@ -547,7 +529,6 @@
             document.getElementById('conversationFlow').innerHTML = '';
             document.getElementById('conversationFlow').style.display = 'none';
             document.getElementById('welcomeView').style.display = 'block';
-            clearImage();
         }
     </script>
 </body>
