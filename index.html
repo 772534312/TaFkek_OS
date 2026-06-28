@@ -2,77 +2,86 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Tafkek OS | Cloud Enterprise</title>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
-        import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js";
-
-        // إعداداتك التي أرسلتها
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
-            authDomain: "tafkekos.firebaseapp.com",
-            projectId: "tafkekos",
-            storageBucket: "tafkekos.firebasestorage.app",
-            messagingSenderId: "402724924724",
-            appId: "1:402724924724:web:8cf9c04583ff3998c48961",
-            measurementId: "G-WT4BBKEKVK"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth();
-        const db = getFirestore();
-        const storage = getStorage();
-
-        // 1. تسجيل الدخول
-        window.login = () => signInWithPopup(auth, new GoogleAuthProvider());
-        
-        // 2. حفظ فكرة/محادثة
-        window.saveThought = async () => {
-            const txt = document.getElementById('thoughtInput').value;
-            if(!txt) return;
-            await addDoc(collection(db, "thoughts"), { text: txt, user: auth.currentUser.email, date: new Date() });
-            document.getElementById('thoughtInput').value = '';
-        };
-
-        // 3. رفع ملف
-        window.upload = async (file) => {
-            const storageRef = ref(storage, 'uploads/' + file.name);
-            await uploadBytes(storageRef, file);
-            alert("تم رفع الملف بنجاح!");
-        };
-
-        // 4. عرض البيانات لحظياً
-        onSnapshot(query(collection(db, "thoughts"), orderBy("date", "desc")), (snapshot) => {
-            const list = document.getElementById('historyList');
-            list.innerHTML = snapshot.docs.map(doc => `<li>${doc.data().text}</li>`).join('');
-        });
-    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tafkek OS | Cloud Edition</title>
     <style>
-        body { background: #0e0e0e; color: #fff; font-family: sans-serif; padding: 20px; }
-        .card { background: #1c1c1c; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; }
-        input, textarea, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; }
-        button { background: #5e81f4; color: white; border: none; cursor: pointer; }
+        body { font-family: sans-serif; background: #121212; color: #eee; padding: 20px; }
+        .container { max-width: 600px; margin: auto; background: #1e1e1e; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        h1 { text-align: center; color: #5e81f4; }
+        button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; cursor: pointer; background: #5e81f4; color: white; font-weight: bold; }
+        textarea { width: 100%; padding: 10px; box-sizing: border-box; background: #333; color: white; border: 1px solid #444; border-radius: 5px; }
+        #files { margin-top: 10px; }
     </style>
 </head>
 <body>
-    <div style="max-width: 600px; margin: auto;">
-        <h1>Tafkek OS | Enterprise</h1>
-        <button onclick="login()">دخول عبر جوجل</button>
+
+<div class="container">
+    <h1>Tafkek OS</h1>
+    <button id="loginBtn">تسجيل الدخول عبر Google</button>
+    <p id="userStatus" style="text-align: center;"></p>
+
+    <div id="appInterface" style="display: none;">
+        <h3>حفظ الملاحظات</h3>
+        <textarea id="noteInput" rows="4" placeholder="اكتب فكرتك هنا..."></textarea>
+        <button onclick="saveNote()">حفظ في السحابة</button>
         
-        <div class="card">
-            <h3>أرشيف الأفكار</h3>
-            <textarea id="thoughtInput" placeholder="اكتب فكرتك لحفظها في السحابة..."></textarea>
-            <button onclick="saveThought()">حفظ في السحابة</button>
-        </div>
-
-        <div class="card">
-            <h3>رفع ملف/صورة</h3>
-            <input type="file" onchange="upload(this.files[0])">
-        </div>
-
-        <ul id="historyList"></ul>
+        <h3>رفع ملف / صورة</h3>
+        <input type="file" id="fileInput">
+        <button onclick="uploadFile()">رفع الملف</button>
     </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+    import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js";
+
+    // إعدادات Firebase الخاصة بك
+    const firebaseConfig = {
+        apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
+        authDomain: "tafkekos.firebaseapp.com",
+        projectId: "tafkekos",
+        storageBucket: "tafkekos.firebasestorage.app",
+        messagingSenderId: "402724924724",
+        appId: "1:402724924724:web:8cf9c04583ff3998c48961",
+        measurementId: "G-WT4BBKEKVK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth();
+    const db = getFirestore();
+    const storage = getStorage();
+
+    // تسجيل الدخول
+    document.getElementById('loginBtn').onclick = () => {
+        signInWithPopup(auth, new GoogleAuthProvider());
+    };
+
+    // مراقبة حالة الدخول
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            document.getElementById('userStatus').innerText = "مرحباً، " + user.displayName;
+            document.getElementById('appInterface').style.display = "block";
+            document.getElementById('loginBtn').style.display = "none";
+        }
+    });
+
+    // حفظ الملاحظة
+    window.saveNote = async () => {
+        const text = document.getElementById('noteInput').value;
+        await addDoc(collection(db, "notes"), { text, date: new Date() });
+        alert("تم حفظ الملاحظة!");
+    };
+
+    // رفع الملف
+    window.uploadFile = async () => {
+        const file = document.getElementById('fileInput').files[0];
+        const storageRef = ref(storage, 'uploads/' + file.name);
+        await uploadBytes(storageRef, file);
+        alert("تم رفع الملف بنجاح!");
+    };
+</script>
+
 </body>
 </html>
