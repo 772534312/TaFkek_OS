@@ -2,93 +2,82 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Tafkek OS | All-in-One</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tafkek OS | Ultimate Build</title>
     <style>
-        :root { --bg-main: #131314; --bg-panel: #202124; --text: #e3e3e3; --accent: #8ab4f8; }
-        body { background: var(--bg-main); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; transition: 0.3s; }
+        :root { --bg: #131314; --panel: #1e1e20; --text: #e3e3e3; --accent: #8ab4f8; --border: #444746; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         
-        /* الرادار */
-        #radarAlert { position: fixed; top: 20px; right: 20px; background: #3c4043; padding: 15px; border-radius: 8px; border-right: 4px solid var(--accent); display: none; }
+        #workspace { width: 100%; max-width: 800px; }
+        textarea { width: 100%; height: 200px; background: var(--panel); color: white; border: 1px solid var(--border); padding: 15px; border-radius: 8px; resize: vertical; }
+        button { background: var(--accent); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 10px; }
         
-        /* لوحة التحكم المحمية */
-        #adminPanel { display: none; position: fixed; top: 50px; left: 50px; background: var(--bg-panel); padding: 20px; border-radius: 12px; border: 1px solid #444; z-index: 1000; width: 300px; }
-        
-        /* زر خفي للوصول */
-        .ghost-btn { position: fixed; bottom: 0; left: 0; width: 30px; height: 30px; cursor: pointer; opacity: 0.05; }
+        #radarAlert { position: fixed; top: 20px; right: 20px; background: #d93025; padding: 15px; border-radius: 8px; display: none; }
+        #adminModal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel); padding: 30px; border-radius: 12px; border: 1px solid var(--accent); z-index: 100; }
+        .ghost-zone { position: fixed; bottom: 0; left: 0; width: 40px; height: 40px; cursor: pointer; opacity: 0; }
     </style>
 </head>
 <body>
 
-    <h1>Tafkek OS</h1>
     <div id="workspace">
-        <textarea id="userInput" placeholder="اكتب فكرتك هنا لتفكيكها..." style="width:100%; height:100px;"></textarea>
-        <button onclick="processInput()">تحليل الفكرة</button>
+        <h1>Tafkek OS</h1>
+        <textarea id="mainInput" placeholder="اكتب فكرتك هنا..."></textarea>
+        <button onclick="TafkekCore.process()">تحليل وتفكيك</button>
+        <button onclick="TafkekCore.exportData()" style="background:transparent; border:1px solid var(--accent); color:var(--accent);">تصدير بيانات</button>
     </div>
 
-    <div id="adminPanel">
-        <h3>⚙️ مركز التحكم</h3>
-        <label>وضع المحاكاة:</label>
-        <select id="simMode">
-            <option value="critical">🔍 النقد التحليلي</option>
-            <option value="financial">💰 مالي</option>
-            <option value="security">🛡️ أمن</option>
-        </select>
-        <br><br>
-        <button onclick="closeAdmin()">إغلاق وحفظ</button>
+    <div id="adminModal">
+        <h3>مركز التحكم (Admin)</h3>
+        <select id="simMode"><option value="critical">نقد تحليلي</option><option value="financial">جدوى مالية</option></select>
+        <button onclick="TafkekCore.closeAdmin()">إغلاق وحفظ</button>
     </div>
-
-    <div class="ghost-btn" onclick="openAdmin()"></div>
 
     <div id="radarAlert"></div>
+    <div class="ghost-zone" onclick="TafkekCore.openAdmin()"></div>
 
     <script>
-        // 1. نظام الحماية للوحة التحكم
-        function openAdmin() {
-            const pass = prompt("أدخل رمز الدخول:");
-            if(pass === "1234") { document.getElementById('adminPanel').style.display = 'block'; }
-            else { alert("خطأ!"); }
-        }
-        function closeAdmin() { document.getElementById('adminPanel').style.display = 'none'; }
+        const TafkekCore = {
+            storageKey: 'tafkek_data',
 
-        // 2. المحاكي (Simulation)
-        function getSimulationContext() {
-            const mode = document.getElementById('simMode').value;
-            const contexts = {
-                critical: "حلل الفكرة بصرامة وابحث عن الثغرات.",
-                financial: "حلل الجدوى المالية والتكاليف.",
-                security: "حلل المخاطر الأمنية."
-            };
-            return contexts[mode];
-        }
+            process: function() {
+                const text = document.getElementById('mainInput').value.trim();
+                if (!text) return;
 
-        // 3. رادار الأفكار (LocalStorage Logic)
-        function processInput() {
-            const text = document.getElementById('userInput').value;
-            const history = JSON.parse(localStorage.getItem('my_projects') || '[]');
-            
-            // تحقق من التشابه
-            if(history.some(item => item.includes(text.substring(0,5)))) {
-                const alert = document.getElementById('radarAlert');
-                alert.innerText = "⚠️ تنبيه: هذه الفكرة مرتبطة بمشروع سابق!";
-                alert.style.display = 'block';
-                setTimeout(() => alert.style.display = 'none', 3000);
+                const history = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+                
+                // تحسين الرادار: مقارنة دقيقة وتجاهل التطابق التام مع المدخل الحالي
+                const isDuplicate = history.some(item => 
+                    item.length > 10 && text.length > 10 && item.includes(text.substring(0, 10))
+                );
+
+                if (isDuplicate) {
+                    const alert = document.getElementById('radarAlert');
+                    alert.innerText = "⚠️ تنبيه: تم العثور على تشابه مع مشروع سابق.";
+                    alert.style.display = 'block';
+                    setTimeout(() => alert.style.display = 'none', 3000);
+                }
+
+                history.push(text);
+                localStorage.setItem(this.storageKey, JSON.stringify(history));
+                document.getElementById('mainInput').value = '';
+                alert("تم التفكيك والحفظ بنجاح!");
+            },
+
+            openAdmin: function() {
+                const pin = prompt("أدخل رمز الدخول:");
+                if(pin === "1234") document.getElementById('adminModal').style.display = 'block';
+            },
+
+            closeAdmin: function() { document.getElementById('adminModal').style.display = 'none'; },
+
+            exportData: function() {
+                const data = localStorage.getItem(this.storageKey);
+                const blob = new Blob([data], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'data.json'; a.click();
             }
-
-            // حفظ
-            history.push(text);
-            localStorage.setItem('my_projects', JSON.stringify(history));
-            
-            console.log("تم التحليل بوضع: " + getSimulationContext());
-        }
-
-        // 4. التصدير (Matrix Export)
-        function exportToJSON() {
-            const data = localStorage.getItem('my_projects');
-            const blob = new Blob([data], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url; a.download = 'my_data.json'; a.click();
-        }
+        };
     </script>
 </body>
 </html>
