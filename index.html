@@ -2,71 +2,93 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS | Cloud Edition</title>
-    <script type="module">
-        // استيراد Firebase (النسخة 9+)
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
-
-        // --- ⚠️ قم بوضع بيانات Firebase الخاصة بك هنا ---
-        const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_ID",
-            appId: "YOUR_APP_ID"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-
-        // --- دوال قاعدة البيانات ---
-        window.saveToCloud = async (data) => {
-            await addDoc(collection(db, "projects"), { title: data.title, content: data.content, date: new Date() });
-            alert("تم الحفظ في السحابة!");
-        };
-
-        window.loadFromCloud = async () => {
-            const querySnapshot = await getDocs(collection(db, "projects"));
-            querySnapshot.forEach((doc) => { console.log(doc.data()); });
-        };
-    </script>
+    <title>Tafkek OS | All-in-One</title>
     <style>
-        :root { --bg: #131314; --text: #e3e3e3; --accent: #8ab4f8; }
-        body { background: var(--bg); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; }
-        .admin-panel { display: none; position: fixed; top: 20px; right: 20px; background: #202124; padding: 20px; border: 1px solid #444; }
-        .hidden-trigger { position: fixed; bottom: 0; left: 0; width: 20px; height: 20px; cursor: pointer; opacity: 0.1; }
+        :root { --bg-main: #131314; --bg-panel: #202124; --text: #e3e3e3; --accent: #8ab4f8; }
+        body { background: var(--bg-main); color: var(--text); font-family: sans-serif; margin: 0; padding: 20px; transition: 0.3s; }
+        
+        /* الرادار */
+        #radarAlert { position: fixed; top: 20px; right: 20px; background: #3c4043; padding: 15px; border-radius: 8px; border-right: 4px solid var(--accent); display: none; }
+        
+        /* لوحة التحكم المحمية */
+        #adminPanel { display: none; position: fixed; top: 50px; left: 50px; background: var(--bg-panel); padding: 20px; border-radius: 12px; border: 1px solid #444; z-index: 1000; width: 300px; }
+        
+        /* زر خفي للوصول */
+        .ghost-btn { position: fixed; bottom: 0; left: 0; width: 30px; height: 30px; cursor: pointer; opacity: 0.05; }
     </style>
 </head>
 <body>
 
-    <h1>Tafkek OS v7.0</h1>
+    <h1>Tafkek OS</h1>
     <div id="workspace">
-        <input type="text" id="projectTitle" placeholder="اسم المشروع">
-        <button onclick="saveProject()">حفظ في السحابة</button>
+        <textarea id="userInput" placeholder="اكتب فكرتك هنا لتفكيكها..." style="width:100%; height:100px;"></textarea>
+        <button onclick="processInput()">تحليل الفكرة</button>
     </div>
 
-    <div id="adminPanel" class="admin-panel">
-        <h3>لوحة التحكم</h3>
-        <button onclick="closeAdmin()">إغلاق</button>
+    <div id="adminPanel">
+        <h3>⚙️ مركز التحكم</h3>
+        <label>وضع المحاكاة:</label>
+        <select id="simMode">
+            <option value="critical">🔍 النقد التحليلي</option>
+            <option value="financial">💰 مالي</option>
+            <option value="security">🛡️ أمن</option>
+        </select>
+        <br><br>
+        <button onclick="closeAdmin()">إغلاق وحفظ</button>
     </div>
 
-    <div class="hidden-trigger" onclick="checkAuth()"></div>
+    <div class="ghost-btn" onclick="openAdmin()"></div>
+
+    <div id="radarAlert"></div>
 
     <script>
-        function checkAuth() {
+        // 1. نظام الحماية للوحة التحكم
+        function openAdmin() {
             const pass = prompt("أدخل رمز الدخول:");
             if(pass === "1234") { document.getElementById('adminPanel').style.display = 'block'; }
+            else { alert("خطأ!"); }
         }
-
-        function saveProject() {
-            const title = document.getElementById('projectTitle').value;
-            window.saveToCloud({ title: title, content: "بيانات المشروع" });
-        }
-
         function closeAdmin() { document.getElementById('adminPanel').style.display = 'none'; }
+
+        // 2. المحاكي (Simulation)
+        function getSimulationContext() {
+            const mode = document.getElementById('simMode').value;
+            const contexts = {
+                critical: "حلل الفكرة بصرامة وابحث عن الثغرات.",
+                financial: "حلل الجدوى المالية والتكاليف.",
+                security: "حلل المخاطر الأمنية."
+            };
+            return contexts[mode];
+        }
+
+        // 3. رادار الأفكار (LocalStorage Logic)
+        function processInput() {
+            const text = document.getElementById('userInput').value;
+            const history = JSON.parse(localStorage.getItem('my_projects') || '[]');
+            
+            // تحقق من التشابه
+            if(history.some(item => item.includes(text.substring(0,5)))) {
+                const alert = document.getElementById('radarAlert');
+                alert.innerText = "⚠️ تنبيه: هذه الفكرة مرتبطة بمشروع سابق!";
+                alert.style.display = 'block';
+                setTimeout(() => alert.style.display = 'none', 3000);
+            }
+
+            // حفظ
+            history.push(text);
+            localStorage.setItem('my_projects', JSON.stringify(history));
+            
+            console.log("تم التحليل بوضع: " + getSimulationContext());
+        }
+
+        // 4. التصدير (Matrix Export)
+        function exportToJSON() {
+            const data = localStorage.getItem('my_projects');
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'my_data.json'; a.click();
+        }
     </script>
 </body>
 </html>
