@@ -2,42 +2,44 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS | Cloud Edition</title>
+    <title>Tafkek OS | System</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: #eee; padding: 20px; }
-        .container { max-width: 600px; margin: auto; background: #1e1e1e; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        h1 { text-align: center; color: #5e81f4; }
-        button { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; cursor: pointer; background: #5e81f4; color: white; font-weight: bold; }
-        textarea { width: 100%; padding: 10px; box-sizing: border-box; background: #333; color: white; border: 1px solid #444; border-radius: 5px; }
-        #files { margin-top: 10px; }
+        :root { --glass: rgba(255, 255, 255, 0.1); }
+        body { background: #0f172a; color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .window { background: var(--glass); backdrop-filter: blur(10px); width: 100%; max-width: 500px; padding: 20px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.1); }
+        h1 { text-align: center; margin-top: 0; }
+        input, textarea, button { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: none; background: rgba(0,0,0,0.3); color: white; }
+        button { background: #3b82f6; cursor: pointer; font-weight: bold; }
+        #notesList { list-style: none; padding: 0; }
+        .note { background: rgba(255,255,255,0.05); padding: 10px; border-radius: 8px; margin-top: 10px; border-right: 4px solid #3b82f6; }
     </style>
 </head>
 <body>
 
-<div class="container">
+<div class="window">
     <h1>Tafkek OS</h1>
-    <button id="loginBtn">تسجيل الدخول عبر Google</button>
-    <p id="userStatus" style="text-align: center;"></p>
-
-    <div id="appInterface" style="display: none;">
-        <h3>حفظ الملاحظات</h3>
-        <textarea id="noteInput" rows="4" placeholder="اكتب فكرتك هنا..."></textarea>
+    <div id="authSection">
+        <button onclick="login()">دخول عبر Google</button>
+    </div>
+    
+    <div id="mainSection" style="display: none;">
+        <p id="userName"></p>
+        <textarea id="noteInput" placeholder="اكتب فكرة جديدة..."></textarea>
         <button onclick="saveNote()">حفظ في السحابة</button>
-        
-        <h3>رفع ملف / صورة</h3>
         <input type="file" id="fileInput">
-        <button onclick="uploadFile()">رفع الملف</button>
+        <button onclick="uploadFile()">رفع ملف</button>
+        <h3>أرشيف السحابة:</h3>
+        <ul id="notesList"></ul>
+        <button onclick="logout()" style="background: #ef4444;">تسجيل خروج</button>
     </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
-    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
     import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js";
 
-    // إعدادات Firebase الخاصة بك
     const firebaseConfig = {
         apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
         authDomain: "tafkekos.firebaseapp.com",
@@ -53,35 +55,46 @@
     const db = getFirestore();
     const storage = getStorage();
 
-    // تسجيل الدخول
-    document.getElementById('loginBtn').onclick = () => {
-        signInWithPopup(auth, new GoogleAuthProvider());
-    };
+    window.login = () => signInWithPopup(auth, new GoogleAuthProvider());
+    window.logout = () => signOut(auth);
 
-    // مراقبة حالة الدخول
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            document.getElementById('userStatus').innerText = "مرحباً، " + user.displayName;
-            document.getElementById('appInterface').style.display = "block";
-            document.getElementById('loginBtn').style.display = "none";
+            document.getElementById('authSection').style.display = 'none';
+            document.getElementById('mainSection').style.display = 'block';
+            document.getElementById('userName').innerText = "مرحباً، " + user.displayName;
+            loadNotes();
+        } else {
+            document.getElementById('authSection').style.display = 'block';
+            document.getElementById('mainSection').style.display = 'none';
         }
     });
 
-    // حفظ الملاحظة
     window.saveNote = async () => {
         const text = document.getElementById('noteInput').value;
         await addDoc(collection(db, "notes"), { text, date: new Date() });
-        alert("تم حفظ الملاحظة!");
+        document.getElementById('noteInput').value = "";
     };
 
-    // رفع الملف
+    function loadNotes() {
+        onSnapshot(query(collection(db, "notes"), orderBy("date", "desc")), (snapshot) => {
+            const list = document.getElementById('notesList');
+            list.innerHTML = "";
+            snapshot.forEach(doc => {
+                const li = document.createElement('li');
+                li.className = 'note';
+                li.innerText = doc.data().text;
+                list.appendChild(li);
+            });
+        });
+    }
+
     window.uploadFile = async () => {
         const file = document.getElementById('fileInput').files[0];
-        const storageRef = ref(storage, 'uploads/' + file.name);
-        await uploadBytes(storageRef, file);
-        alert("تم رفع الملف بنجاح!");
+        if(!file) return;
+        await uploadBytes(ref(storage, 'files/' + file.name), file);
+        alert("تم الرفع!");
     };
 </script>
-
 </body>
 </html>
