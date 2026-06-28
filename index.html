@@ -2,105 +2,77 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Tafkek OS | Master Build</title>
-    <style>
-        :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #4a90e2; }
-        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
-        .container { max-width: 800px; margin: auto; }
-        textarea { width: 100%; height: 150px; background: var(--panel); color: white; border: 1px solid #444; padding: 10px; border-radius: 8px; }
-        .btn-group { margin-top: 10px; }
-        button { padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; background: var(--accent); color: white; }
-        #history { margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
-        .item { background: var(--panel); padding: 15px; margin-bottom: 10px; border-right: 5px solid var(--accent); border-radius: 5px; }
+    <title>Tafkek OS | Cloud Enterprise</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, signOut } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes } from "https://www.gstatic.com/firebasejs/9.0.0/firebase-storage.js";
+
+        // إعداداتك التي أرسلتها
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
+            authDomain: "tafkekos.firebaseapp.com",
+            projectId: "tafkekos",
+            storageBucket: "tafkekos.firebasestorage.app",
+            messagingSenderId: "402724924724",
+            appId: "1:402724924724:web:8cf9c04583ff3998c48961",
+            measurementId: "G-WT4BBKEKVK"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth();
+        const db = getFirestore();
+        const storage = getStorage();
+
+        // 1. تسجيل الدخول
+        window.login = () => signInWithPopup(auth, new GoogleAuthProvider());
         
-        /* لوحة التحكم */
-        #adminPanel { display: none; background: #252525; padding: 20px; margin-top: 20px; border: 1px solid var(--accent); }
-        .hidden-trigger { position: fixed; bottom: 10px; left: 10px; width: 30px; height: 30px; opacity: 0.05; cursor: pointer; }
+        // 2. حفظ فكرة/محادثة
+        window.saveThought = async () => {
+            const txt = document.getElementById('thoughtInput').value;
+            if(!txt) return;
+            await addDoc(collection(db, "thoughts"), { text: txt, user: auth.currentUser.email, date: new Date() });
+            document.getElementById('thoughtInput').value = '';
+        };
+
+        // 3. رفع ملف
+        window.upload = async (file) => {
+            const storageRef = ref(storage, 'uploads/' + file.name);
+            await uploadBytes(storageRef, file);
+            alert("تم رفع الملف بنجاح!");
+        };
+
+        // 4. عرض البيانات لحظياً
+        onSnapshot(query(collection(db, "thoughts"), orderBy("date", "desc")), (snapshot) => {
+            const list = document.getElementById('historyList');
+            list.innerHTML = snapshot.docs.map(doc => `<li>${doc.data().text}</li>`).join('');
+        });
+    </script>
+    <style>
+        body { background: #0e0e0e; color: #fff; font-family: sans-serif; padding: 20px; }
+        .card { background: #1c1c1c; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #333; }
+        input, textarea, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 5px; }
+        button { background: #5e81f4; color: white; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
-
-<div class="container">
-    <h1>Tafkek OS</h1>
-    <textarea id="mainInput" placeholder="اكتب فكرتك هنا..."></textarea>
-    <div class="btn-group">
-        <button onclick="TafkekOS.process()">تحليل وتفكيك</button>
-        <button onclick="TafkekOS.export()" style="background:transparent; border:1px solid var(--accent)">تصدير البيانات</button>
-    </div>
-
-    <div id="adminPanel">
-        <h3>⚙️ لوحة تحكم الأدمن</h3>
-        <label>وضع المحاكاة:</label>
-        <select id="modeSelect">
-            <option value="Critical">🔍 النقد التحليلي</option>
-            <option value="Financial">💰 مالي</option>
-            <option value="Security">🛡️ أمن</option>
-        </select>
-        <button onclick="TafkekOS.toggleAdmin()">إغلاق</button>
-    </div>
-
-    <div id="history">
-        <h3>السجل:</h3>
-        <div id="historyList"></div>
-    </div>
-</div>
-
-<div class="hidden-trigger" onclick="TafkekOS.auth()"></div>
-
-<script>
-    const TafkekOS = {
-        storageKey: 'tafkek_data',
+    <div style="max-width: 600px; margin: auto;">
+        <h1>Tafkek OS | Enterprise</h1>
+        <button onclick="login()">دخول عبر جوجل</button>
         
-        init: function() { this.render(); },
+        <div class="card">
+            <h3>أرشيف الأفكار</h3>
+            <textarea id="thoughtInput" placeholder="اكتب فكرتك لحفظها في السحابة..."></textarea>
+            <button onclick="saveThought()">حفظ في السحابة</button>
+        </div>
 
-        auth: function() {
-            const pass = prompt("أدخل رمز الدخول:");
-            if(pass === "1234") { document.getElementById('adminPanel').style.display = 'block'; }
-        },
+        <div class="card">
+            <h3>رفع ملف/صورة</h3>
+            <input type="file" onchange="upload(this.files[0])">
+        </div>
 
-        toggleAdmin: function() { document.getElementById('adminPanel').style.display = 'none'; },
-
-        process: function() {
-            const text = document.getElementById('mainInput').value.trim();
-            if(!text) return;
-
-            const history = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-            const mode = document.getElementById('modeSelect').value;
-
-            // الرادار
-            if(history.some(i => i.content.includes(text.substring(0,5)))) {
-                alert("⚠️ تنبيه: هذه الفكرة مرتبطة بمشروع سابق!");
-            }
-
-            // الحفظ
-            history.push({ content: text, mode: mode, date: new Date().toLocaleString() });
-            localStorage.setItem(this.storageKey, JSON.stringify(history));
-            
-            document.getElementById('mainInput').value = '';
-            this.render();
-        },
-
-        render: function() {
-            const list = document.getElementById('historyList');
-            const history = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-            list.innerHTML = history.map(item => `
-                <div class="item">
-                    <small>الوضع: ${item.mode}</small>
-                    <p>${item.content}</p>
-                </div>
-            `).join('');
-        },
-
-        export: function() {
-            const data = localStorage.getItem(this.storageKey);
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
-            a.download = 'data.json';
-            a.click();
-        }
-    };
-
-    TafkekOS.init();
-</script>
+        <ul id="historyList"></ul>
+    </div>
 </body>
 </html>
