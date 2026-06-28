@@ -2,103 +2,105 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS | System v8.0</title>
+    <title>Tafkek OS | Master Build</title>
     <style>
-        :root {
-            --bg-color: #0f0f10;
-            --surface: #1e1e20;
-            --text-color: #f8f9fa;
-            --accent: #5e81f4;
-            --danger: #e06c75;
-        }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        :root { --bg: #121212; --panel: #1e1e1e; --text: #e0e0e0; --accent: #4a90e2; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; }
+        .container { max-width: 800px; margin: auto; }
+        textarea { width: 100%; height: 150px; background: var(--panel); color: white; border: 1px solid #444; padding: 10px; border-radius: 8px; }
+        .btn-group { margin-top: 10px; }
+        button { padding: 10px 20px; border-radius: 5px; border: none; cursor: pointer; background: var(--accent); color: white; }
+        #history { margin-top: 20px; border-top: 1px solid #444; padding-top: 20px; }
+        .item { background: var(--panel); padding: 15px; margin-bottom: 10px; border-right: 5px solid var(--accent); border-radius: 5px; }
         
-        #app-container { width: 100%; max-width: 800px; }
-        h1 { text-align: center; color: var(--accent); }
-        
-        textarea { width: 100%; height: 250px; background: var(--surface); color: white; border: 2px solid #333; border-radius: 12px; padding: 15px; font-size: 16px; box-sizing: border-box; }
-        textarea:focus { outline: none; border-color: var(--accent); }
-        
-        .controls { display: flex; gap: 10px; margin-top: 20px; }
-        button { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-        .btn-primary { background: var(--accent); color: white; }
-        .btn-secondary { background: transparent; border: 1px solid var(--accent); color: var(--accent); }
-        button:hover { opacity: 0.8; transform: scale(1.02); }
-
-        /* اللوحة الإدارية */
-        #adminPanel { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #252526; padding: 30px; border-radius: 15px; border: 1px solid var(--accent); z-index: 1000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        
-        /* تنبيهات الرادار */
-        #radar { position: fixed; top: 20px; right: 20px; background: var(--danger); padding: 15px; border-radius: 8px; display: none; color: white; z-index: 999; }
-        
-        .hidden-zone { position: fixed; bottom: 0; left: 0; width: 50px; height: 50px; cursor: pointer; opacity: 0.05; }
+        /* لوحة التحكم */
+        #adminPanel { display: none; background: #252525; padding: 20px; margin-top: 20px; border: 1px solid var(--accent); }
+        .hidden-trigger { position: fixed; bottom: 10px; left: 10px; width: 30px; height: 30px; opacity: 0.05; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="app-container">
-        <h1>Tafkek OS</h1>
-        <textarea id="mainInput" placeholder="اكتب فكرتك هنا لتفكيكها..."></textarea>
-        <div class="controls">
-            <button class="btn-primary" onclick="System.process()">تحليل وتفكيك</button>
-            <button class="btn-secondary" onclick="System.exportData()">تصدير JSON</button>
-        </div>
+<div class="container">
+    <h1>Tafkek OS</h1>
+    <textarea id="mainInput" placeholder="اكتب فكرتك هنا..."></textarea>
+    <div class="btn-group">
+        <button onclick="TafkekOS.process()">تحليل وتفكيك</button>
+        <button onclick="TafkekOS.export()" style="background:transparent; border:1px solid var(--accent)">تصدير البيانات</button>
     </div>
-
-    <div id="radar"></div>
 
     <div id="adminPanel">
-        <h3>🔧 مركز التحكم (Admin)</h3>
-        <button onclick="System.closeAdmin()">إغلاق</button>
+        <h3>⚙️ لوحة تحكم الأدمن</h3>
+        <label>وضع المحاكاة:</label>
+        <select id="modeSelect">
+            <option value="Critical">🔍 النقد التحليلي</option>
+            <option value="Financial">💰 مالي</option>
+            <option value="Security">🛡️ أمن</option>
+        </select>
+        <button onclick="TafkekOS.toggleAdmin()">إغلاق</button>
     </div>
 
-    <div class="hidden-zone" onclick="System.auth()"></div>
+    <div id="history">
+        <h3>السجل:</h3>
+        <div id="historyList"></div>
+    </div>
+</div>
 
-    <script>
-        const System = {
-            storageKey: 'tafkek_mem_v8',
+<div class="hidden-trigger" onclick="TafkekOS.auth()"></div>
 
-            process: function() {
-                const input = document.getElementById('mainInput');
-                const text = input.value.trim();
-                if (!text) return alert("الرجاء كتابة شيء!");
+<script>
+    const TafkekOS = {
+        storageKey: 'tafkek_data',
+        
+        init: function() { this.render(); },
 
-                const history = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
-                
-                // رادار الذكاء
-                if (history.some(item => item.includes(text.substring(0, 10)))) {
-                    this.showRadar("⚠️ تنبيه: هذه الفكرة مرتبطة بمشروع سابق!");
-                }
+        auth: function() {
+            const pass = prompt("أدخل رمز الدخول:");
+            if(pass === "1234") { document.getElementById('adminPanel').style.display = 'block'; }
+        },
 
-                history.push(text);
-                localStorage.setItem(this.storageKey, JSON.stringify(history));
-                input.value = '';
-                alert("تم التفكيك والحفظ بنجاح.");
-            },
+        toggleAdmin: function() { document.getElementById('adminPanel').style.display = 'none'; },
 
-            showRadar: function(msg) {
-                const radar = document.getElementById('radar');
-                radar.innerText = msg;
-                radar.style.display = 'block';
-                setTimeout(() => radar.style.display = 'none', 3000);
-            },
+        process: function() {
+            const text = document.getElementById('mainInput').value.trim();
+            if(!text) return;
 
-            auth: function() {
-                const pin = prompt("أدخل رمز الدخول:");
-                if(pin === "1234") document.getElementById('adminPanel').style.display = 'block';
-                else alert("وصول مرفوض!");
-            },
+            const history = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+            const mode = document.getElementById('modeSelect').value;
 
-            closeAdmin: function() { document.getElementById('adminPanel').style.display = 'none'; },
-
-            exportData: function() {
-                const data = localStorage.getItem(this.storageKey);
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
-                a.download = 'data.json'; a.click();
+            // الرادار
+            if(history.some(i => i.content.includes(text.substring(0,5)))) {
+                alert("⚠️ تنبيه: هذه الفكرة مرتبطة بمشروع سابق!");
             }
-        };
-    </script>
+
+            // الحفظ
+            history.push({ content: text, mode: mode, date: new Date().toLocaleString() });
+            localStorage.setItem(this.storageKey, JSON.stringify(history));
+            
+            document.getElementById('mainInput').value = '';
+            this.render();
+        },
+
+        render: function() {
+            const list = document.getElementById('historyList');
+            const history = JSON.parse(localStorage.getItem(this.storageKey) || '[]');
+            list.innerHTML = history.map(item => `
+                <div class="item">
+                    <small>الوضع: ${item.mode}</small>
+                    <p>${item.content}</p>
+                </div>
+            `).join('');
+        },
+
+        export: function() {
+            const data = localStorage.getItem(this.storageKey);
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(new Blob([data], {type: 'application/json'}));
+            a.download = 'data.json';
+            a.click();
+        }
+    };
+
+    TafkekOS.init();
+</script>
 </body>
 </html>
