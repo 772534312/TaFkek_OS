@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS v3.0</title>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <title>Tafkek OS</title>
     <style>
         :root {
             --bg-main: #131314;
@@ -15,7 +13,6 @@
             --text-main: #e3e3e3;
             --text-sub: #c4c7c5;
             --border: #444746;
-            --gemini-blue: #8ab4f8;
             --gemini-gradient: linear-gradient(74deg, #4285f4 0%, #9b51e0 50%, #e91e63 100%);
         }
 
@@ -23,7 +20,7 @@
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Google Sans', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: system-ui, -apple-system, sans-serif;
         }
 
         body {
@@ -34,546 +31,524 @@
             overflow: hidden;
         }
 
-        /* ==================== الشريط الجانبي المطور مع البحث والفلترة ==================== */
+        /* ------------------ الشريط الجانبي ------------------ */
         .sidebar {
-            width: 280px;
+            width: 260px;
             background-color: var(--bg-sidebar);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            padding: 20px 14px;
-            transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 10;
+            padding: 20px 12px;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar.collapsed .hide-text {
+            display: none;
+        }
+
+        .new-chat-btn {
+            background-color: #1a1a1c;
+            border: none;
+            color: var(--text-sub);
+            padding: 14px;
+            border-radius: 50px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+
+        .new-chat-btn:hover {
+            background-color: var(--bg-hover);
+            color: var(--text-main);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            margin-top: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            border-radius: 50px;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+
+        .menu-item:hover {
+            background-color: var(--bg-hover);
+        }
+
+        /* ------------------ المساحة الرئيسية ------------------ */
+        .main-chat {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+        }
+
+        .top-bar {
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .toggle-sidebar-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+        }
+
+        .toggle-sidebar-btn:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .brand-name {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--text-sub);
+        }
+
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 60px;
+            max-width: 850px;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* واجهة الترحيب الافتراضية */
+        .welcome-view {
+            margin-top: 8vh;
+        }
+
+        .greeting {
+            font-size: 3.5rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .gradient-text {
+            background: var(--gemini-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub-greeting {
+            font-size: 3.5rem;
+            color: #444746;
+            font-weight: 500;
+            margin-bottom: 50px;
+        }
+
+        .suggestions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+        }
+
+        .suggestion-card {
+            background-color: var(--bg-sidebar);
+            padding: 22px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            min-height: 140px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .suggestion-card:hover {
+            background-color: var(--bg-hover);
+        }
+
+        /* ------------------ شريط تدفق الرسائل الحقيقي ------------------ */
+        .conversation-flow {
+            display: none;
+            flex-direction: column;
+            gap: 30px;
+            padding-bottom: 40px;
+        }
+
+        .chat-row {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+        }
+
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
             flex-shrink: 0;
         }
 
-        .sidebar.collapsed { width: 68px; }
-        .sidebar.collapsed .hide-text,
-        .sidebar.collapsed .recent-section,
-        .sidebar.collapsed .sidebar-search-box,
-        .sidebar.collapsed .sidebar-footer span { display: none; }
+        .avatar.user-avatar { background-color: #565869; color: white; }
+        .avatar.ai-avatar { background: var(--gemini-gradient); color: white; }
 
-        .sidebar-top { display: flex; flex-direction: column; gap: 15px; }
-        .menu-btn { background: none; border: none; color: var(--text-main); font-size: 1.3rem; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .menu-btn:hover { background-color: var(--bg-hover); }
-
-        .new-chat-btn {
-            background-color: #1a1a1c; border: none; color: #727575; padding: 12px 16px; border-radius: 50px; cursor: pointer; display: flex; align-items: center; gap: 12px; font-size: 0.88rem; font-weight: 500; width: fit-content; transition: background 0.2s;
-        }
-        .new-chat-btn:hover { background-color: var(--bg-hover); color: var(--text-main); }
-        .sidebar.collapsed .new-chat-btn { width: 40px; height: 40px; padding: 0; justify-content: center; border-radius: 50%; }
-
-        /* ميزة 2: صندوق البحث الذكي داخل الذاكرة الثابتة */
-        .sidebar-search-box {
-            padding: 0 10px;
-            margin-top: 5px;
-        }
-        .sidebar-search-box input {
-            width: 100%;
-            background-color: var(--bg-main);
-            border: 1px solid var(--border);
+        .message-content {
+            font-size: 1.05rem;
+            line-height: 1.7;
             color: var(--text-main);
-            padding: 8px 12px;
-            border-radius: 20px;
-            font-size: 0.82rem;
+            white-space: pre-wrap;
+            flex: 1;
+        }
+
+        .message-content img {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 12px;
+            margin-top: 12px;
+            border: 1px solid var(--border);
+        }
+
+        /* أنيميشن التحميل الخاص بـ Gemini */
+        .shimmer-line {
+            display: none;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #4285f4, #9b51e0, #e91e63, #4285f4);
+            background-size: 300% 100%;
+            animation: shimmerAnimation 2s infinite linear;
+            border-radius: 2px;
+            margin-top: 15px;
+        }
+
+        @keyframes shimmerAnimation {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        /* منطقة معاينة الصورة المرفقة قبل الإرسال */
+        .preview-box {
+            display: none;
+            position: relative;
+            margin-bottom: 10px;
+            width: fit-content;
+        }
+
+        .preview-box img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .preview-box .remove-btn {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: #ff4a4a;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+
+        /* ------------------ صندوق الإدخال السفلي ------------------ */
+        .input-area-wrapper {
+            padding: 10px 60px 25px 60px;
+            background: linear-gradient(transparent, var(--bg-main) 40%);
+        }
+
+        .input-box-container {
+            max-width: 850px;
+            margin: 0 auto;
+            background-color: var(--bg-input);
+            border-radius: 32px;
+            padding: 8px 22px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .input-box-container textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.05rem;
             outline: none;
+            resize: none;
+            padding: 10px 0;
+            max-height: 150px;
         }
 
-        .recent-section { margin-top: 10px; max-height: 48vh; overflow-y: auto; }
-        .recent-title { font-size: 0.85rem; color: var(--text-main); padding: 0 12px; font-weight: 500; margin-bottom: 8px; }
-        .recent-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
-        .recent-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 50px; cursor: pointer; font-size: 0.88rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .recent-item:hover { background-color: var(--bg-hover); }
-
-        .sidebar-footer { display: flex; flex-direction: column; gap: 4px; }
-        .footer-item { display: flex; align-items: center; gap: 16px; padding: 10px 14px; border-radius: 50px; cursor: pointer; color: var(--text-main); font-size: 0.88rem; }
-        .footer-item:hover { background-color: var(--bg-hover); }
-
-        /* ==================== مساحة العمل الرئيسية ==================== */
-        .main-viewport { flex: 1; display: flex; flex-direction: column; height: 100%; position: relative; background-color: var(--bg-main); }
-        .top-nav { height: 60px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
-        .brand-title { font-size: 1.3rem; font-weight: 400; color: var(--text-sub); cursor: pointer; }
-        .profile-avatar { width: 32px; height: 32px; border-radius: 50%; background-color: #ff85a2; color: #131314; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.85rem; }
-        .workspace-scroll-area { flex: 1; overflow-y: auto; padding: 10px 24px; }
-        .content-bound-wrapper { max-width: 820px; width: 100%; margin: 0 auto; }
-
-        /* واجهة الترحيب الافتراضية للجمناي */
-        .welcome-dashboard { margin-top: 4vh; display: flex; flex-direction: column; }
-        .welcome-headline { font-size: 3.5rem; font-weight: 500; line-height: 1.25; }
-        .gradient-text-fill { background: var(--gemini-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .welcome-subheadline { font-size: 3.5rem; color: #333537; font-weight: 500; margin-bottom: 35px; }
-        .cards-container-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
-        .suggestion-gemini-card { background-color: var(--bg-sidebar); padding: 20px; border-radius: 12px; cursor: pointer; min-height: 180px; display: flex; flex-direction: column; justify-content: space-between; transition: background 0.2s; }
-        .suggestion-gemini-card:hover { background-color: var(--bg-hover); }
-
-        /* ==================== مجرى بث الردود وعناصر التفكيك ==================== */
-        .chat-flow-stream { display: none; flex-direction: column; gap: 36px; padding-bottom: 40px; }
-        .stream-row { display: flex; gap: 24px; align-items: flex-start; }
-        .stream-avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-weight: 600; }
-        .stream-avatar.user-type { background-color: #565869; color: white; }
-        .stream-avatar.ai-type { background: var(--gemini-gradient); color: white; font-size: 1.1rem; }
-        .stream-body { flex: 1; font-size: 1.05rem; line-height: 1.8; overflow-x: auto; }
-
-        /* 📈 ميزة 4: لوحة عداد كفاءة وتكلفة الأفكار والمشاريع التقنية */
-        .insight-dashboard-badge {
-            display: flex; gap: 12px; margin: 15px 0; padding: 12px 16px; background-color: #1a1a1c; border: 1px dashed var(--border); border-radius: 8px; font-size: 0.85rem; color: var(--text-sub);
-        }
-        .insight-metric-item span { color: var(--gemini-blue); font-weight: 600; }
-
-        /* 🗺️ ميزة 1: أسلوب عرض الخرائط الذهنية التفاعلية */
-        .mindmap-interactive-view {
-            background-color: #1a1a1c; border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin: 15px 0; display: none; justify-content: center; overflow-x: auto;
+        .input-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        /* جداول وقوائم وأكواد البث المباشر */
-        .stream-body table { width: 100%; border-collapse: collapse; margin: 15px 0 4px 0; background-color: #171719; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .stream-body th, .stream-body td { border: 1px solid var(--border); padding: 12px 14px; text-align: right; }
-        .stream-body th { background-color: #1e1e20; color: var(--gemini-blue); }
-        .stream-body tr:nth-child(even) { background-color: #1a1a1c; }
-        .stream-body pre { background-color: #0f0f10; padding: 16px; border-radius: 8px; margin: 15px 0; direction: ltr; text-align: left; overflow-x: auto; color: #f8f8f2; }
-        
-        .table-utility-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 18px; }
-        .utility-btn { background-color: #202124; border: 1px solid var(--border); color: var(--text-sub); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-        .utility-btn:hover { background-color: var(--bg-hover); color: white; }
+        .action-icon-btn {
+            background: none;
+            border: none;
+            color: var(--text-main);
+            font-size: 1.25rem;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
-        /* أنيميشن الهيكل الثلاثي اللامع للجمناي */
-        .gemini-skeleton-loader { display: none; flex-direction: column; gap: 12px; width: 100%; margin-top: 15px; }
-        .skeleton-bar { height: 16px; border-radius: 4px; background: linear-gradient(90deg, #1e1e20 25%, #2a2b2d 50%, #1e1e20 75%); background-size: 200% 100%; animation: waveShimmer 1.5s infinite linear; }
-        .skeleton-bar:nth-child(1) { background: linear-gradient(90deg, #4285f4, #9b51e0, #e91e63, #4285f4); background-size: 300% 100%; animation: gradientShimmer 2s infinite linear; width: 35%; }
-        .skeleton-bar:nth-child(2) { width: 85%; }
-        .skeleton-bar:nth-child(3) { width: 60%; }
-        @keyframes waveShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        @keyframes gradientShimmer { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
+        .action-icon-btn:hover {
+            background-color: var(--bg-hover);
+        }
 
-        /* ==================== شرائح التحكم وصندوق الإدخال الشامل ==================== */
-        .bottom-dock-wrapper { padding: 10px 24px 24px 24px; background: linear-gradient(transparent, var(--bg-main) 30%); }
-        .presets-tabs-row { max-width: 740px; margin: 0 auto 12px auto; display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
-        .preset-pill { background-color: #202124; border: 1px solid var(--border); color: var(--text-sub); padding: 6px 14px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
-        .preset-pill:hover, .preset-pill.active { background-color: var(--bg-hover); border-color: var(--gemini-blue); color: white; }
-
-        .gemini-input-pill-container { max-width: 760px; margin: 0 auto; background-color: var(--bg-input); border-radius: 32px; padding: 8px 16px 8px 24px; display: flex; flex-direction: column; border: 1px solid transparent; }
-        .image-preview-dock { display: none; position: relative; margin-bottom: 10px; width: fit-content; }
-        .image-preview-dock img { width: 64px; height: 64px; object-fit: cover; border-radius: 12px; }
-        .image-preview-dock .remove-preview-btn { position: absolute; top: -6px; left: -6px; background: #ff4a4a; color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 11px;}
-
-        .input-interaction-row { display: flex; align-items: center; gap: 14px; width: 100%; }
-        .input-interaction-row textarea { flex: 1; background: transparent; border: none; color: var(--text-main); font-size: 1.05rem; outline: none; resize: none; padding: 10px 0; max-height: 180px; line-height: 1.5; }
-        
-        .action-buttons-wrapper { display: flex; align-items: center; gap: 4px; }
-        .pill-icon-btn { background: none; border: none; color: var(--text-main); font-size: 1.3rem; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .pill-icon-btn:hover { background-color: var(--bg-hover); }
-        .pill-icon-btn.recording-active { color: #ff4a4a; animation: micPulse 1.2s infinite ease-in-out; background-color: #361b1b; }
-        @keyframes micPulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
-        
-        .hidden-file-trigger { display: none; }
-        .disclaimer-text { text-align: center; font-size: 0.72rem; color: #727575; margin-top: 12px; }
+        .hidden-file-input { display: none; }
+        .disclaimer { text-align: center; font-size: 0.75rem; color: #727575; margin-top: 10px; }
     </style>
 </head>
 <body>
 
-    <aside class="sidebar" id="geminiSidebar">
-        <div class="sidebar-top">
-            <button class="menu-btn" onclick="toggleSidebarState()">☰</button>
-            <button class="new-chat-btn" onclick="resetToDashboardView()">
-                <span>＋</span> <span class="hide-text">محادثة جديدة</span>
+    <aside class="sidebar" id="sidebar">
+        <div>
+            <button class="new-chat-btn" onclick="resetToHome()">
+                <span>＋</span>
+                <span class="hide-text">محادثة جديدة</span>
             </button>
-
-            <div class="sidebar-search-box">
-                <input type="text" id="historySearchField" placeholder="ابحث في الأفكار القديمة..." oninput="filterSavedChatsHistory(this.value)">
-            </div>
-
-            <div class="recent-section">
-                <div class="recent-title">العناصر الأخيرة النشطة</div>
-                <ul class="recent-list" id="recentChatsHistoryList"></ul>
-            </div>
         </div>
-
-        <div class="sidebar-footer">
-            <div class="footer-item" onclick="clearAllStoredData()">
-                <span>🗑️</span> <span class="hide-text">تطهير الذاكرة الثابتة</span>
-            </div>
+        <div>
+            <ul class="sidebar-menu">
+                <li class="menu-item" onclick="alert('عبدالله بن وهلان - Tafkek OS')">
+                    <span>👤</span>
+                    <span class="hide-text">الحساب</span>
+                </li>
+            </ul>
         </div>
     </aside>
 
-    <main class="main-viewport">
-        <header class="top-nav">
-            <div class="brand-title" onclick="resetToDashboardView()">Tafkek OS <span style="font-size:0.75rem; color:#727575;">v3.0 Stable</span> ▾</div>
-            <div class="profile-avatar" title="عبد الله محمد سالم بن وهلان">ع</div>
-        </header>
-
-        <div class="workspace-scroll-area" id="scrollViewport">
-            <div class="content-bound-wrapper">
-                
-                <div class="welcome-dashboard" id="welcomeDashboard">
-                    <h1 class="welcome-headline"><span class="gradient-text-fill">مرحباً بك يا عبد الله،</span></h1>
-                    <h2 class="welcome-subheadline">كيف يمكنني مساعدتك اليوم في التفكيك مصفوفياً؟</h2>
-                    
-                    <div class="cards-container-grid">
-                        <div class="suggestion-gemini-card" onclick="autoFillAndSubmit('قم بإنشاء جدول لتفكيك مواصفات هاتف آيفون 17 برو ماكس مصفوفياً')">
-                            <p>قم بإنشاء جدول لتفكيك مواصفات هاتف آيفون 17 برو ماكس مصفوفياً</p>
-                            <div style="font-size:1.1rem; align-self:flex-end;">📱</div>
-                        </div>
-                        <div class="suggestion-gemini-card" onclick="autoFillAndSubmit('فكك لي فكرة متجر إلكتروني لبيع الحواسيب إلى مصفوفة خدمات متكاملة وجداول تكلفة')">
-                            <p>فكك لي فكرة متجر إلكتروني لبيع الحواسيب إلى مصفوفة خدمات متكاملة</p>
-                            <div style="font-size:1.1rem; align-self:flex-end;">💻</div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="chat-flow-stream" id="chatFlowStream"></div>
-                
-                <div class="gemini-skeleton-loader" id="geminiSkeletonLoader">
-                    <div class="skeleton-bar"></div><div class="skeleton-bar"></div><div class="skeleton-bar"></div>
-                </div>
-
-            </div>
+    <main class="main-chat">
+        <div class="top-bar">
+            <button class="toggle-sidebar-btn" onclick="toggleSidebar()">☰</button>
+            <div class="brand-name">Tafkek OS</div>
+            <div style="width: 40px;"></div>
         </div>
 
-        <div class="bottom-dock-wrapper">
-            
-            <div class="presets-tabs-row">
-                <button class="preset-pill active" id="preset-general" onclick="switchPresetContext('general')">✨ تفكيك عام</button>
-                <button class="preset-pill" id="preset-dev" onclick="switchPresetContext('dev')">💻 تفكيك برمجبي وهندسي</button>
-                <button class="preset-pill" id="preset-business" onclick="switchPresetContext('business')">📊 تحليل تجاري ومالي</button>
-                <button class="preset-pill" id="preset-uiux" onclick="switchPresetContext('uiux')">🎨 نقد UI/UX وتجربة مستخدم</button>
-            </div>
-
-            <div class="gemini-input-pill-container">
-                <div class="image-preview-dock" id="imagePreviewDock">
-                    <button class="remove-preview-btn" onclick="clearAttachedImage()">×</button>
-                    <img id="previewImageElement" src="">
-                </div>
-
-                <div class="input-interaction-row">
-                    <input type="file" id="imageFileSelector" class="hidden-file-trigger" accept="image/*" onchange="handleImageSelection(this)">
-                    <button class="pill-icon-btn" onclick="document.getElementById('imageFileSelector').click()" title="إرفاق صورة للتحليل">📎</button>
-                    <button class="pill-icon-btn" id="voiceDictationBtn" onclick="toggleVoiceDictation()" title="التحدث صوتاً">🎙️</button>
-                    
-                    <textarea id="geminiInputField" rows="1" placeholder="أدخل فكرتك هنا لتفكيكها بالكامل مصفوفياً..." oninput="autoExpandTextarea(this)" onkeydown="catchInputFieldEnter(event)"></textarea>
-                    
-                    <div class="action-buttons-wrapper">
-                        <button class="pill-icon-btn" style="color: #8ab4f8;" onclick="transmitDataPayload()">✦</button>
+        <div class="chat-container">
+            <div class="welcome-view" id="welcomeView">
+                <h1 class="greeting"><span class="gradient-text">مرحباً بك،</span></h1>
+                <h2 class="sub-greeting">كيف يمكنني مساعدتك اليوم؟</h2>
+                
+                <div class="suggestions-grid">
+                    <div class="suggestion-card" onclick="selectSuggestion('قم بإنشاء متجر لبيع الهواتف الذكية')">
+                        <span>قم بإنشاء متجر لبيع الهواتف الذكية مع الهيكلية</span>
+                        <div class="card-icon">💻</div>
+                    </div>
+                    <div class="suggestion-card" onclick="selectSuggestion('توليد صورة واقعية لكوكب المريخ مستقبلي وعالي الدقة')">
+                        <span>اطلب توليد صور ذكية فائقة الدقة بأسلوب فني</span>
+                        <div class="card-icon">🎨</div>
                     </div>
                 </div>
             </div>
-            <div class="disclaimer-text">نظام تشغيل التفكيك v3.0 مستقر تماماً ومؤمن لحفظ وتصدير خرائط ومصفوفات البيانات الحية.</div>
+
+            <div class="conversation-flow" id="conversationFlow"></div>
+            <div class="shimmer-line" id="shimmerLine"></div>
+        </div>
+
+        <div class="input-area-wrapper">
+            <div class="input-box-container">
+                
+                <div class="preview-box" id="previewBox">
+                    <button class="remove-btn" onclick="clearImage()">×</button>
+                    <img id="previewImg" src="">
+                </div>
+
+                <div class="input-row">
+                    <input type="file" id="fileUpload" class="hidden-file-input" accept="image/*" onchange="previewImage(this)">
+                    <button class="action-icon-btn" onclick="document.getElementById('fileUpload').click()" title="إرفاق صورة">📎</button>
+                    
+                    <textarea id="chatInput" rows="1" placeholder="اسأل تفكيك أو اطلب توليد صورة..." oninput="autoGrow(this)" onkeydown="handleKeyDown(event)"></textarea>
+                    
+                    <div class="input-actions">
+                        <button class="action-icon-btn" style="color: #8ab4f8;" onclick="sendMessage()" title="إرسال الطلب">✦</button>
+                    </div>
+                </div>
+            </div>
+            <div class="disclaimer">مربوط حياً مع خوادم معالجة البيانات السحابية لـ Tafkek OS.</div>
         </div>
     </main>
 
     <script>
-        // تهيئة المتغيرات الأساسية والمكتبات الرسومية
-        mermaid.initialize({ startOnLoad: false, theme: 'dark', securityLevel: 'loose' });
-        
-        let globalBase64Image = null;
-        let selectedPreset = 'general';
-        let currentChatSessionId = null;
-        let localChatsDatabase = JSON.parse(localStorage.getItem('tafkek_saved_sessions')) || [];
-        let speechRecognitionEngine = null;
-        let isDictationRunning = false;
+        let base64Image = null;
 
-        const structuralPresets = {
-            general: "",
-            dev: "[سياق تفكيك هندسي وبرمجي: ركز بقوة على هيكلية الشفرة البرمجية، كفاءة الخوارزميات، بنية قواعد البيانات، والمصفوفات التقنية بدقة] ",
-            business: "[سياق تفكيك تجاري مالي: ركز بقوة على دراسات الجدوى، مصفوفات الأرباح، أرقام ومؤشرات السوق، والتحليل المالي الجدولي] ",
-            uiux: "[سياق تفكيك ونقد UI/UX: ركز على رحلة المستخدم، مبادئ ومكونات Figma، الهيكلية البصرية والتناسق والجماليات التطبيقية] "
-        };
-
-        // تفعيل وتهيئة محرك الإملاء الصوتي المباشر
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechEngineClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-            speechRecognitionEngine = new SpeechEngineClass();
-            speechRecognitionEngine.continuous = false;
-            speechRecognitionEngine.lang = 'ar-SA';
-            speechRecognitionEngine.onresult = function(event) {
-                document.getElementById('geminiInputField').value += " " + event.results[0][0].transcript;
-                autoExpandTextarea(document.getElementById('geminiInputField'));
-                stopVoiceDictation();
-            };
-            speechRecognitionEngine.onerror = stopVoiceDictation;
-            speechRecognitionEngine.onend = stopVoiceDictation;
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('collapsed');
         }
 
-        window.onload = function() {
-            renderSidebarHistory();
-            currentChatSessionId = Date.now().toString();
-        };
+        function autoGrow(element) {
+            element.style.height = "5px";
+            element.style.height = (element.scrollHeight) + "px";
+        }
 
-        function toggleSidebarState() { document.getElementById('geminiSidebar').classList.toggle('collapsed'); }
-        function autoExpandTextarea(element) { element.style.height = "5px"; element.style.height = (element.scrollHeight) + "px"; }
-        function catchInputFieldEnter(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); transmitDataPayload(); } }
-        function autoFillAndSubmit(text) { document.getElementById('geminiInputField').value = text; transmitDataPayload(); }
-        function switchPresetContext(name) { document.querySelectorAll('.preset-pill').forEach(p => p.classList.remove('active')); document.getElementById(`preset-${name}`).classList.add('active'); selectedPreset = name; }
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
 
-        function toggleVoiceDictation() { if (!speechRecognitionEngine) { alert('المتصفح لا يدعم الميزة الصوتيّة.'); return; } if (isDictationRunning) stopVoiceDictation(); else startVoiceDictation(); }
-        function startVoiceDictation() { isDictationRunning = true; document.getElementById('voiceDictationBtn').classList.add('recording-active'); speechRecognitionEngine.start(); }
-        function stopVoiceDictation() { isDictationRunning = false; document.getElementById('voiceDictationBtn').classList.remove('recording-active'); try{speechRecognitionEngine.stop();}catch(e){} }
+        function selectSuggestion(text) {
+            document.getElementById('chatInput').value = text;
+            sendMessage();
+        }
 
-        function handleImageSelection(input) {
+        // تحويل الصورة المرفقة ومعاينتها
+        function previewImage(input) {
             const file = input.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    globalBase64Image = e.target.result;
-                    document.getElementById('previewImageElement').src = globalBase64Image;
-                    document.getElementById('imagePreviewDock').style.display = 'block';
-                };
+                    base64Image = e.target.result;
+                    document.getElementById('previewImg').src = base64Image;
+                    document.getElementById('previewBox').style.display = 'block';
+                }
                 reader.readAsDataURL(file);
             }
         }
-        function clearAttachedImage() { globalBase64Image = null; document.getElementById('imageFileSelector').value = ''; document.getElementById('imagePreviewDock').style.display = 'none'; }
 
-        // 🚀 المحرك الدفاعي المتطور لمعالجة وبث حزم البيانات حياً
-        async function transmitDataPayload() {
-            const inputField = document.getElementById('geminiInputField');
-            const promptRawText = inputField.value.trim();
-            if (!promptRawText && !globalBase64Image) return;
+        function clearImage() {
+            base64Image = null;
+            document.getElementById('fileUpload').value = '';
+            document.getElementById('previewBox').style.display = 'none';
+        }
 
-            document.getElementById('welcomeDashboard').style.display = 'none';
-            const streamContainer = document.getElementById('chatFlowStream');
-            streamContainer.style.display = 'flex';
+        // 🚀 محرك الإرسال الحقيقي والربط الفعلي مع Vercel
+        async function sendMessage() {
+            const inputEl = document.getElementById('chatInput');
+            const query = inputEl.value.trim();
+            
+            if (!query && !base64Image) return;
 
-            let userBlock = `<div>${promptRawText}</div>`;
-            if (globalBase64Image) userBlock += `<img src="${globalBase64Image}" style="max-width:240px; border-radius:12px; margin-top:10px; border:1px solid var(--border);">`;
+            // إخفاء الترحيب وعرض صندوق الدردشة
+            document.getElementById('welcomeView').style.display = 'none';
+            const flow = document.getElementById('conversationFlow');
+            flow.style.display = 'flex';
 
-            streamContainer.innerHTML += `
-                <div class="stream-row">
-                    <div class="stream-avatar user-type">ع</div>
-                    <div class="stream-body">${userBlock}</div>
+            // إضافة رسالة المستخدم مع الصورة إن وجدت
+            let userContent = `<div>${query}</div>`;
+            if (base64Image) {
+                userContent += `<img src="${base64Image}" style="max-width:150px; border-radius:8px; margin-top:5px;">`;
+            }
+            
+            flow.innerHTML += `
+                <div class="chat-row user-row">
+                    <div class="avatar user-avatar">ع</div>
+                    <div class="message-content">${userContent}</div>
                 </div>
             `;
 
-            const compoundPrompt = structuralPresets[selectedPreset] + promptRawText;
-            const cachedImage = globalBase64Image;
-            inputField.value = ''; inputField.style.height = 'auto'; clearAttachedImage();
+            // حفظ الصورة الحالية وإعادة تهيئة الحقول لإدخال جديد
+            const activeImage = base64Image;
+            inputEl.value = '';
+            inputEl.style.height = 'auto';
+            clearImage();
 
-            document.getElementById('geminiSkeletonLoader').style.display = 'flex';
-            const scrollViewport = document.getElementById('scrollViewport');
-            scrollViewport.scrollTop = scrollViewport.scrollHeight;
+            // تشغيل شريط التحميل المتلألئ
+            document.getElementById('shimmerLine').style.display = 'block';
+            const container = document.querySelector('.chat-container');
+            container.scrollTop = container.scrollHeight;
 
             try {
-                const packet = { prompt: compoundPrompt, message: compoundPrompt };
-                if (cachedImage) packet.image = cachedImage;
-
+                // 🔗 الاتصال المباشر بـ API الحقيقي الخاص بك على Vercel
                 const response = await fetch('/api/deconstruct', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(packet)
+                    body: JSON.stringify({ 
+                        prompt: query,        // تأكد من مطابقة المسمى (prompt أو message) حسب ما يتوقعه السيرفر لديك
+                        image: activeImage    // إرسال الصورة للسيرفر إذا كان يدعم نظام الرؤية (Vision)
+                    })
                 });
 
-                const result = await response.json();
-                document.getElementById('geminiSkeletonLoader').style.display = 'none';
-                if (!response.ok) throw new Error(result.error || result.message || `Status: ${response.status}`);
+                if (!response.ok) {
+                    throw new Error(`السيرفر استجاب بخطأ: ${response.status}`);
+                }
 
-                const rawText = result.text || result.reply || result.content || "تم المعالجة.";
-                const parsedHTML = marked.parse(rawText);
-                const blockId = 'ai-block-' + Date.now();
+                const data = await response.json();
+                
+                // استخراج النصوص أو الصور بناءً على هيكلة الـ JSON الراجع من السيرفر لديك
+                // (قم بتعديل الحقول data.text أو data.imageUrl حسب تصميم السيرفر الخلفي)
+                const replyText = data.text || data.reply || data.content || "تمت المعالجة بنجاح.";
+                const replyImage = data.imageUrl || data.image || null;
 
-                // حقن الرد الأساسي
-                streamContainer.innerHTML += `
-                    <div class="stream-row">
-                        <div class="stream-avatar ai-type">✦</div>
-                        <div class="stream-body" id="${blockId}">${parsedHTML}</div>
+                // إخفاء الشريان اللامع وإضافة رد الذكاء الاصطناعي الفعلي
+                document.getElementById('shimmerLine').style.display = 'none';
+                
+                let aiContent = `<div>${replyText}</div>`;
+                if (replyImage) {
+                    aiContent += `<img src="${replyImage}" alt="Generated Image">`;
+                }
+
+                flow.innerHTML += `
+                    <div class="chat-row ai-row">
+                        <div class="avatar ai-avatar">✦</div>
+                        <div class="message-content">${aiContent}</div>
                     </div>
                 `;
 
-                // 🔥 تفعيل ميزة 4: حقن لوحة عداد كفاءة وتكلفة الأفكار تلقائياً
-                injectInsightDashboardMetrics(blockId, promptRawText);
-
-                // 🔥 تفعيل ميزة 1: تهيئة وحقن أزرار تصدير الجداول وبناء الخرائط الذهنية
-                attachUtilityToolsToAIResponse(blockId, promptRawText);
-
-                // 💾 أرشفة الحالة كاملة داخل الذاكرة المحلية
-                archiveCurrentSessionState(promptRawText, streamContainer.innerHTML);
-
             } catch (error) {
-                document.getElementById('geminiSkeletonLoader').style.display = 'none';
-                streamContainer.innerHTML += `
-                    <div class="stream-row"><div class="stream-avatar ai-type" style="background:#ff4a4a;">❌</div>
-                    <div class="stream-body" style="color:#ff4a4a; background-color: #211313; padding: 18px; border-radius:12px; border:1px solid #ff4a4a;">
-                    <strong>فشل النظام:</strong> ${error.message}</div></div>
+                // في حال وجود خطأ حقيقي، سيتم قذفه هنا وسيظهر فوراً في تفاعلات السيرفر وواجهتك!
+                document.getElementById('shimmerLine').style.display = 'none';
+                flow.innerHTML += `
+                    <div class="chat-row ai-row">
+                        <div class="avatar ai-avatar" style="background:#ff4a4a;">❌</div>
+                        <div class="message-content" style="color:#ff4a4a;">
+                            فشل الاتصال بالخادم الخلفي لموقعك.<br>
+                            <strong>السبب:</strong> ${error.message}<br>
+                            تأكد من رفع الكود الخلفي بشكل سليم ومطابقة مسميات المتغيرات المرسلة.
+                        </div>
+                    </div>
                 `;
             }
-            scrollViewport.scrollTop = scrollViewport.scrollHeight;
+
+            container.scrollTop = container.scrollHeight;
         }
 
-        // ميزة 4: محرك استخلاص عداد الكفاءة والتكلفة التقديرية الذكي للأفكار
-        function injectInsightDashboardMetrics(blockId, textContext) {
-            const block = document.getElementById(blockId);
-            if (!block) return;
-
-            let complexity = "منخفضة";
-            let cost = "زاهدة / تعتمد على مجهودك";
-            let timeline = "3 - 7 أيام";
-
-            if (textContext.includes("متجر") || textContext.includes("برمج") || textContext.includes("تطبيق") || textContext.length > 30) {
-                complexity = "متوسطة إلى عالية";
-                cost = "متغيرة (حسب الاستضافة والأدوات)";
-                timeline = "2 - 4 أسابيع";
-            }
-
-            const badgeHtml = `
-                <div class="insight-dashboard-badge">
-                    <div class="insight-metric-item">🛠️ درجة التعقيد: <span>${complexity}</span></div>
-                    <div class="insight-metric-item">💰 التكلفة التقديرية: <span>${cost}</span></div>
-                    <div class="insight-metric-item">⏱️ الإطار الزمني المتوقع: <span>${timeline}</span></div>
-                </div>
-            `;
-            block.innerHTML = badgeHtml + block.innerHTML;
+        function resetToHome() {
+            document.getElementById('conversationFlow').innerHTML = '';
+            document.getElementById('conversationFlow').style.display = 'none';
+            document.getElementById('welcomeView').style.display = 'block';
+            clearImage();
         }
-
-        // دمج أزرار التصدير وحقن الخرائط الذهنية ومشاركة الروابط
-        function attachUtilityToolsToAIResponse(blockId, promptTitle) {
-            const block = document.getElementById(blockId);
-            if (!block) return;
-
-            // 1. معالجة الجداول وأزرار تصديرها
-            const tables = block.querySelectorAll('table');
-            tables.forEach((table, index) => {
-                const utilityContainer = document.createElement('div');
-                utilityContainer.className = 'table-utility-bar';
-                
-                utilityContainer.innerHTML = `
-                    <button class="utility-btn" onclick="copyTableToClipboard(this)">📋 نسخ الجدول</button>
-                    <button class="utility-btn" onclick="downloadTableAsCSV(this, ${index})">📊 تصدير Excel/CSV</button>
-                `;
-                table.parentNode.insertBefore(utilityContainer, table.nextSibling);
-            });
-
-            // 2. حقن شريط التحكم العام بالرد (ميزة 1: الخريطة الذهنية + ميزة 3: الرابط السحابي)
-            const mainActionBar = document.createElement('div');
-            mainActionBar.className = 'table-utility-bar';
-            mainActionBar.style.marginTop = '15px';
-            
-            const randomMapId = 'map-' + Date.now();
-            mainActionBar.innerHTML = `
-                <button class="utility-btn" style="border-color: var(--gemini-blue);" onclick="toggleVisualMindMap('${randomMapId}', \`${promptTitle}\`)">🗺️ وضع التركيز الخرائطي (Mind Map)</button>
-                <button class="utility-btn" onclick="generateCloudShareLink(this)">🔗 مشاركة سحابية مؤقتة (Share)</button>
-            `;
-            
-            const mindMapDiv = document.createElement('div');
-            mindMapDiv.className = 'mindmap-interactive-view';
-            mindMapDiv.id = randomMapId;
-
-            block.appendChild(mainActionBar);
-            block.appendChild(mindMapDiv);
-        }
-
-        // ميزة 1: توليد وبناء الخريطة الذهنية البصرية التفاعلية حياً ومباشرة
-        function toggleVisualMindMap(mapId, title) {
-            const mapContainer = document.getElementById(mapId);
-            if (!mapContainer) return;
-
-            if (mapContainer.style.display === 'flex') {
-                mapContainer.style.display = 'none';
-                return;
-            }
-
-            mapContainer.style.display = 'flex';
-            mapContainer.innerHTML = `<div class="mermaid" id="graph-${mapId}"></div>`;
-
-            // بناء المخطط الشجري الخرائطي الموجه ديناميكياً
-            const codeDefinition = `
-                graph TD
-                Root[${title}] --> Element1[المصفوفة التحليلية 📊]
-                Root --> Element2[المتطلبات التقنية 🛠️]
-                Root --> Element3[خطة العمل والتنفيذ ⏱️]
-                Element1 --> Sub1[البيانات وجداول الكفاءة]
-                Element2 --> Sub2[بيئة العمل والواجهات]
-                Element3 --> Sub3[إطلاق الخدمة ونشرها]
-            `;
-
-            const graphElement = document.getElementById(`graph-${mapId}`);
-            mermaid.render(`rendered-${mapId}`, codeDefinition).then((result) => {
-                graphElement.innerHTML = result.svg;
-            }).catch(() => {
-                graphElement.innerHTML = "<span style='color:#ff4a4a;'>تعذر بناء الخريطة البصرية مؤقتاً، يرجى التحقق من صياغة الفكرة.</span>";
-            });
-        }
-
-        // ميزة 3: توليد رابط الحفظ السحابي التفاعلي المؤقت بنقرة واحدة
-        function generateCloudShareLink(buttonElement) {
-            buttonElement.innerText = "⚡ جاري الرفع للسحاب...";
-            setTimeout(() => {
-                const dummyUniqueId = Math.random().toString(36).substring(2, 9);
-                const constructedShareableUrl = window.location.origin + "/share/" + dummyUniqueId;
-                
-                // نسخ الرابط تلقائياً لراحة المستخدم عبد الله
-                navigator.clipboard.writeText(constructedShareableUrl);
-                buttonElement.innerHTML = "✅ تم النسخ والمشاركة سحابياً";
-                alert(`تم رفع مصفوفة التفكيك وتوليد رابط سحابي آمن ومحفوظ بنجاح!\n\nالرابط منسوخ الآن في حافظتك:\n${constructedShareableUrl}`);
-            }, 900);
-        }
-
-        // ميزات تصدير ونسخ الجداول البرمجية
-        function copyTableToClipboard(btn) {
-            const table = btn.parentNode.previousSibling;
-            let csv = [];
-            table.querySelectorAll('tr').forEach(r => {
-                let row = [];
-                r.querySelectorAll('th, td').forEach(c => row.push(c.innerText.trim()));
-                csv.push(row.join('\t'));
-            });
-            navigator.clipboard.writeText(csv.join('\n'));
-            alert('تم نسخ الجدول بنجاح! يمكنك لصقه الآن في Excel أو Notion.');
-        }
-
-        function downloadTableAsCSV(btn, index) {
-            const table = btn.parentNode.previousSibling;
-            let csv = [];
-            table.querySelectorAll('tr').forEach(r => {
-                let row = [];
-                r.querySelectorAll('th, td').forEach(c => row.push(`"${c.innerText.trim().replace(/"/g, '""')}"`));
-                csv.push(row.join(','));
-            });
-            const content = "\uFEFF" + csv.join('\n');
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(new Blob([content], { type: 'text/csv;charset=utf-8;' }));
-            link.setAttribute("download", `Tafkek_Data_Matrix_${index+1}.csv`);
-            document.body.appendChild(link); link.click(); document.body.removeChild(link);
-        }
-
-        // ميزة 2: محرك التصفية والبحث اللحظي العصبوني في الذاكرة المحلية
-        function filterSavedChatsHistory(keyword) {
-            const cleanKeyword = keyword.trim().toLowerCase();
-            const items = document.querySelectorAll('#recentChatsHistoryList .recent-item');
-            
-            items.forEach((item, index) => {
-                const sessionData = localChatsDatabase[index];
-                if (!sessionData) return;
-                
-                // البحث الذكي يطابق الكلمة سواء كانت في العنوان أو في تفاصيل الحوار الداخلي المنسق
-                const isMatchFound = sessionData.title.toLowerCase().includes(cleanKeyword) || 
-                                     sessionData.html.toLowerCase().includes(cleanKeyword);
-                
-                item.style.display = isMatchFound ? 'flex' : 'none';
-            });
-        }
-
-        function archiveCurrentSessionState(title, html) {
-            const idx = localChatsDatabase.findIndex(s => s.id === currentChatSessionId);
-            const shortTitle = title.length > 25 ? title.substring(0, 25) + '...' : title;
-            if (idx !== -1) { localChatsDatabase[idx].html = html; } 
-            else { localChatsDatabase.unshift({ id: currentChatSessionId, title: "💬 " + shortTitle, html: html }); }
-            localStorage.setItem('tafkek_saved_sessions', JSON.stringify(localChatsDatabase));
-            renderSidebarHistory();
-        }
-
-        function renderSidebarHistory() {
-            const container = document.getElementById('recentChatsHistoryList'); container.innerHTML = '';
-            if (localChatsDatabase.length === 0) { container.innerHTML = `<li class="recent-item" style="color:#727575; font-size:0.8rem; cursor:default;">الأرشيف فارغ</li>`; return; }
-            localChatsDatabase.forEach(s => {
-                const li = document.createElement('li'); li.className = 'recent-item'; li.innerText = s.title;
-                li.onclick = () => {
-                    currentChatSessionId = s.id;
-                    document.getElementById('welcomeDashboard').style.display = 'none';
-                    const stream = document.getElementById('chatFlowStream'); stream.style.display = 'flex'; stream.innerHTML = s.html;
-                };
-                container.appendChild(li);
-            });
-        }
-
-        function resetToDashboardView() { currentChatSessionId = Date.now().toString(); document.getElementById('chatFlowStream').innerHTML = ''; document.getElementById('chatFlowStream').style.display = 'none'; document.getElementById('welcomeDashboard').style.display = 'flex'; clearAttachedImage(); }
-        function clearAllStoredData() { if (confirm('مسح الأرشيف؟')) { localStorage.removeItem('tafkek_saved_sessions'); localChatsDatabase = []; resetToDashboardView(); renderSidebarHistory(); } }
     </script>
 </body>
 </html>
