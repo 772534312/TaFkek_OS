@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS</title>
+    <title>Tafkek OS v2.0</title>
+    <!-- استدعاء مكتبة لتفسير وتحويل الجداول والمصفوفات الذكية القادمة من السيرفر -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
             --bg-main: #131314;
@@ -31,7 +33,7 @@
             overflow: hidden;
         }
 
-        /* ------------------ الشريط الجانبي ------------------ */
+        /* ------------------ الشريط الجانبي الذكي ------------------ */
         .sidebar {
             width: 260px;
             background-color: var(--bg-sidebar);
@@ -69,30 +71,7 @@
             color: var(--text-main);
         }
 
-        .sidebar-menu {
-            list-style: none;
-            margin-top: 30px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .menu-item {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 12px;
-            border-radius: 50px;
-            cursor: pointer;
-            color: var(--text-main);
-            font-size: 0.9rem;
-        }
-
-        .menu-item:hover {
-            background-color: var(--bg-hover);
-        }
-
-        /* ------------------ المساحة الرئيسية ------------------ */
+        /* ------------------ المساحة الرئيسية للمحادثة والتفكيك ------------------ */
         .main-chat {
             flex: 1;
             display: flex;
@@ -131,13 +110,13 @@
         .chat-container {
             flex: 1;
             overflow-y: auto;
-            padding: 20px 60px;
-            max-width: 850px;
+            padding: 20px 40px;
+            max-width: 900px;
             width: 100%;
             margin: 0 auto;
         }
 
-        /* واجهة الترحيب الافتراضية */
+        /* واجهة الترحيب الافتراضية المقتبسة من Gemini */
         .welcome-view {
             margin-top: 8vh;
         }
@@ -161,33 +140,11 @@
             margin-bottom: 50px;
         }
 
-        .suggestions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-        }
-
-        .suggestion-card {
-            background-color: var(--bg-sidebar);
-            padding: 22px;
-            border-radius: 16px;
-            cursor: pointer;
-            font-size: 0.95rem;
-            min-height: 140px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .suggestion-card:hover {
-            background-color: var(--bg-hover);
-        }
-
-        /* ------------------ شريط تدفق الرسائل الحقيقي ------------------ */
+        /* ------------------ مصفوفة تدفق رسائل التفكيك والجداول ------------------ */
         .conversation-flow {
             display: none;
             flex-direction: column;
-            gap: 30px;
+            gap: 35px;
             padding-bottom: 40px;
         }
 
@@ -216,19 +173,37 @@
             font-size: 1.05rem;
             line-height: 1.7;
             color: var(--text-main);
-            white-space: pre-wrap;
             flex: 1;
+            width: 100%;
         }
 
-        .message-content img {
-            max-width: 100%;
-            max-height: 350px;
-            border-radius: 12px;
-            margin-top: 12px;
+        /* 🔥 التنسيق الاحترافي لـ مصفوفة الجداول المسترجعة وتثبيتها كما في الصورة تماماً */
+        .message-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            background-color: #171719;
             border: 1px solid var(--border);
         }
 
-        /* أنيميشن التحميل الخاص بـ Gemini */
+        .message-content th, .message-content td {
+            border: 1px solid var(--border);
+            padding: 14px;
+            text-align: right;
+            font-size: 0.95rem;
+        }
+
+        .message-content th {
+            background-color: #1e1e20;
+            color: #74a1eb; /* اللون الأزرق المميز للعناوين الأساسية */
+            font-weight: bold;
+        }
+
+        .message-content tr:nth-child(even) {
+            background-color: #1a1a1c;
+        }
+
+        /* أنيميشن شريط التحميل المتلألئ */
         .shimmer-line {
             display: none;
             width: 100%;
@@ -245,40 +220,11 @@
             100% { background-position: 100% 50%; }
         }
 
-        /* منطقة معاينة الصورة المرفقة قبل الإرسال */
-        .preview-box {
-            display: none;
-            position: relative;
-            margin-bottom: 10px;
-            width: fit-content;
-        }
-
-        .preview-box img {
-            width: 60px;
-            height: 60px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
-
-        .preview-box .remove-btn {
-            position: absolute;
-            top: -5px;
-            left: -5px;
-            background: #ff4a4a;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            font-size: 10px;
-        }
-
-        /* ------------------ صندوق الإدخال السفلي ------------------ */
+        /* ------------------ صندوق الإدخال السفلي المطابق لهوية نظام تفكيك ------------------ */
         .input-area-wrapper {
             padding: 10px 60px 25px 60px;
             background: linear-gradient(transparent, var(--bg-main) 40%);
+            position: relative;
         }
 
         .input-box-container {
@@ -286,16 +232,15 @@
             margin: 0 auto;
             background-color: var(--bg-input);
             border-radius: 32px;
-            padding: 8px 22px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-row {
+            padding: 8px 24px;
             display: flex;
             align-items: center;
             gap: 15px;
-            width: 100%;
+            border: 1px solid transparent;
+        }
+
+        .input-box-container:focus-within {
+            border-color: #4285f4;
         }
 
         .input-box-container textarea {
@@ -308,12 +253,6 @@
             resize: none;
             padding: 10px 0;
             max-height: 150px;
-        }
-
-        .input-actions {
-            display: flex;
-            align-items: center;
-            gap: 12px;
         }
 
         .action-icon-btn {
@@ -334,8 +273,20 @@
             background-color: var(--bg-hover);
         }
 
-        .hidden-file-input { display: none; }
-        .disclaimer { text-align: center; font-size: 0.75rem; color: #727575; margin-top: 10px; }
+        .disclaimer { 
+            text-align: center; 
+            font-size: 0.75rem; 
+            color: #727575; 
+            margin-top: 10px; 
+        }
+
+        .version-tag {
+            position: absolute;
+            bottom: 25px;
+            left: 40px;
+            font-size: 0.8rem;
+            color: #444746;
+        }
     </style>
 </head>
 <body>
@@ -347,13 +298,8 @@
                 <span class="hide-text">محادثة جديدة</span>
             </button>
         </div>
-        <div>
-            <ul class="sidebar-menu">
-                <li class="menu-item" onclick="alert('عبدالله بن وهلان - Tafkek OS')">
-                    <span>👤</span>
-                    <span class="hide-text">الحساب</span>
-                </li>
-            </ul>
+        <div style="padding: 15px; font-size: 0.85rem; color: var(--text-sub);">
+            Tafkek Engine Active
         </div>
     </aside>
 
@@ -365,52 +311,29 @@
         </div>
 
         <div class="chat-container">
+            <!-- واجهة الترحيب العلوية -->
             <div class="welcome-view" id="welcomeView">
                 <h1 class="greeting"><span class="gradient-text">مرحباً بك،</span></h1>
                 <h2 class="sub-greeting">كيف يمكنني مساعدتك اليوم؟</h2>
-                
-                <div class="suggestions-grid">
-                    <div class="suggestion-card" onclick="selectSuggestion('قم بإنشاء متجر لبيع الهواتف الذكية')">
-                        <span>قم بإنشاء متجر لبيع الهواتف الذكية مع الهيكلية</span>
-                        <div class="card-icon">💻</div>
-                    </div>
-                    <div class="suggestion-card" onclick="selectSuggestion('توليد صورة واقعية لكوكب المريخ مستقبلي وعالي الدقة')">
-                        <span>اطلب توليد صور ذكية فائقة الدقة بأسلوب فني</span>
-                        <div class="card-icon">🎨</div>
-                    </div>
-                </div>
             </div>
 
+            <!-- حاوية الرسائل والجداول الحية -->
             <div class="conversation-flow" id="conversationFlow"></div>
             <div class="shimmer-line" id="shimmerLine"></div>
         </div>
 
+        <!-- منطقة الإدخال السفلية المستعادة بالكامل مع نصوص الهوية الأصلية لتفكيك -->
         <div class="input-area-wrapper">
             <div class="input-box-container">
-                
-                <div class="preview-box" id="previewBox">
-                    <button class="remove-btn" onclick="clearImage()">×</button>
-                    <img id="previewImg" src="">
-                </div>
-
-                <div class="input-row">
-                    <input type="file" id="fileUpload" class="hidden-file-input" accept="image/*" onchange="previewImage(this)">
-                    <button class="action-icon-btn" onclick="document.getElementById('fileUpload').click()" title="إرفاق صورة">📎</button>
-                    
-                    <textarea id="chatInput" rows="1" placeholder="اسأل تفكيك أو اطلب توليد صورة..." oninput="autoGrow(this)" onkeydown="handleKeyDown(event)"></textarea>
-                    
-                    <div class="input-actions">
-                        <button class="action-icon-btn" style="color: #8ab4f8;" onclick="sendMessage()" title="إرسال الطلب">✦</button>
-                    </div>
-                </div>
+                <textarea id="chatInput" rows="1" placeholder="أدخل فكرتك هنا لتفكيكها بالكامل..." oninput="autoGrow(this)" onkeydown="handleKeyDown(event)"></textarea>
+                <button class="action-icon-btn" style="color: #8ab4f8;" onclick="sendMessage()" title="إرسال الفكرة">✦</button>
             </div>
-            <div class="disclaimer">مربوط حياً مع خوادم معالجة البيانات السحابية لـ Tafkek OS.</div>
+            <div class="disclaimer">نظام التفكيك متصل مباشرة بـ Gemini API. يرجى التحقق من الخطوات الهامة.</div>
+            <div class="version-tag">Tafkek OS v2.0</div>
         </div>
     </main>
 
     <script>
-        let base64Image = null;
-
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('collapsed');
         }
@@ -427,114 +350,68 @@
             }
         }
 
-        function selectSuggestion(text) {
-            document.getElementById('chatInput').value = text;
-            sendMessage();
-        }
-
-        // تحويل الصورة المرفقة ومعاينتها
-        function previewImage(input) {
-            const file = input.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    base64Image = e.target.result;
-                    document.getElementById('previewImg').src = base64Image;
-                    document.getElementById('previewBox').style.display = 'block';
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        function clearImage() {
-            base64Image = null;
-            document.getElementById('fileUpload').value = '';
-            document.getElementById('previewBox').style.display = 'none';
-        }
-
-        // 🚀 محرك الإرسال الحقيقي والربط الفعلي مع Vercel
+        // 🚀 محرك الاتصال الفعلي والقراءة البصرية للجداول والخدمات المفقودة
         async function sendMessage() {
             const inputEl = document.getElementById('chatInput');
             const query = inputEl.value.trim();
-            
-            if (!query && !base64Image) return;
+            if (!query) return;
 
-            // إخفاء الترحيب وعرض صندوق الدردشة
             document.getElementById('welcomeView').style.display = 'none';
             const flow = document.getElementById('conversationFlow');
             flow.style.display = 'flex';
 
-            // إضافة رسالة المستخدم مع الصورة إن وجدت
-            let userContent = `<div>${query}</div>`;
-            if (base64Image) {
-                userContent += `<img src="${base64Image}" style="max-width:150px; border-radius:8px; margin-top:5px;">`;
-            }
-            
+            // إضافة رسالة المستخدم في مجرى الحوار
             flow.innerHTML += `
                 <div class="chat-row user-row">
                     <div class="avatar user-avatar">ع</div>
-                    <div class="message-content">${userContent}</div>
+                    <div class="message-content"><div>${query}</div></div>
                 </div>
             `;
 
-            // حفظ الصورة الحالية وإعادة تهيئة الحقول لإدخال جديد
-            const activeImage = base64Image;
             inputEl.value = '';
             inputEl.style.height = 'auto';
-            clearImage();
 
-            // تشغيل شريط التحميل المتلألئ
+            // إظهار أنيميشن التحميل
             document.getElementById('shimmerLine').style.display = 'block';
             const container = document.querySelector('.chat-container');
             container.scrollTop = container.scrollHeight;
 
             try {
-                // 🔗 الاتصال المباشر بـ API الحقيقي الخاص بك على Vercel
+                // الاتصال المباشر بملف السيرفر الخلفي الحقيقي لتفكيك الأفكار
                 const response = await fetch('/api/deconstruct', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        prompt: query,        // تأكد من مطابقة المسمى (prompt أو message) حسب ما يتوقعه السيرفر لديك
-                        image: activeImage    // إرسال الصورة للسيرفر إذا كان يدعم نظام الرؤية (Vision)
-                    })
+                    body: JSON.stringify({ prompt: query, message: query })
                 });
 
-                if (!response.ok) {
-                    throw new Error(`السيرفر استجاب بخطأ: ${response.status}`);
-                }
-
                 const data = await response.json();
-                
-                // استخراج النصوص أو الصور بناءً على هيكلة الـ JSON الراجع من السيرفر لديك
-                // (قم بتعديل الحقول data.text أو data.imageUrl حسب تصميم السيرفر الخلفي)
-                const replyText = data.text || data.reply || data.content || "تمت المعالجة بنجاح.";
-                const replyImage = data.imageUrl || data.image || null;
-
-                // إخفاء الشريان اللامع وإضافة رد الذكاء الاصطناعي الفعلي
                 document.getElementById('shimmerLine').style.display = 'none';
-                
-                let aiContent = `<div>${replyText}</div>`;
-                if (replyImage) {
-                    aiContent += `<img src="${replyImage}" alt="Generated Image">`;
+
+                if (!response.ok) {
+                    throw new Error(data.error || `خطأ سيرفر: ${response.status}`);
                 }
+
+                // استخراج رد الذكاء الاصطناعي (سواء كان نص عادي أو جدول ماركداون محمل بالمصفوفات)
+                const rawReply = data.text || data.reply || data.content || "تمت المعالجة.";
+
+                // 🔥 الخطوة السحرية: استخدام مكتبة marked لتحويل نصوص الجداول والمصفوفات البرمجية إلى جداول HTML حقيقية
+                const formattedHTML = marked.parse(rawReply);
 
                 flow.innerHTML += `
                     <div class="chat-row ai-row">
                         <div class="avatar ai-avatar">✦</div>
-                        <div class="message-content">${aiContent}</div>
+                        <div class="message-content">${formattedHTML}</div>
                     </div>
                 `;
 
             } catch (error) {
-                // في حال وجود خطأ حقيقي، سيتم قذفه هنا وسيظهر فوراً في تفاعلات السيرفر وواجهتك!
                 document.getElementById('shimmerLine').style.display = 'none';
                 flow.innerHTML += `
                     <div class="chat-row ai-row">
                         <div class="avatar ai-avatar" style="background:#ff4a4a;">❌</div>
                         <div class="message-content" style="color:#ff4a4a;">
-                            فشل الاتصال بالخادم الخلفي لموقعك.<br>
-                            <strong>السبب:</strong> ${error.message}<br>
-                            تأكد من رفع الكود الخلفي بشكل سليم ومطابقة مسميات المتغيرات المرسلة.
+                            <strong>فشل في استدعاء معمل التفكيك العصبوني:</strong><br>
+                            ${error.message}
                         </div>
                     </div>
                 `;
@@ -547,7 +424,6 @@
             document.getElementById('conversationFlow').innerHTML = '';
             document.getElementById('conversationFlow').style.display = 'none';
             document.getElementById('welcomeView').style.display = 'block';
-            clearImage();
         }
     </script>
 </body>
