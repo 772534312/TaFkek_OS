@@ -1,43 +1,46 @@
+import https from 'https';
+
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
-
-    // الواجهة سترسل: النص المطلوب، وصيغة الملف (مثل image/jpeg أو application/pdf)، والملف مشفر كـ base64
-    const { prompt, mimeType, base64Data } = req.body || {};
-    if (!base64Data || !mimeType) return res.status(400).json({ error: 'Missing file data' });
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    const userPrompt = prompt || "قم بقراءة هذا المستند أو الصورة بدقة واشرح محتوياته بالتفصيل باللغة العربية.";
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
-        // نستخدم الرابط المستقر v1 الذي اكتشفناه في الفحص لمنع أعطال الـ 404
-        const url = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+        const { prompt, model } = req.body;
+        const apiKey = process.env.GEMINI_API_KEY;
+        let targetModel = model || "gemini-2.5-flash";
 
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [
-                    {
-                        parts: [
-                            { text: userPrompt },
-                            {
-                                inlineData: {
-                                    mimeType: mimeType,
-                                    data: base64Data
-                                }
-                            }
-                        ]
-                    }
-                ]
-            })
+        const postData = JSON.stringify({
+            contents: [{ parts: [{ text: `قم بتحليل وتفكيك البنية المستندية للنص التالي واستخراج المفاهيم وهيكلتها:\n\n${prompt}` }] }]
         });
 
-        const data = await response.json();
-        const outputText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        const options = {
+            hostname: 'generativelanguage.googleapis.com',
+            port: 443,
+            path: `/v1beta/models/${targetModel}:generateContent?key=${apiKey}`,
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
+        };
 
-        return res.status(200).json({ success: true, analysis: outputText });
-    } catch (error) {
-        return res.status(500).json({ error: error.message });
+        const reqPromise = () => {
+            return new Promise((resolve, reject) => {
+                const request = https.request(options, response => {
+                    let body = '';
+                    response.on('data', chunk => body += chunk);
+                    response.on('end', () => resolve({ status: response.statusCode, data: JSON.parse(body) }));
+                });
+                request.on('error', reject);
+                request.write(postData);
+                request.end();
+            });
+        };
+
+        const result = await reqPromise();
+        const output = result.data.candidates?.[0]?.content?.parts?.[0]?.text || "لم يتم استخراج نص معالجة.";
+
+        return res.status(200).json({ result: output, source: `Document Analyzer Engine (${targetModel.toUpperCase()})` });
+    } catch (e) {
+        return res.status(500).json({ error: e.message });
     }
 }
-
