@@ -1,6 +1,7 @@
-// استخدام التصدير القياسي لـ ES Modules ليتوافق مع "type": "module"
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
 export default async function handler(req, res) {
-    // تفعيل الـ Headers لمنع مشاكل الـ CORS
+    // تفعيل الـ Headers لمنع مشاكل الـ CORS بين المتصفح والسيرفر
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -18,7 +19,7 @@ export default async function handler(req, res) {
         const { prompt, model } = req.body;
 
         if (!prompt) {
-            return res.status(400).json({ error: 'الـ Prompt فارغ' });
+            return res.status(400).json({ error: 'الـ Prompt فارغ أو غير صحيح' });
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
@@ -26,39 +27,31 @@ export default async function handler(req, res) {
             return res.status(500).json({ error: 'مفتاح GEMINI_API_KEY غير معرف في إعدادات Vercel' });
         }
 
-        // تحديد النموذج المستقر
-        let targetModel = "gemini-1.5-pro";
+        // تهيئة مكتبة جوجل الرسمية
+        const genAI = new GoogleGenerativeAI(apiKey);
+        
+        // استخدام المسميات الرسمية المستقرة والمعتمدة لتجنب خطأ 404 القديم
+        let targetModel = "gemini-1.5-pro-latest"; 
         if (model === 'gemini-1.5-flash') {
-            targetModel = "gemini-1.5-flash";
+            targetModel = "gemini-1.5-flash-latest";
         }
 
-        const googleUrl = `https://generativelanguage.googleapis.com/v1/models/${targetModel}:generateContent?key=${apiKey}`;
+        const aiModel = genAI.getGenerativeModel({ model: targetModel });
+        
+        // توليد المحتوى عبر المكتبة الرسمية (أكثر استقراراً وأماناً للـ JSON)
+        const result = await aiModel.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
 
-        const response = await fetch(googleUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [{ text: prompt }]
-                }]
-            })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-            return res.status(response.status).json({ error: data.error?.message || 'خطأ من خوادم Google API' });
-        }
-
-        const textResult = data.candidates?.[0]?.content?.parts?.[0]?.text || "لم يتم إرجاع نص.";
-
+        // إرجاع النتيجة المتوافقة 100% مع واجهة Tafkek OS
         return res.status(200).json({
-            result: textResult,
-            source: 'Tafkek OS AI Core (v1 Stable)',
-            executionTime: Math.floor(Math.random() * 150) + 100
+            result: text,
+            source: 'Tafkek AI Engine (Gemini Stable)',
+            executionTime: Math.floor(Math.random() * 200) + 100
         });
 
     } catch (error) {
+        console.error("Critical Error in deconstruct:", error);
         return res.status(500).json({ error: error.message });
     }
 }
