@@ -71,6 +71,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            width: 100%;
         }
 
         .tool-btn:hover, .tool-btn.active {
@@ -152,7 +153,7 @@
             font-size: 14px;
         }
 
-        /*Controls & Controls Select*/
+        /*Controls*/
         .controls-row {
             display: flex;
             gap: 15px;
@@ -193,7 +194,7 @@
             cursor: not-allowed;
         }
 
-        /*Terminal / Output Style*/
+        /*Terminal Output*/
         .output-panel {
             background-color: #05070f;
             border: 1px solid var(--border-color);
@@ -238,7 +239,7 @@
         
         <div class="section-title">الأساس الفوري والربط</div>
         <button class="tool-btn active" onclick="switchTool('grounding')">🌐 التوثيق وبحث جوجل الفوري</button>
-        <button class="tool-btn" onclick="switchTool('live-voice')">🎙️ المحادثثة الصوتية الحية (Live)</button>
+        <button class="tool-btn" onclick="switchTool('live-voice')">🎙️ المحادثة الصوتية الحية (Live)</button>
         
         <div class="section-title">بيئات المعالجة والوسائط</div>
         <button class="tool-btn" onclick="switchTool('python-lab')">🐍 مختبر بايثون وتحليل البيانات</button>
@@ -268,8 +269,8 @@
                 <button id="submit-btn" class="action-btn" onclick="executeProcess()">تفعيل المعالجة الإدراكية</button>
                 
                 <select id="model-select" class="model-select">
-                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (سياق عميق ومكثف)</option>
-                    <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (سرعة استجابة فائقة)</option>
+                    <option value="gemini-2.5-pro">Gemini 2.5 Pro (التحليل والمنطق الأعمق)</option>
+                    <option value="gemini-2.5-flash" selected>Gemini 2.5 Flash (سرعة خارقة ومعالجة فورية)</option>
                 </select>
             </div>
         </div>
@@ -286,7 +287,7 @@
     </div>
 
     <script>
-        // 1. الإعدادات الصحيحة والنهائية لكل الأدوات متطابقة مع مخرجات خوادم Vercel المحدثة (.js)
+        // الإعدادات المحدثة للمسارات (.js) لتجنب أخطاء الـ 404
         const toolsConfig = {
             'grounding': {
                 title: 'التوثيق والربط ببحث جوجل الفوري (Google Search Grounding)',
@@ -322,7 +323,6 @@
 
         let currentToolKey = 'grounding';
 
-        // دالة التنقل بين الأدوات في القائمة الجانبية
         function switchTool(toolKey) {
             currentToolKey = toolKey;
             const config = toolsConfig[toolKey];
@@ -331,12 +331,10 @@
             document.getElementById('tool-desc').innerText = config.desc;
             document.getElementById('toggle-label').innerText = config.label;
             
-            // تحديث تصميم الأزرار النشطة
             document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-            event.currentTarget.classList.add('active');
+            if(event) event.currentTarget.classList.add('active');
         }
 
-        // دالة المعالجة والاتصال بالسيرفر (تم حسمها وتثبيتها بالمتغير prompt)
         async function executeProcess() {
             const inputVal = document.getElementById('user-input').value.trim();
             const submitBtn = document.getElementById('submit-btn');
@@ -349,7 +347,6 @@
                 return;
             }
 
-            // تهيئة واجهة العرض أثناء التحميل
             submitBtn.disabled = true;
             outputBox.innerText = 'جاري الاتصال بالنواة الإدراكية السحابية وتفكيك البيانات...';
             outputBox.style.color = 'var(--text-main)';
@@ -360,32 +357,29 @@
             const selectedModel = document.getElementById('model-select').value;
 
             try {
-                // إرسال الطلب بالصيغة الصارمة المتوقعة في الـ Backend
                 const response = await fetch(activeTool.apiEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        prompt: inputVal,      // المتغير المطابق 100% للسيرفر
-                        model: selectedModel   // النموذج المختار
+                        prompt: inputVal,
+                        model: selectedModel
                     })
                 });
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(data.error || `خطأ في استجابة الخادم الداخلي: ${response.status}`);
+                    throw new Error(data.error || `خطأ من الخادم الداخلي: ${response.status}`);
                 }
 
-                // عرض النتيجة بنجاح
                 outputBox.innerText = data.result;
                 statusDot.className = 'dot active';
-                statusText.innerText = `تمت المعالجة بنجاح عبر [${data.source || 'السيرفر الآمن'}]`;
+                statusText.innerText = `تمت المعالجة بنجاح عبر [${data.source}]`;
 
             } catch (error) {
-                // التعامل الذكي مع أخطاء الشبكة والسيرفر لعرضها بوضوح في لوحة التحكم
-                outputBox.innerText = `فشل الاتصال بـ الـ API الخارجي للمشروع.\nتأكد من تفعيل بيئة المطور المتغيرة (Environment Variables) ورابط السيرفر السحابي.\n\nالتفاصيل: ${error.message}`;
+                outputBox.innerText = `فشل الاتصال بـ الـ API الخارجي للمشروع.\nتأكد من تفعيل بيئة المطور المتغيرة (Environment Variables) ورابط السيرفر.\n\nالتفاصيل: ${error.message}`;
                 outputBox.style.color = 'var(--error-red)';
                 statusDot.className = 'dot error';
                 statusText.innerText = 'فشل الاتصال الخارجي';
