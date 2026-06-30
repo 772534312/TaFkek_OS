@@ -3,489 +3,394 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS v3.0.0 | البيئة الإدراكية الشاملة</title>
+    <title>Tafkek OS - البيئة الإدراكية الشاملة</title>
     <style>
         :root {
-            --bg-main: #0b0f19;
-            --bg-side: #111827;
-            --accent-blue: #3b82f6;
-            --accent-pink: #ec4899;
-            --accent-green: #10b981;
-            --glass: rgba(255, 255, 255, 0.03);
-            --border-glass: rgba(255, 255, 255, 0.08);
+            --bg-dark: #0b0f19;
+            --panel-bg: #111827;
+            --border-color: #1f2937;
+            --text-main: #f3f4f6;
             --text-muted: #9ca3af;
+            --accent-blue: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --error-red: #ef4444;
+            --success-green: #10b981;
         }
 
         body {
             margin: 0;
             padding: 0;
-            background-color: var(--bg-main);
-            color: #ffffff;
+            background-color: var(--bg-dark);
+            color: var(--text-main);
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: grid;
-            grid-template-columns: 1fr 320px;
+            display: flex;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* القائمة الجانبية اليسرى */
+        /*Sidebar Style*/
         .sidebar {
-            background-color: var(--bg-side);
-            border-right: 1px solid var(--border-glass);
+            width: 300px;
+            background-color: var(--panel-bg);
+            border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             padding: 20px;
+            box-sizing: border-box;
             overflow-y: auto;
         }
 
-        .os-logo {
+        .logo-area {
             font-size: 24px;
             font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            color: var(--text-main);
             margin-bottom: 30px;
-        }
-
-        .os-logo span {
-            color: var(--accent-pink);
-        }
-
-        .menu-section {
-            margin-bottom: 25px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 15px;
         }
 
         .section-title {
             font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 10px;
             text-transform: uppercase;
+            color: var(--text-muted);
+            margin: 15px 0 10px 0;
             letter-spacing: 1px;
         }
 
-        .menu-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 5px;
-            font-size: 14px;
+        .tool-btn {
+            background: none;
             border: 1px solid transparent;
-        }
-
-        .menu-item:hover {
-            background: rgba(255, 255, 255, 0.02);
-        }
-
-        .menu-item.active {
-            background: var(--glass);
-            border: 1px solid var(--border-glass);
-            border-left: 4px solid var(--accent-blue);
-        }
-
-        /* منطقة المحتوى الرئيسية */
-        .main-content {
-            padding: 40px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow-y: auto;
-        }
-
-        .header-area {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        .header-area h2 {
-            font-size: 26px;
-            margin-bottom: 8px;
-        }
-
-        .header-area p {
             color: var(--text-muted);
+            padding: 12px 15px;
+            text-align: right;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 5px;
+            transition: all 0.2s ease;
             font-size: 14px;
-            margin: 0;
-        }
-
-        /* لوحة التحكم والخيارات الوسطى */
-        .control-panel {
-            background: var(--glass);
-            border: 1px solid var(--border-glass);
-            border-radius: 20px;
-            padding: 25px;
-            backdrop-filter: blur(20px);
-            max-width: 800px;
-            width: 100%;
-            margin: 0 auto;
-            box-sizing: border-box;
-        }
-
-        .feature-option-container {
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
+            gap: 10px;
         }
 
-        .feature-option-container input[type="checkbox"], 
-        .feature-option-container input[type="file"] {
-            cursor: pointer;
-        }
-
-        .hidden { display: none !important; }
-
-        /* منطقة المدخلات والمخرجات المتطورة */
-        .interactive-zone {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        textarea {
-            width: 100%;
-            height: 80px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-glass);
-            border-radius: 12px;
-            color: white;
-            padding: 15px;
-            box-sizing: border-box;
-            resize: none;
-            font-family: inherit;
-            outline: none;
-        }
-
-        textarea:focus {
+        .tool-btn:hover, .tool-btn.active {
+            background-color: var(--border-color);
+            color: var(--accent-blue);
             border-color: var(--accent-blue);
         }
 
-        .btn-execute {
-            background: var(--accent-blue);
-            color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
-        .btn-execute:hover { background: #2563eb; }
-
-        .response-box {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border-glass);
-            padding: 20px;
-            border-radius: 12px;
-            min-height: 100px;
-            font-size: 15px;
-            line-height: 1.6;
-            max-height: 250px;
+        /*Main Workspace*/
+        .workspace {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            box-sizing: border-box;
             overflow-y: auto;
         }
 
-        .output-media-container img {
-            max-width: 100%;
-            border-radius: 12px;
-            margin-top: 10px;
-            border: 1px solid var(--border-glass);
+        .tool-header {
+            margin-bottom: 25px;
         }
 
-        .source-links {
+        .tool-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 28px;
+            color: var(--text-main);
+        }
+
+        .tool-header p {
+            margin: 0;
+            color: var(--text-muted);
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /*Interactive Area*/
+        .interface-card {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        .input-field {
+            width: 100%;
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            color: var(--text-main);
+            font-size: 16px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            color: var(--text-main);
+            font-size: 14px;
+        }
+
+        /*Controls & Controls Select*/
+        .controls-row {
             display: flex;
             gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .btn-source {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border-glass);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            cursor: pointer;
-        }
-
-        /* شريط التفعيل السفلي */
-        .bottom-bar {
-            max-width: 800px;
-            width: 100%;
-            margin: 10px auto 0 auto;
-            display: flex;
-            justify-content: space-between;
             align-items: center;
+            margin-top: 15px;
         }
 
-        .model-selector {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid var(--border-glass);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 12px;
+        .model-select {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px;
+            border-radius: 8px;
             font-size: 14px;
             outline: none;
             cursor: pointer;
         }
 
-        .system-status {
-            font-size: 14px;
-            color: var(--text-muted);
+        .action-btn {
+            background-color: var(--accent-blue);
+            color: var(--bg-dark);
+            border: none;
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
         }
 
-        .windows-activation {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            color: rgba(255, 255, 255, 0.15);
-            font-size: 13px;
-            text-align: right;
-            pointer-events: none;
+        .action-btn:hover {
+            background-color: var(--accent-hover);
         }
+
+        .action-btn:disabled {
+            background-color: var(--border-color);
+            color: var(--text-muted);
+            cursor: not-allowed;
+        }
+
+        /*Terminal / Output Style*/
+        .output-panel {
+            background-color: #05070f;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 120px;
+            font-family: 'Courier New', Courier, monospace;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 10px;
+            padding: 0 5px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+        }
+
+        .dot.active { background-color: var(--success-green); }
+        .dot.error { background-color: var(--error-red); }
     </style>
 </head>
 <body>
 
-    <main class="main-content">
-        <div class="header-area">
-            <h2 id="toolTitle">التوثيق والربط ببحث جوجل الفوري (Google Search Grounding)</h2>
-            <p id="toolDesc">تلقي إجابات حية من الإنترنت مدعومة بروابط مصادر ومراجع حية وموثوقة.</p>
+    <div class="sidebar">
+        <div class="logo-area">Tafkek OS</div>
+        
+        <div class="section-title">الأساس الفوري والربط</div>
+        <button class="tool-btn active" onclick="switchTool('grounding')">🌐 التوثيق وبحث جوجل الفوري</button>
+        <button class="tool-btn" onclick="switchTool('live-voice')">🎙️ المحادثثة الصوتية الحية (Live)</button>
+        
+        <div class="section-title">بيئات المعالجة والوسائط</div>
+        <button class="tool-btn" onclick="switchTool('python-lab')">🐍 مختبر بايثون وتحليل البيانات</button>
+        <button class="tool-btn" onclick="switchTool('deconstruct')">🧠 التفكيك المنطقي والنصوص</button>
+        <button class="tool-btn" onclick="switchTool('code-assistant')">💻 المساعد البرمجي وهندسة الأكواد</button>
+    </div>
+
+    <div class="workspace">
+        <div class="tool-header">
+            <h1 id="tool-title">التوثيق والربط ببحث جوجل الفوري (Google Search Grounding)</h1>
+            <p id="tool-desc">تلقي إجابات حية من الإنترنت مدعومة بروابط مصادر ومراجع حية وموثوقة.</p>
         </div>
 
-        <div class="control-panel">
-            <div id="dynamicOption" class="feature-option-container">
-                <input type="checkbox" id="groundingToggle" checked>
-                <label for="groundingToggle" id="optionLabel">تفعيل محرك التوثيق الفوري (Grounding Enable)</label>
+        <div class="interface-card">
+            <div class="input-group">
+                <textarea id="user-input" class="input-field" rows="4" placeholder="أدخل المدخلات أو السؤال المراد معالجته تفكيكياً هنا..."></textarea>
             </div>
 
-            <div class="interactive-zone">
-                <textarea id="cmdInput" placeholder="اكتب أمرك أو استفسارك التقني هنا..."></textarea>
-                <button class="btn-execute" onclick="executeCurrentTool()">تفعيل المعالجة الإدراكية</button>
+            <div class="input-group">
+                <label class="checkbox-container">
+                    <input type="checkbox" id="feature-toggle" checked>
+                    <span id="toggle-label">تفعيل محرك التوثيق الفوري (Grounding Enable)</span>
+                </label>
             </div>
 
-            <div class="response-box" id="outputDisplay">
-                في انتظار إصدار أمر معالجة... أنظمة الـ Backend جاهزة لاستقبال الطلبات.
+            <div class="controls-row">
+                <button id="submit-btn" class="action-btn" onclick="executeProcess()">تفعيل المعالجة الإدراكية</button>
+                
+                <select id="model-select" class="model-select">
+                    <option value="gemini-1.5-pro">Gemini 1.5 Pro (سياق عميق ومكثف)</option>
+                    <option value="gemini-1.5-flash" selected>Gemini 1.5 Flash (سرعة استجابة فائقة)</option>
+                </select>
             </div>
-            
-            <div id="mediaOutput" class="output-media-container hidden"></div>
+        </div>
 
-            <div class="source-links" id="sourceContainer">
-                <button class="btn-source">🌐 النواة الحية: المتصلة</button>
+        <div id="output-box" class="output-panel">في انتظار تفعيل المعالجة الإدراكية...</div>
+        
+        <div class="status-bar">
+            <div class="status-indicator">
+                <div id="status-dot" class="dot"></div>
+                <span id="status-text">النواة الحية: متصلة</span>
             </div>
+            <div id="meta-info">الإصدار الشامل v3.0.0</div>
         </div>
-
-        <div class="bottom-bar">
-            <div class="system-status">البيئة الإدراكية الشاملة v3.0.0</div>
-            <select class="model-selector" id="modelSelect">
-                <option value="gemini-1.5-pro">Gemini 1.5 Pro (سياق عميق ومكثف)</option>
-                <option value="groq-llama3">Groq Llama 3 (أداء فوري فائق)</option>
-            </select>
-        </div>
-    </main>
-
-    <aside class="sidebar">
-        <div class="os-logo">Tafkek OS <span>✦</span></div>
-
-        <div class="menu-section">
-            <div class="section-title">الأساس الفوري والربط</div>
-            <div class="menu-item active" onclick="switchTool('grounding', this)">🎯 التوثيق ببحث جوجل الفوري</div>
-            <div class="menu-item" onclick="switchTool('live-voice', this)">🎙️ المحادثة الصوتية الحية (Live)</div>
-        </div>
-
-        <div class="menu-section">
-            <div class="section-title">بينات المعالجة والوسائط</div>
-            <div class="menu-item" onclick="switchTool('python-lab', this)">🐍 مختبر بايثون وتحليل البيانات</div>
-            <div class="menu-item" onclick="switchTool('deconstruct', this)">🧠 التفكيك المنطقي والنصوص</div>
-            <div class="menu-item" onclick="switchTool('code-assistant', this)">💻 المساعد البرمجي وهندسة الأكواد</div>
-            <div class="menu-item" onclick="switchTool('doc-check', this)">👁️ فحص الوثائق والميديا الفورية</div>
-            <div class="menu-item" onclick="switchTool('pixel-gen', this)">🎨 غزل البكسلات التوليدية</div>
-        </div>
-
-        <div class="menu-section">
-            <div class="section-title">بيئة ونظام المطورين</div>
-            <div class="menu-item" onclick="switchTool('gem-studio', this)">💎 استوديو الجواهر المخصصة</div>
-        </div>
-    </aside>
-
-    <div class="windows-activation">تنشيط Windows<br>انتقل إلى الإعدادات لتنشيط Windows.</div>
+    </div>
 
     <script>
-        // الذاكرة المؤقتة لحالة الأداة المحددة حالياً
-        let currentTool = 'grounding';
-
-        // خريطة تعريفات الأدوات (النصوص والخيارات والروابط المباشرة لملفات الـ api الخاصة بك)
+        // 1. الإعدادات الصحيحة والنهائية لكل الأدوات متطابقة مع مخرجات خوادم Vercel المحدثة (.js)
         const toolsConfig = {
             'grounding': {
                 title: 'التوثيق والربط ببحث جوجل الفوري (Google Search Grounding)',
                 desc: 'تلقي إجابات حية من الإنترنت مدعومة بروابط مصادر ومراجع حية وموثوقة.',
                 label: 'تفعيل محرك التوثيق الفوري (Grounding Enable)',
-                inputType: 'checkbox',
-                apiEndpoint: '/api/deconstruct.js' // يتم توجيهها لمعالج البحث الرئيسي
+                apiEndpoint: '/api/deconstruct.js'
             },
             'live-voice': {
                 title: 'المحادثة الصوتية الحية (Live Voice Streaming)',
                 desc: 'التفاعل الصوتي اللحظي متعدد الوسائط عبر بروتوكولات الاتصال منخفضة التأخير.',
                 label: 'تشغيل ميكروفون النظام الصوتي',
-                inputType: 'checkbox',
                 apiEndpoint: '/api/deconstruct.js'
             },
             'python-lab': {
                 title: 'مختبر بايثون وتحليل البيانات (Python Sandbox)',
                 desc: 'تشغيل بيئات برمجية معزولة لمعالجة البيانات الرياضية وتوليد الرسوم البيانية.',
                 label: 'السماح بالمحاكاة الرسومية العميقة',
-                inputType: 'checkbox',
-                apiEndpoint: '/api/deconstruct-groq.js'
+                apiEndpoint: '/api/deconstruct.js'
             },
             'deconstruct': {
                 title: 'التفكيك المنطقي والنصوص (Semantic Deconstruction)',
                 desc: 'تحليل البنى اللغوية، استخراج المفاهيم الأساسية، وإعادة هيكلة النصوص المعقدة.',
                 label: 'استخدام التفكيك الكثيف عبر جروق',
-                inputType: 'checkbox',
-                apiEndpoint: '/api/deconstruct-groq.js'
+                apiEndpoint: '/api/deconstruct.js'
             },
             'code-assistant': {
                 title: 'المساعد البرمجي وهندسة الأكواد (Code Architecture)',
                 desc: 'مراجعة الأخطاء البرمجية، هندسة الخوارزميات، وتوليد واجهات الأنظمة الذكية.',
                 label: 'تفعيل الفحص الصارم للأخطاء والمنطق',
-                inputType: 'checkbox',
-                apiEndpoint: '/api/deconstruct.js'
-            },
-            'doc-check': {
-                title: 'فحص الوثائق والميديا الفورية (Document Analysis)',
-                desc: 'تحليل مستندات PDF، الصور، واستخلاص الجداول والبيانات الصورية بدقة عالية.',
-                label: 'إرفاق المستند/الصورة المراد فحصها:',
-                inputType: 'file',
-                apiEndpoint: '/api/analyze-document.js'
-            },
-            'pixel-gen': {
-                title: 'غزل البكسلات التوليدية (Pixel Diffusion Art)',
-                desc: 'إنتاج لوحات فنية وتصاميم واجهات رقمية دقيقة بناءً على الوصف الإبداعي النصي.',
-                label: 'نمط دقة خارق (Ultra-Detail Rendering)',
-                inputType: 'checkbox',
-                apiEndpoint: '/api/generate-image.js'
-            },
-            'gem-studio': {
-                title: 'استوديو الجواهر المخصصة (Custom Gems Studio)',
-                desc: 'تخصيص وضبط بيئات ذكاء اصطناعي ذات أدوار ومهام وظيفية ثابتة وموجهة للمطور.',
-                label: 'حفظ كجوهرة نظام دائمة',
-                inputType: 'checkbox',
                 apiEndpoint: '/api/deconstruct.js'
             }
         };
 
-        // دالة تبديل واجهة الأداة عند الضغط على القائمة الجانبية
-        function switchTool(toolKey, element) {
-            currentTool = toolKey;
+        let currentToolKey = 'grounding';
+
+        // دالة التنقل بين الأدوات في القائمة الجانبية
+        function switchTool(toolKey) {
+            currentToolKey = toolKey;
             const config = toolsConfig[toolKey];
-
-            // تحديث العناصر النشطة في القائمة
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-            element.classList.add('active');
-
-            // تحديث العناوين والشروحات
-            document.getElementById('toolTitle').innerText = config.title;
-            document.getElementById('toolDesc').innerText = config.desc;
             
-            // إعادة بناء منطقة الخيارات (ملف أو مربع فحص)
-            const optionContainer = document.getElementById('dynamicOption');
-            optionContainer.innerHTML = '';
+            document.getElementById('tool-title').innerText = config.title;
+            document.getElementById('tool-desc').innerText = config.desc;
+            document.getElementById('toggle-label').innerText = config.label;
             
-            if(config.inputType === 'checkbox') {
-                optionContainer.innerHTML = `
-                    <input type="checkbox" id="toolToggle" checked>
-                    <label for="toolToggle" id="optionLabel">${config.label}</label>
-                `;
-            } else if(config.inputType === 'file') {
-                optionContainer.innerHTML = `
-                    <label style="margin-left: 10px;">${config.label}</label>
-                    <input type="file" id="toolFileInput">
-                `;
-            }
-            
-            // تنظيف شاشات العرض السابقة
-            document.getElementById('outputDisplay').innerText = `نظام التوجيه مستعد للعمل على أداة: ${config.title}`;
-            document.getElementById('mediaOutput').classList.add('hidden');
-            document.getElementById('mediaOutput').innerHTML = '';
+            // تحديث تصميم الأزرار النشطة
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
         }
 
-        // محرك التشغيل ومعالجة الطلبات وإرسالها لملفات الـ Serverless Backend
-        async function executeCurrentTool() {
-            const inputVal = document.getElementById('cmdInput').value.trim();
-            const outputBox = document.getElementById('outputDisplay');
-            const mediaBox = document.getElementById('mediaOutput');
-            const sourceContainer = document.getElementById('sourceContainer');
-            const selectedModel = document.getElementById('modelSelect').value;
-            const config = toolsConfig[currentTool];
+        // دالة المعالجة والاتصال بالسيرفر (تم حسمها وتثبيتها بالمتغير prompt)
+        async function executeProcess() {
+            const inputVal = document.getElementById('user-input').value.trim();
+            const submitBtn = document.getElementById('submit-btn');
+            const outputBox = document.getElementById('output-box');
+            const statusDot = document.getElementById('status-dot');
+            const statusText = document.getElementById('status-text');
 
-            if (!inputVal && currentTool !== 'doc-check') {
-                outputBox.innerText = "تنبيه: يرجى كتابة أو صياغة أمر قبل إرساله للمعالجة.";
+            if (!inputVal) {
+                alert('يرجى كتابة نص أو أمر قبل تفعيل المعالجة.');
                 return;
             }
 
-            outputBox.innerText = "جاري معالجة الطلب في النواة السيبرانية الحية... يرجى الانتظار...";
-            mediaBox.classList.add('hidden');
-            mediaBox.innerHTML = '';
+            // تهيئة واجهة العرض أثناء التحميل
+            submitBtn.disabled = true;
+            outputBox.innerText = 'جاري الاتصال بالنواة الإدراكية السحابية وتفكيك البيانات...';
+            outputBox.style.color = 'var(--text-main)';
+            statusDot.className = 'dot active';
+            statusText.innerText = 'جاري المعالجة...';
+
+            const activeTool = toolsConfig[currentToolKey];
+            const selectedModel = document.getElementById('model-select').value;
 
             try {
-                let response;
-                
-                // هيكلة الطلب حسب طبيعة الأداة (إذا كانت أداة فحص وثائق تتطلب فورم ميديا)
-                if (currentTool === 'doc-check') {
-                    const fileInput = document.getElementById('toolFileInput');
-                    const formData = new FormData();
-                    formData.append('prompt', inputVal);
-                    if(fileInput && fileInput.files[0]) {
-                        formData.append('file', fileInput.files[0]);
-                    }
-                    
-                    response = await fetch(config.apiEndpoint, {
-                        method: 'POST',
-                        body: formData // Vercel Serverless سيتولى قراءته عبر الرابط المخصص
-                    });
-                } else {
-                    // الطلبات النصية العادية لبقية الملفات mjs
-                    response = await fetch(config.apiEndpoint, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            prompt: inputVal,
-                            model: selectedModel,
-                            timestamp: new Date().toISOString()
-                        })
-                    });
-                }
+                // إرسال الطلب بالصيغة الصارمة المتوقعة في الـ Backend
+                const response = await fetch(activeTool.apiEndpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        prompt: inputVal,      // المتغير المطابق 100% للسيرفر
+                        model: selectedModel   // النموذج المختار
+                    })
+                });
 
-                if (!response.ok) throw new Error(`خطأ في استجابة الخادم الداخلي: ${response.status}`);
-                
                 const data = await response.json();
 
-                // عرض وتوجيه المخرجات حسب الأداة المستدعاة
-                if (currentTool === 'pixel-gen' && data.imageUrl) {
-                    // إذا كانت أداة توليد صور
-                    outputBox.innerText = data.text || "تم غزل البكسلات وتوليد الصورة المطلوبة بنجاح:";
-                    mediaBox.innerHTML = `<img src="${data.imageUrl}" alt="AI Generated Image">`;
-                    mediaBox.classList.remove('hidden');
-                } else {
-                    // المخرجات النصية العادية للأدوات الأخرى
-                    outputBox.innerText = data.result || data.text || JSON.stringify(data, null, 2);
+                if (!response.ok) {
+                    throw new Error(data.error || `خطأ في استجابة الخادم الداخلي: ${response.status}`);
                 }
 
-                // تحديث روابط المصادر بشكل ديناميكي لتأكيد تفعيل الـ Grounding
-                sourceContainer.innerHTML = `
-                    <button class="btn-source">🌐 المصدر الفعلي: ${data.source || 'Vercel Lambda'}</button>
-                    <button class="btn-source">⚡ زمن الاستجابة: ${data.executionTime || 'تلقائي'}ms</button>
-                `;
+                // عرض النتيجة بنجاح
+                outputBox.innerText = data.result;
+                statusDot.className = 'dot active';
+                statusText.innerText = `تمت المعالجة بنجاح عبر [${data.source || 'السيرفر الآمن'}]`;
 
             } catch (error) {
-                console.error("خطأ بالنواة:", error);
-                outputBox.innerText = `فشل الاتصال بـ الـ API الخارجي للمشروع.\nتأكد من تفعيل بيئة المطور المتغيرة (Environment Variables) ورابط Firebase.\nالتفاصيل: ${error.message}`;
+                // التعامل الذكي مع أخطاء الشبكة والسيرفر لعرضها بوضوح في لوحة التحكم
+                outputBox.innerText = `فشل الاتصال بـ الـ API الخارجي للمشروع.\nتأكد من تفعيل بيئة المطور المتغيرة (Environment Variables) ورابط السيرفر السحابي.\n\nالتفاصيل: ${error.message}`;
+                outputBox.style.color = 'var(--error-red)';
+                statusDot.className = 'dot error';
+                statusText.innerText = 'فشل الاتصال الخارجي';
+            } finally {
+                submitBtn.disabled = false;
             }
         }
     </script>
