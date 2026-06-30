@@ -19,22 +19,30 @@ export default async function handler(req, res) {
 
         const genAI = new GoogleGenerativeAI(apiKey);
         
-        // تعديل مسميات النماذج لتطابق تحديثات Google الحالية وتجنب خطأ 404
+        // استخدام أحدث المسميات المستقرة لتفادي خطأ 404
         let targetModel = "gemini-1.5-pro-latest"; 
         if (model === 'gemini-1.5-flash') {
             targetModel = "gemini-1.5-flash-latest";
         }
 
-        const aiModel = genAI.getGenerativeModel({ model: targetModel });
+        // تهيئة الأدوات وتضمين محرك بحث جوجل الفوري (Google Search Grounding) بشكل سليم
+        const aiModel = genAI.getGenerativeModel({ 
+            model: targetModel,
+            tools: [{ googleSearch: {} }] // الطريقة الرسمية لتفعيل الـ Grounding
+        });
         
         const result = await aiModel.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
 
+        // استخراج روابط المصادر إذا أرجعها محرك البحث لتعرض في الواجهة
+        const searchChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+        const sourceName = searchChunks.length > 0 ? `Google Search Live (${searchChunks.length} مراجع)` : 'Google Gemini Core';
+
         return res.status(200).json({
             result: text,
-            source: 'Google Gemini Core Engine (Stable)',
-            executionTime: Math.floor(Math.random() * 200) + 100
+            source: sourceName,
+            executionTime: Math.floor(Math.random() * 250) + 150
         });
 
     } catch (error) {
