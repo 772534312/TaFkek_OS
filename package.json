@@ -1,8 +1,8 @@
 {
-  "name":"ta-fkek-os",
-  "version":"1.0.0",
-  "type":"module",
-  "dependencies":{
-    "@google/genai":"latest"
+  "name": "tafkek-os",
+  "version": "3.0.0",
+  "type": "module",
+  "dependencies": {
+    "@google/generative-ai": "^0.2.1"
   }
 }
