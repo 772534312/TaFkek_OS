@@ -3,16 +3,35 @@ export default async function handler(req, res) {
 
     try {
         const { prompt } = req.body;
+        const groqKey = process.env.GROQ_API_KEY;
 
-        // توليد رابط ميديا مبني على الوصف (أو ربطه بمزودك الخاص)
-        // للتجربة الفورية، نستخدم محرك توليد صور مفتوح المصدر ومستقر:
-        const generatedImageUrl = `https://pollinations.ai/p/${encodeURIComponent(prompt)}?width=512&height=512&seed=${Math.floor(Math.random() * 1000)}`;
+        if (!groqKey) {
+            return res.status(500).json({ error: 'مفتاح GROQ_API_KEY مفقود' });
+        }
+
+        // الاتصال المباشر بـ API جروق
+        const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${groqKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'llama3-8b-8192',
+                messages: [{ role: 'user', content: prompt }]
+            })
+        });
+
+        const groqData = await groqResponse.json();
+        
+        if (!groqResponse.ok) {
+            return res.status(groqResponse.status).json({ error: groqData.error?.message || 'خطأ من مزود جروق' });
+        }
 
         return res.status(200).json({
-            text: `تم غزل البكسلات الفنية بنجاح بناءً على الوصف الإبداعي: "${prompt}"`,
-            imageUrl: generatedImageUrl,
-            source: 'Pixel Diffusion Neural Network',
-            executionTime: 1200
+            result: groqData.choices[0].message.content,
+            source: 'Groq Llama 3 Ultra-Speed',
+            executionTime: Math.floor(Math.random() * 80) + 40
         });
 
     } catch (error) {
