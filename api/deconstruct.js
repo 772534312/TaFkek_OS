@@ -1,5 +1,6 @@
-module.exports = async (req, res) => {
-    // تفعيل الـ Headers لمنع مشاكل الـ CORS بين الدومينات
+// استخدام التصدير القياسي لـ ES Modules ليتوافق مع "type": "module"
+export default async function handler(req, res) {
+    // تفعيل الـ Headers لمنع مشاكل الـ CORS
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -60,4 +61,4 @@ module.exports = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
-};
+}
