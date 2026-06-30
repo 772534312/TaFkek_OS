@@ -1,4 +1,14 @@
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
+    // تفعيل الـ Headers لمنع مشاكل الـ CORS بين الدومينات
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+    res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
@@ -12,16 +22,15 @@ export default async function handler(req, res) {
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: 'مفتاح GEMINI_API_KEY مفقود في إعدادات Vercel' });
+            return res.status(500).json({ error: 'مفتاح GEMINI_API_KEY غير معرف في إعدادات Vercel' });
         }
 
-        // استخدام النماذج المستقرة مباشرة والمدعومة عالمياً في الإصدار v1
+        // تحديد النموذج المستقر
         let targetModel = "gemini-1.5-pro";
         if (model === 'gemini-1.5-flash') {
             targetModel = "gemini-1.5-flash";
         }
 
-        // الرابط الرسمي المستقر والمباشر
         const googleUrl = `https://generativelanguage.googleapis.com/v1/models/${targetModel}:generateContent?key=${apiKey}`;
 
         const response = await fetch(googleUrl, {
@@ -51,4 +60,4 @@ export default async function handler(req, res) {
     } catch (error) {
         return res.status(500).json({ error: error.message });
     }
-}
+};
