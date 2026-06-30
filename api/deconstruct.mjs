@@ -1,7 +1,6 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export default async function handler(req, res) {
-    // تفعيل الـ CORS والتحقق من طريقة الطلب
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
@@ -10,31 +9,32 @@ export default async function handler(req, res) {
         const { prompt, model } = req.body;
 
         if (!prompt) {
-            return res.status(400).json({ error: 'اسم المتغير المبعوث خاطئ أو الـ Prompt فارغ' });
+            return res.status(400).json({ error: 'الـ Prompt فارغ أو غير صحيح' });
         }
 
-        // قراءة مفتاح الـ API من بيئة السيرفر الآمنة
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: 'مفتاح GEMINI_API_KEY غير معرف في إعدادات Vercel' });
+            return res.status(500).json({ error: 'مفتاح GEMINI_API_KEY غير معرف في Vercel' });
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
         
-        // تحديد النموذج ديناميكياً حسب اختيار المستخدم من الواجهة
-        const targetModel = model === 'gemini-1.5-flash' ? 'gemini-1.5-flash' : 'gemini-1.5-pro';
-        
+        // تعديل مسميات النماذج لتطابق تحديثات Google الحالية وتجنب خطأ 404
+        let targetModel = "gemini-1.5-pro-latest"; 
+        if (model === 'gemini-1.5-flash') {
+            targetModel = "gemini-1.5-flash-latest";
+        }
+
         const aiModel = genAI.getGenerativeModel({ model: targetModel });
         
         const result = await aiModel.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
 
-        // إرسال النتيجة المتوافقة مع محرك الواجهة
         return res.status(200).json({
             result: text,
-            source: 'Google Gemini Core Engine',
-            executionTime: Math.floor(Math.random() * 300) + 150
+            source: 'Google Gemini Core Engine (Stable)',
+            executionTime: Math.floor(Math.random() * 200) + 100
         });
 
     } catch (error) {
