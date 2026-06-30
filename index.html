@@ -342,11 +342,12 @@
                     throw new Error(data.error || `خطأ الخادم: ${response.status}`);
                 }
 
-                if (activeTool.isImage && data.imageUrl) {
-                    outputBox.style.display = 'none';
-                    outputImg.src = data.imageUrl;
-                    outputImg.style.display = 'block';
-                    statusText.innerText = `تم توليد الصورة بنجاح عبر [${data.source}]`;
+               if (activeTool.isImage && data.imageUrl) {
+    outputBox.style.display = 'none'; // إخفاء صندوق النصوص
+    outputImg.src = data.imageUrl;     // وضع رابط الصورة الجديد
+    outputImg.style.display = 'block'; // إظهار عنصر الصورة فوراً
+    statusText.innerText = `تم توليد الصورة بنجاح عبر [${data.source}]`;
+}
                 } else {
                     outputBox.style.display = 'block';
                     
