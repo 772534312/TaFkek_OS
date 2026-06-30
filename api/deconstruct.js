@@ -32,11 +32,15 @@ export default async function handler(req, res) {
             targetModel = "gemini-2.5-flash";
         }
 
-        const postData = JSON.stringify({
-            contents: [{
-                parts: [{ text: prompt }]
-            }]
-        });
+        // أضف هذا التوجيه (System Instruction) داخل طلب الـ API لجوجل لرفع جودة البيانات المستلمة
+const postData = JSON.stringify({
+    contents: [{
+        parts: [{ text: prompt }]
+    }],
+    systemInstruction: {
+        parts: [{ text: "أنت النواة التحليلية لـ Tafkek OS. عند الإجابة، رتب البيانات دائماً بشكل مرئي متقدم. استخدم الجداول (Markdown Tables) للمقارنات أو عرض الخصائص والميزات، واستخدم النقاط المنظمة (Bullet Points)، والعناوين الجانبية الواضحة (H2, H3). تجنب الأسطر الطويلة المتكدسة." }]
+    }
+});
 
         const options = {
             hostname: 'generativelanguage.googleapis.com',
