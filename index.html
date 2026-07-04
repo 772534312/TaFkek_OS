@@ -4,18 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tafkek OS - البيئة الإدراكية الشاملة</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
-            --bg-dark: #0b0f19;
-            --panel-bg: #111827;
-            --border-color: #1f2937;
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
+            --bg-dark: #070a13;
+            --panel-bg: #0f1626;
+            --border-color: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
             --accent-blue: #38bdf8;
             --accent-hover: #0ea5e9;
-            --error-red: #ef4444;
+            --error-red: #f43f5e;
             --success-green: #10b981;
+            --code-bg: #030712;
         }
 
         body {
@@ -23,7 +27,7 @@
             padding: 0;
             background-color: var(--bg-dark);
             color: var(--text-main);
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Cairo', Tahoma, sans-serif;
             display: flex;
             height: 100vh;
             overflow: hidden;
@@ -35,26 +39,28 @@
             border-left: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            padding: 20px;
+            padding: 25px;
             box-sizing: border-box;
             overflow-y: auto;
         }
 
         .logo-area {
-            font-size: 24px;
-            font-weight: bold;
+            font-size: 22px;
+            font-weight: 700;
             color: var(--text-main);
             margin-bottom: 30px;
-            border-bottom: 2px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
             padding-bottom: 15px;
+            letter-spacing: 0.5px;
         }
 
         .section-title {
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             color: var(--text-muted);
-            margin: 15px 0 10px 0;
+            margin: 20px 0 10px 0;
             letter-spacing: 1px;
+            font-weight: 600;
         }
 
         .tool-btn {
@@ -65,9 +71,10 @@
             text-align: right;
             border-radius: 8px;
             cursor: pointer;
-            margin-bottom: 5px;
-            transition: all 0.2s ease;
+            margin-bottom: 6px;
+            transition: all 0.25s ease;
             font-size: 14px;
+            font-family: 'Cairo', sans-serif;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -76,34 +83,35 @@
         }
 
         .tool-btn:hover, .tool-btn.active {
-            background-color: var(--border-color);
+            background-color: #1e293b;
             color: var(--accent-blue);
-            border-color: var(--accent-blue);
+            border-color: rgba(56, 189, 248, 0.2);
         }
 
         .workspace {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 30px;
+            padding: 35px;
             box-sizing: border-box;
             overflow-y: auto;
         }
 
-        .tool-header { margin-bottom: 25px; }
-        .tool-header h1 { margin: 0 0 10px 0; font-size: 28px; color: var(--text-main); }
-        .tool-header p { margin: 0; color: var(--text-muted); font-size: 15px; line-height: 1.6; }
+        .tool-header { margin-bottom: 30px; }
+        .tool-header h1 { margin: 0 0 8px 0; font-size: 26px; font-weight: 700; color: var(--text-main); }
+        .tool-header p { margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.6; }
 
         .interface-card {
             background-color: var(--panel-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
             padding: 25px;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }
 
         .input-group { margin-bottom: 20px; }
-        .input-group label { display: block; margin-bottom: 10px; color: var(--text-main); font-size: 14px; }
+        .input-group label { display: block; margin-bottom: 10px; color: var(--text-main); font-size: 14px; font-weight: 600; }
 
         .input-field {
             width: 100%;
@@ -112,9 +120,11 @@
             border-radius: 8px;
             padding: 15px;
             color: var(--text-main);
-            font-size: 16px;
+            font-size: 15px;
+            font-family: 'Cairo', sans-serif;
             box-sizing: border-box;
             resize: vertical;
+            transition: border-color 0.2s;
         }
 
         .input-field:focus { outline: none; border-color: var(--accent-blue); }
@@ -124,9 +134,11 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
-            color: var(--text-main);
-            font-size: 14px;
+            color: var(--text-muted);
+            font-size: 13px;
+            transition: color 0.2s;
         }
+        .checkbox-container:hover { color: var(--text-main); }
 
         .controls-row { display: flex; gap: 15px; align-items: center; margin-top: 15px; }
 
@@ -136,57 +148,96 @@
             color: var(--text-main);
             padding: 12px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
+            font-family: 'Cairo', sans-serif;
             outline: none;
             cursor: pointer;
         }
 
         .action-btn {
             background-color: var(--accent-blue);
-            color: var(--bg-dark);
+            color: #030712;
             border: none;
-            padding: 14px 28px;
-            font-size: 16px;
-            font-weight: bold;
+            padding: 12px 28px;
+            font-size: 15px;
+            font-weight: 700;
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s ease;
+            font-family: 'Cairo', sans-serif;
+            transition: all 0.2s ease;
         }
 
-        .action-btn:hover { background-color: var(--accent-hover); }
-        .action-btn:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
+        .action-btn:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
+        .action-btn:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; transform: none; }
 
-        /* لوحة المخرجات المتقدمة المدعومة بالجداول */
+        /* لوحة العرض الراقية والمحسنة نصوصاً وبصرياً */
         .output-panel {
-            background-color: #0d1322;
+            background-color: var(--panel-bg);
             border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 25px;
-            min-height: 120px;
-            line-height: 1.7;
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 150px;
+            line-height: 1.8;
             overflow-x: auto;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        .output-panel h1, .output-panel h2, .output-panel h3 { color: var(--accent-blue); margin-top: 20px; margin-bottom: 10px; }
-        .output-panel p { margin-bottom: 15px; font-size: 16px; }
-        .output-panel ul, .output-panel ol { padding-right: 20px; margin-bottom: 15px; }
-        .output-panel li { margin-bottom: 5px; }
+        /* حركات الظهور الناعمة للبيانات المستلمة */
+        .fade-in-content {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* صياغة العناوين وتناسق المسافات */
+        .output-panel h1, .output-panel h2, .output-panel h3 { color: var(--text-main); font-weight: 600; margin-top: 25px; margin-bottom: 12px; }
+        .output-panel h1 { font-size: 22px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .output-panel h2 { font-size: 18px; color: var(--accent-blue); }
+        .output-panel p { margin-bottom: 16px; font-size: 15.5px; color: #e2e8f0; }
         
+        /* القوائم المنسقة */
+        .output-panel ul, .output-panel ol { padding-right: 25px; margin-bottom: 18px; color: #e2e8f0; }
+        .output-panel li { margin-bottom: 6px; }
+        
+        /* الجداول الذكية الراقية */
         .output-panel table {
             width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            font-size: 15px;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 25px 0;
+            font-size: 14.5px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
         }
-        .output-panel th { background-color: #1f2937; color: var(--accent-blue); padding: 12px; text-align: right; border: 1px solid var(--border-color); }
-        .output-panel td { padding: 12px; border: 1px solid var(--border-color); background-color: #111827; }
-        .output-panel tr:nth-child(even) td { background-color: #161e2e; }
+        .output-panel th { background-color: #1e293b; color: var(--accent-blue); padding: 14px; text-align: right; font-weight: 600; }
+        .output-panel td { padding: 14px; border-bottom: 1px solid var(--border-color); background-color: #0b1324; color: #e2e8f0; }
+        .output-panel tr:last-child td { border-bottom: none; }
+        .output-panel tr:nth-child(even) td { background-color: #0f192e; }
 
-        .output-panel code { background-color: #1f2937; padding: 3px 6px; border-radius: 4px; font-family: monospace; color: #f43f5e; font-size: 14px; }
-        .output-panel pre { background-color: #05070f; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); overflow-x: auto; margin: 15px 0; }
-        .output-panel pre code { background: none; padding: 0; color: #34d399; font-size: 14px; }
+        /* كتل الأكواد البرمجية الفاخرة */
+        .output-panel code { background-color: #1e293b; padding: 3px 6px; border-radius: 4px; font-family: 'Consolas', monospace; color: #f43f5e; font-size: 13.5px; }
+        .output-panel pre { background-color: var(--code-bg); padding: 20px; border-radius: 10px; border: 1px solid var(--border-color); overflow-x: auto; margin: 20px 0; position: relative; }
+        .output-panel pre::before { content: "CODE BLOCK"; position: absolute; top: 0; left: 20px; font-size: 9px; color: var(--text-muted); background: #1f2937; padding: 2px 8px; border-radius: 0 0 4px 4px; font-family: sans-serif; }
+        .output-panel pre code { background: none; padding: 0; color: #34d399; font-size: 14px; font-family: 'Consolas', 'Courier New', monospace; }
 
-        .status-bar { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 10px; padding: 0 5px; }
+        /* الصناديق التنبيهية والاقتباسات (Callouts) */
+        .output-panel blockquote {
+            margin: 20px 0;
+            padding: 15px 20px;
+            background-color: rgba(56, 189, 248, 0.06);
+            border-right: 4px solid var(--accent-blue);
+            border-left: none;
+            border-radius: 4px;
+            color: #cbd5e1;
+            font-style: normal;
+        }
+        .output-panel blockquote p { margin: 0; font-size: 15px; }
+
+        .status-bar { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 15px; padding: 0 5px; }
         .status-indicator { display: flex; align-items: center; gap: 6px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-muted); }
         .dot.active { background-color: var(--success-green); }
@@ -194,10 +245,11 @@
         
         #output-image {
             max-width: 100%;
-            border-radius: 8px;
-            margin-top: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
             display: none;
             border: 1px solid var(--border-color);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
@@ -289,7 +341,6 @@
 
         let currentToolKey = 'grounding';
 
-        // دالة التنقل الآمنة بعد إصلاح تعارض الـ Element Object لقائمة الأزرار الجانبية
         function switchTool(toolKey, element) {
             currentToolKey = toolKey;
             const config = toolsConfig[toolKey];
@@ -350,9 +401,10 @@
                     statusText.innerText = `تم توليد الصورة بنجاح عبر [${data.source}]`;
                 } else {
                     outputBox.style.display = 'block';
-                    // عرض مخرجات الـ Markdown والـ Tables بنجاح
+                    
+                    // تحويل وعرض الـ Markdown الفاخر وإضافة كلاس الحركة الصاعد تلقائياً
                     if (window.marked && typeof window.marked.parse === 'function') {
-                        outputBox.innerHTML = window.marked.parse(data.result);
+                        outputBox.innerHTML = `<div class="fade-in-content">${window.marked.parse(data.result)}</div>`;
                     } else {
                         outputBox.innerText = data.result;
                     }
