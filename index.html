@@ -72,6 +72,7 @@
             align-items: center;
             gap: 10px;
             width: 100%;
+            box-sizing: border-box;
         }
 
         .tool-btn:hover, .tool-btn.active {
@@ -155,7 +156,7 @@
         .action-btn:hover { background-color: var(--accent-hover); }
         .action-btn:disabled { background-color: var(--border-color); color: var(--text-muted); cursor: not-allowed; }
 
-        /* لوحة عرض البيانات المتقدمة والمحسنة */
+        /* لوحة المخرجات المتقدمة المدعومة بالجداول */
         .output-panel {
             background-color: #0d1322;
             border: 1px solid var(--border-color);
@@ -166,13 +167,11 @@
             overflow-x: auto;
         }
 
-        /* تنسيق البيانات المعروضة بداخل اللوحة (جداول، قوائم، عناوين) */
         .output-panel h1, .output-panel h2, .output-panel h3 { color: var(--accent-blue); margin-top: 20px; margin-bottom: 10px; }
         .output-panel p { margin-bottom: 15px; font-size: 16px; }
         .output-panel ul, .output-panel ol { padding-right: 20px; margin-bottom: 15px; }
         .output-panel li { margin-bottom: 5px; }
         
-        /* تنسيق رائع للجداول المتقدمة */
         .output-panel table {
             width: 100%;
             border-collapse: collapse;
@@ -183,7 +182,6 @@
         .output-panel td { padding: 12px; border: 1px solid var(--border-color); background-color: #111827; }
         .output-panel tr:nth-child(even) td { background-color: #161e2e; }
 
-        /* تنسيق اقتباسات الأكواد والنصوص البرمجية */
         .output-panel code { background-color: #1f2937; padding: 3px 6px; border-radius: 4px; font-family: monospace; color: #f43f5e; font-size: 14px; }
         .output-panel pre { background-color: #05070f; padding: 15px; border-radius: 8px; border: 1px solid var(--border-color); overflow-x: auto; margin: 15px 0; }
         .output-panel pre code { background: none; padding: 0; color: #34d399; font-size: 14px; }
@@ -209,12 +207,12 @@
         <div class="logo-area">Tafkek OS</div>
         
         <div class="section-title">الأساس الفوري والربط</div>
-        <button class="tool-btn active" onclick="switchTool('grounding')">🌐 التوثيق وبحث جوجل الفوري</button>
-        <button class="tool-btn" onclick="switchTool('deconstruct')">🧠 التفكيك المنطقي والنصوص</button>
+        <button id="btn-grounding" class="tool-btn active" onclick="switchTool('grounding', this)">🌐 التوثيق وبحث جوجل الفوري</button>
+        <button id="btn-deconstruct" class="tool-btn" onclick="switchTool('deconstruct', this)">🧠 التفكيك المنطقي والنصوص</button>
         
         <div class="section-title">بيئات المعالجة والوسائط</div>
-        <button class="tool-btn" onclick="switchTool('analyze-document')">📄 فحص وفحص الوثائق الذكي</button>
-        <button class="tool-btn" onclick="switchTool('generate-image')">🎨 استوديو توليد الصور الإبداعية</button>
+        <button id="btn-analyze" class="tool-btn" onclick="switchTool('analyze-document', this)">📄 فحص الوثائق الذكي</button>
+        <button id="btn-image" class="tool-btn" onclick="switchTool('generate-image', this)">🎨 استوديو توليد الصور الإبداعية</button>
     </div>
 
     <div class="workspace">
@@ -291,7 +289,8 @@
 
         let currentToolKey = 'grounding';
 
-        function switchTool(toolKey) {
+        // دالة التنقل الآمنة بعد إصلاح تعارض الـ Element Object لقائمة الأزرار الجانبية
+        function switchTool(toolKey, element) {
             currentToolKey = toolKey;
             const config = toolsConfig[toolKey];
             
@@ -303,7 +302,9 @@
             document.getElementById('output-box').style.display = 'block';
 
             document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
-            if(event) event.currentTarget.classList.add('active');
+            if(element) {
+                element.classList.add('active');
+            }
         }
 
         async function executeProcess() {
@@ -342,18 +343,19 @@
                     throw new Error(data.error || `خطأ الخادم: ${response.status}`);
                 }
 
-               if (activeTool.isImage && data.imageUrl) {
-    outputBox.style.display = 'none'; // إخفاء صندوق النصوص
-    outputImg.src = data.imageUrl;     // وضع رابط الصورة الجديد
-    outputImg.style.display = 'block'; // إظهار عنصر الصورة فوراً
-    statusText.innerText = `تم توليد الصورة بنجاح عبر [${data.source}]`;
-}
+                if (activeTool.isImage && data.imageUrl) {
+                    outputBox.style.display = 'none';
+                    outputImg.src = data.imageUrl;
+                    outputImg.style.display = 'block';
+                    statusText.innerText = `تم توليد الصورة بنجاح عبر [${data.source}]`;
                 } else {
                     outputBox.style.display = 'block';
-                    
-                    // التعديل السحري: استخدام المكتبة لتحويل النص المقروء إلى عناصر HTML متقدمة بدلاً من نص جاف
-                    outputBox.innerHTML = marked.parse(data.result);
-                    
+                    // عرض مخرجات الـ Markdown والـ Tables بنجاح
+                    if (window.marked && typeof window.marked.parse === 'function') {
+                        outputBox.innerHTML = window.marked.parse(data.result);
+                    } else {
+                        outputBox.innerText = data.result;
+                    }
                     statusText.innerText = `تمت المعالجة بنجاح عبر [${data.source}]`;
                 }
 
