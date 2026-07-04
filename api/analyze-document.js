@@ -9,10 +9,19 @@ export default async function handler(req, res) {
     try {
         const { prompt, model } = req.body;
         const apiKey = process.env.GEMINI_API_KEY;
-        let targetModel = model || "gemini-2.5-flash";
+        let targetModel = model || "gemini-2.5-pro"; // نفضل Pro لتحليل الوثائق الطويلة والأكواد
 
         const postData = JSON.stringify({
-            contents: [{ parts: [{ text: `قم بتحليل وتفكيك البنية المستندية للنص التالي واستخراج المفاهيم وهيكلتها:\n\n${prompt}` }] }]
+            contents: [{ parts: [{ text: prompt }] }],
+            // إعدادات جيل الذكاء الاصطناعي المتقدم لضبط التفكير المنطقي الصارم
+            generationConfig: {
+                temperature: 0.1, // خفض الحرارة ليكون التحليل صارماً ودقيقاً جداً بدون عشوائية
+                maxOutputTokens: 8192, // رفع سقف المخرجات لاستيعاب شروحات برمجية وهياكل ضخمة
+                topP: 0.95
+            },
+            systemInstruction: {
+                parts: [{ text: "أنت خبير تفكيك المستندات وهندسة السياق الطويل. وظيفتك قراءة الأكواد أو الملفات الطويلة وتفكيكها بأسلوب صارم على شكل جداول مقارنة، نقاط مرقمة، واستخراج الأخطاء المخفية." }]
+            }
         });
 
         const options = {
@@ -37,9 +46,12 @@ export default async function handler(req, res) {
         };
 
         const result = await reqPromise();
-        const output = result.data.candidates?.[0]?.content?.parts?.[0]?.text || "لم يتم استخراج نص معالجة.";
+        const output = result.data.candidates?.[0]?.content?.parts?.[0]?.text || "فشل استخراج البيانات السياقية.";
 
-        return res.status(200).json({ result: output, source: `Document Analyzer Engine (${targetModel.toUpperCase()})` });
+        return res.status(200).json({ 
+            result: output, 
+            source: `Tafkek Document Analyzer (${targetModel.toUpperCase()})` 
+        });
     } catch (e) {
         return res.status(500).json({ error: e.message });
     }
