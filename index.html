@@ -43,12 +43,7 @@
         .brand i { color: var(--accent-cyan); text-shadow: 0 0 10px var(--accent-cyan); }
         .badge-tag { background: rgba(99, 102, 241, 0.2); border: 1px solid var(--accent-indigo); color: #c7d2fe; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; }
 
-        .api-bar { display: flex; gap: 12px; align-items: center; }
-        .api-input {
-            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px;
-            padding: 6px 12px; color: #fff; font-size: 0.85rem; width: 240px; outline: none; transition: all 0.3s;
-        }
-        .api-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-glow); }
+        .status-badge { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #4ade80; background: rgba(74, 222, 128, 0.1); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(74, 222, 128, 0.3); }
 
         /* Layout Architecture */
         .app-container { display: flex; flex: 1; overflow: hidden; }
@@ -130,8 +125,9 @@
             <span>AETHER AI OS</span>
             <span class="badge-tag">v2.0 PROTOTYPE</span>
         </div>
-        <div class="api-bar">
-            <input type="password" id="api-key" class="api-input" placeholder="Gemini API Key..." onchange="saveApiKey(this.value)">
+        <div class="status-badge">
+            <i class="fa-solid fa-circle" style="font-size:0.5rem;"></i>
+            <span>النظام متصل وجاهز</span>
         </div>
     </header>
 
@@ -153,7 +149,7 @@
                 </h4>
                 
                 <div class="omni-box">
-                    <textarea id="user-input" placeholder="اكتب أمرك هنا، ثم اضغط على زر 'تنفيذ الطلب' أدناه (أو Ctrl + Enter)..." onkeydown="handleKeyPress(event)"></textarea>
+                    <textarea id="user-input" placeholder="اكتب أمرك هنا، واضغط على زر 'تنفيذ الطلب' أدناه..." onkeydown="handleKeyPress(event)"></textarea>
                     <input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(event)">
                     
                     <div class="omni-actions">
@@ -171,7 +167,7 @@
 
                 <div style="font-size:0.8rem; color:var(--text-muted); margin-top:10px; display:flex; justify-content:space-between;">
                     <span><i class="fa-solid fa-circle-info"></i> الشاشة مقسمة تلقائياً للمعاينة.</span>
-                    <span id="router-indicator" style="color:var(--accent-cyan);">الموجه الذكي: جاهز</span>
+                    <span id="router-indicator" style="color:var(--accent-cyan);">الموجه الذكي: نشط</span>
                 </div>
             </div>
 
@@ -179,7 +175,7 @@
             <div class="canvas-pane">
                 <div class="section-title"><i class="fa-solid fa-desktop"></i> لوحة المعاينة التفاعلية (Infinite Canvas)</div>
                 <div class="output-box" id="output-content">
-                    في انتظار التفاعل... اختر أداة من الشريط الجانبي، اكتب طلبك واضغط <b>تنفيذ الطلب 🚀</b>.
+                    مرحباً بك! اختر أداتك المفضلة، اكتب أمرك ثم اضغط <b>تنفيذ الطلب 🚀</b>.
                 </div>
                 <div id="mermaid-container" class="mermaid" style="display:none;"></div>
             </div>
@@ -187,6 +183,9 @@
     </div>
 
     <script>
+        // المفتاح المدمج في الخفاء
+        const SYSTEM_API_KEY = "AQ.Ab8RN6JC2Nega32Bhj3MMo8lpV9A7zTzn3UhbCIYIh8QT0PLVA";
+
         mermaid.initialize({ startOnLoad: false });
 
         // Core Engines Architecture
@@ -221,10 +220,6 @@
             container.appendChild(btn);
         });
 
-        // API Key Handling
-        function saveApiKey(key) { localStorage.setItem('aether_gemini_key', key); }
-        document.getElementById('api-key').value = localStorage.getItem('aether_gemini_key') || '';
-
         // Handle Ctrl+Enter Shortcut
         function handleKeyPress(e) {
             if (e.ctrlKey && e.key === 'Enter') {
@@ -246,22 +241,25 @@
             if (engine.local) {
                 engine.action(input);
             } else {
-                const apiKey = localStorage.getItem('aether_gemini_key');
-                if (!apiKey) return alert('يرجى إدخال Gemini API Key في أعلى الصفحة للاتصال بالذكاء الاصطناعي.');
-
                 output.innerText = "جاري التفكير والتنفيذ عبر المحرك الذكي...";
                 try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${SYSTEM_API_KEY}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ contents: [{ parts: [{ text: `${engine.prompt}\n\n${input}` }] }] })
                     });
                     const data = await res.json();
+                    
+                    if (data.error) {
+                        output.innerText = "خطأ في المعالجة: " + data.error.message;
+                        return;
+                    }
+
                     const reply = data.candidates[0].content.parts[0].text;
                     output.innerHTML = marked.parse(reply);
                     Prism.highlightAllUnder(output);
                 } catch(err) {
-                    output.innerText = "خطأ في الاتصال: " + err.message;
+                    output.innerText = "تعذر الاتصال بالسيرفر. يرجى التحقق من اتصال الإنترنت والتجربة مجدداً.";
                 }
             }
         }
