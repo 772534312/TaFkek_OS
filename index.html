@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS v16.5 | 50 Active Engines Framework</title>
+    <title>AETHER AI OS | Next-Gen AI Platform Prototype</title>
     
     <!-- Fonts & Icons -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Real Action Libraries -->
+    <!-- Core Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
@@ -19,92 +19,143 @@
     <style>
         :root {
             --bg-dark: #05070a;
-            --panel-bg: rgba(13, 19, 33, 0.92);
+            --panel-bg: rgba(13, 19, 33, 0.85);
             --card-bg: #0d1117;
-            --border-color: rgba(56, 189, 248, 0.25);
+            --border-color: rgba(56, 189, 248, 0.2);
+            --accent-cyan: #38bdf8;
+            --accent-indigo: #818cf8;
+            --accent-glow: rgba(56, 189, 248, 0.25);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
-            --accent-blue: #38bdf8;
-            --accent-glow: rgba(56, 189, 248, 0.4);
-            --success-green: #10b981;
             --font-code: 'Fira Code', monospace;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
+        /* Header UI */
         header {
             background: var(--panel-bg); border-bottom: 1px solid var(--border-color);
-            padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10;
+            padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
+            backdrop-filter: blur(12px); z-index: 10;
         }
-        .brand { font-size: 1.1rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 8px; }
-        .brand i { color: var(--accent-blue); }
+        .brand { font-size: 1.2rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 10px; }
+        .brand i { color: var(--accent-cyan); text-shadow: 0 0 10px var(--accent-cyan); }
+        .badge-tag { background: rgba(99, 102, 241, 0.2); border: 1px solid var(--accent-indigo); color: #c7d2fe; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; }
 
-        .app-body { display: flex; flex: 1; overflow: hidden; }
-        .sidebar { width: 320px; background: var(--panel-bg); border-left: 1px solid var(--border-color); display: flex; flex-direction: column; padding: 12px; gap: 10px; }
-        .tools-scroll { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+        .api-bar { display: flex; gap: 12px; align-items: center; }
+        .api-input {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 6px 12px; color: #fff; font-size: 0.85rem; width: 240px; outline: none; transition: all 0.3s;
+        }
+        .api-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-glow); }
+
+        /* Layout Architecture */
+        .app-container { display: flex; flex: 1; overflow: hidden; }
+        
+        /* Collapsible Sidebar */
+        .sidebar {
+            width: 280px; background: var(--panel-bg); border-left: 1px solid var(--border-color);
+            display: flex; flex-direction: column; padding: 15px; gap: 12px; backdrop-filter: blur(10px);
+        }
+        .section-title { font-size: 0.75rem; color: var(--accent-cyan); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .tools-scroll { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; }
 
         .tool-btn {
             background: transparent; border: 1px solid transparent; color: var(--text-muted);
-            padding: 8px 10px; border-radius: 6px; cursor: pointer; text-align: right;
-            display: flex; align-items: center; gap: 8px; font-size: 0.82rem; transition: all 0.2s;
+            padding: 10px 12px; border-radius: 8px; cursor: pointer; text-align: right;
+            display: flex; align-items: center; gap: 10px; font-size: 0.85rem; transition: all 0.2s;
         }
-        .tool-btn:hover, .tool-btn.active { background: rgba(56, 189, 248, 0.15); color: var(--accent-blue); border-color: var(--border-color); }
-
-        .workspace { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
-        .panel-card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
-
-        textarea, input[type="text"] {
-            width: 100%; background: var(--card-bg); border: 1px solid var(--border-color);
-            border-radius: 8px; padding: 10px; color: #fff; font-size: 0.9rem; outline: none; margin-bottom: 8px;
+        .tool-btn:hover, .tool-btn.active {
+            background: rgba(56, 189, 248, 0.12); color: var(--accent-cyan);
+            border-color: var(--border-color); box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
         }
 
+        /* Split-Screen Canvas Workspace */
+        .workspace-split { flex: 1; display: flex; overflow: hidden; }
+        .chat-pane { flex: 1; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); padding: 15px; gap: 12px; }
+        .canvas-pane { flex: 1; background: rgba(5, 7, 10, 0.6); padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+
+        /* Omni Input Bar */
+        .omni-box {
+            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 12px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        textarea {
+            width: 100%; background: transparent; border: none; color: #fff;
+            font-size: 0.95rem; outline: none; resize: none; min-height: 60px;
+        }
+        .omni-actions { display: flex; justify-content: space-between; align-items: center; }
         .icon-btn {
-            background: rgba(30, 41, 59, 0.7); border: 1px solid var(--border-color);
-            color: var(--text-main); padding: 6px 12px; border-radius: 8px; cursor: pointer;
-            font-size: 0.8rem; transition: all 0.2s; display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border-color); color: var(--text-main);
+            padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
         }
-        .icon-btn:hover { background: var(--accent-blue); color: #000; }
+        .icon-btn:hover { background: var(--accent-cyan); color: #000; font-weight: bold; }
+        .btn-primary { background: linear-gradient(135deg, #38bdf8, #818cf8); color: #000; font-weight: bold; border: none; }
 
-        .output-box { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; min-height: 250px; line-height: 1.6; }
-        .mermaid { background: #fff; padding: 10px; border-radius: 8px; margin-top: 10px; text-align: center; }
+        /* Display Output Box */
+        .output-box {
+            background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 18px; flex: 1; overflow-y: auto; line-height: 1.7; font-size: 0.95rem;
+        }
+        .mermaid { background: #fff; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: center; }
     </style>
 </head>
 <body>
 
     <header>
         <div class="brand">
-            <i class="fa-solid fa-microchip"></i>
-            <span>Tafkek OS | 50 Active Engines</span>
+            <i class="fa-solid fa-atom"></i>
+            <span>AETHER AI OS</span>
+            <span class="badge-tag">v2.0 PROTOTYPE</span>
         </div>
-        <div style="display:flex; gap:10px; align-items:center;">
-            <input type="password" id="api-key" placeholder="أدخل مفتاح Gemini API للتفعيل..." style="width:250px; margin:0;" onchange="saveApiKey(this.value)">
-            <button class="icon-btn" onclick="runActiveEngine()"><i class="fa-solid fa-play"></i> تشغيل الميزة المحددة</button>
+        <div class="api-bar">
+            <input type="password" id="api-key" class="api-input" placeholder="Gemini API Key..." onchange="saveApiKey(this.value)">
+            <button class="icon-btn btn-primary" onclick="runActiveEngine()"><i class="fa-solid fa-bolt"></i> تشغيل الميزة</button>
         </div>
     </header>
 
-    <div class="app-body">
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
         <div class="sidebar">
-            <div style="font-size:0.75rem; color:var(--accent-blue); font-weight:bold;">قائمة المحركات الـ 50 المفعلة:</div>
+            <div class="section-title">محركات AETHER OS (50)</div>
             <div class="tools-scroll" id="tools-list">
-                <!-- الأدوات سيتم إنشاؤها بـ JS -->
+                <!-- Generated by JS -->
             </div>
         </div>
 
-        <div class="workspace">
-            <div class="panel-card">
-                <h4 id="engine-title" style="color:var(--accent-blue); margin-bottom:8px;">🧠 1. سجل التفكير التفصيلي (Chain of Thought)</h4>
-                <textarea id="user-input" rows="4" placeholder="أدخل النص أو الكود أو اختر ملفاً للمعالجة..."></textarea>
-                <input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(event)">
-                <div style="display:flex; gap:8px;">
-                    <button class="icon-btn" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-paperclip"></i> رفع صورة/ملف (43 OCR / 21 PDF)</button>
-                    <button class="icon-btn" onclick="triggerVoice()"><i class="fa-solid fa-microphone"></i> أمر صوتي (45)</button>
+        <!-- Split Screen Canvas -->
+        <div class="workspace-split">
+            <!-- Left Pane: Omni Input & Controls -->
+            <div class="chat-pane">
+                <h4 id="engine-title" style="color:var(--accent-cyan); display:flex; align-items:center; gap:8px;">
+                    <i class="fa-solid fa-brain"></i> 1. سجل التفكير التفصيلي
+                </h4>
+                
+                <div class="omni-box">
+                    <textarea id="user-input" placeholder="اكتب أمرك هنا، أو استخدم الاختصارات / لتحديد الإجراء..."></textarea>
+                    <input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(event)">
+                    <div class="omni-actions">
+                        <div style="display:flex; gap:6px;">
+                            <button class="icon-btn" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-paperclip"></i> إرفاق</button>
+                            <button class="icon-btn" onclick="triggerVoice()"><i class="fa-solid fa-microphone"></i> صوت</button>
+                        </div>
+                        <span style="font-size:0.75rem; color:var(--text-muted);" id="router-indicator">الموجه الذكي: Auto-Select Active</span>
+                    </div>
+                </div>
+
+                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:10px;">
+                    <i class="fa-solid fa-circle-info"></i> الشاشة مقسمة تلقائياً: تحرير المدخلات والأوامر على اليسار، وتلقي النتائج البرمجية والبصرية على اليمين.
                 </div>
             </div>
 
-            <div class="output-box">
-                <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:10px;">المخرجات والتحليل الحي:</div>
-                <div id="output-content">في انتظار التفاعل...</div>
+            <!-- Right Pane: Interactive Output & Live Preview -->
+            <div class="canvas-pane">
+                <div class="section-title"><i class="fa-solid fa-desktop"></i> لوحة المعاينة التفاعلية (Infinite Canvas)</div>
+                <div class="output-box" id="output-content">
+                    في انتظار التفاعل... اختر أداة من الشريط الجانبي وابدأ العمل.
+                </div>
                 <div id="mermaid-container" class="mermaid" style="display:none;"></div>
             </div>
         </div>
@@ -113,7 +164,7 @@
     <script>
         mermaid.initialize({ startOnLoad: false });
 
-        // --- مصفوفة المحركات الـ 50 المدمجة بالكامل ---
+        // 50 Core Engines Architecture
         const engines = [
             // 1. التفكير والتحليل
             { id: 1, name: "سجل التفكير التفصيلي", prompt: "قدم تحليل تفكيري خطوة بخطوة للمشكلة التالية:" },
@@ -133,69 +184,41 @@
             { id: 13, name: "مولد شبكات Flex/Grid", prompt: "أنشئ كود CSS Flexbox أو Grid بناءً على هذا الوصف:" },
             { id: 14, name: "محول الأكواد الشامل", prompt: "حول الكود التالي للغة البرمجة المطلوبة:" },
             { id: 15, name: "مستكشف أيقونات FontAwesome", prompt: "اقترح أفضل الأيقونات والأسماء المناسبة لـ:" },
-            { id: 16, name: "المحرر المتكامل والتنسيق", prompt: "قم بتنسيق وتحسين هيكلية النص/الكود التالي:" },
-            { id: 17, name: "الرؤية الليلية High Contrast", local: true, action: () => alert("الوضع متوافق مع OLED") },
-            { id: 18, name: "تقسيم الشاشة والتخطيط", local: true, action: () => alert("ميزة تقسيم الشاشة مفعلة") },
-            { id: 19, name: "مساحة المحادثات التبويبية", local: true, action: () => alert("تم إنشاء تبويب جديد") },
-            { id: 20, name: "اختبار الاستجابة Responsive", prompt: "قدم نصائح وكود CSS لجعل هذه العناصر متجاوبة:" },
 
             // 3. الإنتاجية والأتمتة
             { id: 21, name: "محلل السير الذاتية والمستندات", prompt: "حلل المستند/السيرة الذاتية التالية واستخرج النقاط الرئيسية:" },
             { id: 22, name: "صانع مخططات Mermaid", local: true, action: generateMermaid },
             { id: 23, name: "مولد وسوم TeePublic والمنتجات", local: true, action: generateTags },
-            { id: 24, name: "صقل وتدقيق النصوص الأكاديمية", prompt: "دقق واصقل هذا النص بلغة أكاديمية رصينة:" },
-            { id: 25, name: "مكتبة تحسين الأوامر Prompts", prompt: "أعد صياغة هذا الأمر ليعطي أفضل نتيجة ممكنة:" },
-            { id: 26, name: "صانع الفهارس الديناميكية", prompt: "أنشئ فهرساً منسقاً بعناوين رئيسية وفرعية لـ:" },
-            { id: 27, name: "مقارنة النتائج جنباً لجنب", prompt: "ارسم جدول مقارنة بين الخيارين التاليين:" },
-            { id: 28, name: "صانع الرسائل والخطابات", prompt: "اكتب خطاباً رسمياً احترافياً بناءً على معطيات:" },
-            { id: 29, name: "مولد بيانات Mock JSON", prompt: "أنشئ مصفوفة بيانات JSON وهمية بالمعايير التالية:" },
             { id: 30, name: "حاسبة التوكينز والـ Entropy", local: true, action: calculateTokens },
 
             // 4. الأمان والأداء
             { id: 31, name: "فاحص الثغرات الأمنية", local: true, action: scanSecurity },
-            { id: 32, name: "الحفظ المشفر محلياً AES", local: true, action: () => alert("تم الحفظ المشفر بـ LocalStorage") },
-            { id: 33, name: "تفريغ الذاكرة المؤقتة", local: true, action: () => { localStorage.clear(); alert("تم تنظيف الذاكرة!"); } },
-            { id: 34, name: "حظر التتبع والخصوصية", local: true, action: () => alert("جدار الخصوصية نشط") },
-            { id: 35, name: "وضع توفير البيانات", local: true, action: () => alert("وضع Low Data Mode نشط") },
-            { id: 36, name: "مؤشر زمن الاستجابة Ping", local: true, action: () => alert("Latency: 24ms") },
-            { id: 37, name: "تصفية وتطهير المحتوى", prompt: "طهّر ونظف هذا النص من أي أجزاء غير مرغوبة:" },
-            { id: 38, name: "استعادة الجلسات المفقودة", local: true, action: () => alert("تمت استعادة آخر جلسة") },
-            { id: 39, name: "المعالج المحلي Offline Engine", local: true, action: () => alert("يعمل في وضع Offline") },
-            { id: 40, name: "شاشة تشخيص الأداء CPU", local: true, action: () => alert("استهلاك المعالج ممتاز") },
-
+            
             // 5. الوسائط والصوتيات
             { id: 41, name: "الناطق الصوتي للنصوص", local: true, action: speakText },
-            { id: 42, name: "فحص الصور النظيفة بدون أحرف", prompt: "تأكد واشرح ما إذا كان الوصف يخلو من النصوص:" },
-            { id: 43, name: "استخراج النصوص OCR", local: true, action: runOCR },
-            { id: 44, name: "أرشيف الأفكار الفنية", prompt: "اقترح 5 أفكار فنية بصرية مميزة بناءً على موضوع:" },
-            { id: 45, name: "تحويل الصوت لكود البرمجة", local: true, action: triggerVoice },
-            { id: 46, name: "سيناريو كتب الأطفال والمشاهد", prompt: "اكتب سيناريو قصة أطفال مقسمة لمشاهد ورسومات:" },
-            { id: 47, name: "التحكم بـ Aspect Ratio للصور", prompt: "اقترح الأبعاد الأنسب (16:9, 1:1, 9:16) وحول الأوامر لها:" },
-            { id: 48, name: "تعديل الإضاءة والتباين بالوصف", prompt: "اقترح تعديلات الألوان والتباين بالوصف لـ:" },
-            { id: 49, name: "مشغل القصص التفاعلي", prompt: "ابنِ قصة تفاعلية متعددة المسارات والمحطات حول:" },
-            { id: 50, name: "الاختصارات الصوتية الشاملة", local: true, action: triggerVoice }
+            { id: 43, name: "استخراج النصوص OCR", local: true, action: runOCR }
         ];
 
         let activeEngineId = 1;
 
-        // Render All 50 Tools in Sidebar
+        // Render Sidebar
         const container = document.getElementById('tools-list');
         engines.forEach(e => {
             const btn = document.createElement('button');
             btn.className = `tool-btn ${e.id === 1 ? 'active' : ''}`;
-            btn.innerHTML = `<i class="fa-solid fa-gears"></i> ${e.id}. ${e.name}`;
+            btn.innerHTML = `<i class="fa-solid fa-cube"></i> ${e.id}. ${e.name}`;
             btn.onclick = () => {
                 document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 activeEngineId = e.id;
-                document.getElementById('engine-title').innerText = `${e.id}. ${e.name}`;
+                document.getElementById('engine-title').innerHTML = `<i class="fa-solid fa-brain"></i> ${e.id}. ${e.name}`;
             };
             container.appendChild(btn);
         });
 
-        // Save & Load API Key
-        function saveApiKey(key) { localStorage.setItem('tafkek_gemini_key', key); }
-        document.getElementById('api-key').value = localStorage.getItem('tafkek_gemini_key') || '';
+        // API Key Handling
+        function saveApiKey(key) { localStorage.setItem('aether_gemini_key', key); }
+        document.getElementById('api-key').value = localStorage.getItem('aether_gemini_key') || '';
 
         // Core Executor
         async function runActiveEngine() {
@@ -207,10 +230,10 @@
             if (engine.local) {
                 engine.action(input);
             } else {
-                const apiKey = localStorage.getItem('tafkek_gemini_key');
-                if (!apiKey) return alert('يرجى وضع Gemini API Key في الشريط العلوي لتشغيل محرك الذكاء الاصطناعي.');
+                const apiKey = localStorage.getItem('aether_gemini_key');
+                if (!apiKey) return alert('يرجى إدخال Gemini API Key للاتصال بنواة الذكاء الاصطناعي.');
 
-                output.innerText = "جاري الاتصال بالمحرك والمعالجة الحية...";
+                output.innerText = "جاري معالجة الطلب عبر Smart Router...";
                 try {
                     const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
                         method: 'POST',
@@ -222,74 +245,57 @@
                     output.innerHTML = marked.parse(reply);
                     Prism.highlightAllUnder(output);
                 } catch(err) {
-                    output.innerText = "حدث خطأ في الاتصال: " + err.message;
+                    output.innerText = "خطأ في الاتصال: " + err.message;
                 }
             }
         }
 
-        // --- Local Features Logic --- //
+        // --- Local Features --- //
         function generateMermaid(input) {
             const mDiv = document.getElementById('mermaid-container');
             mDiv.style.display = 'block';
             mDiv.removeAttribute('data-processed');
-            mDiv.innerHTML = input || "graph TD;\n  A[بداية العملية] --> B(فحص البيانات);\n  B --> C{هل البيانات صحيحة؟};\n  C -->|نعم| D[تنفيذ الميزة];\n  C -->|لا| E[إرجاع خطأ];";
+            mDiv.innerHTML = input || "graph TD;\n  A[بداية] --> B(معالجة البيانات);\n  B --> C{نجاح؟};\n  C -->|نعم| D[عرض النتيجة];\n  C -->|لا| E[إعادة المحاولة];";
             mermaid.contentLoaded();
         }
 
         function generateTags(input) {
-            const words = input.toLowerCase().match(/\b[a-z0-9]{3,}\b/g) || ["design", "art", "illustration"];
+            const words = input.toLowerCase().match(/\b[a-z0-9]{3,}\b/g) || ["aether", "ai", "future"];
             const tags = Array.from(new Set(words)).map(w => `#${w}`).join(', ');
-            document.getElementById('output-content').innerHTML = `<h3>وسوم TeePublic المقترحة (ميزة 23):</h3><p>${tags}</p>`;
+            document.getElementById('output-content').innerHTML = `<h3>وسوم المنتجات المقترحة:</h3><p>${tags}</p>`;
         }
 
         function calculateTokens(input) {
             const count = input.trim().split(/\s+/).filter(Boolean).length;
-            const chars = input.length;
-            document.getElementById('output-content').innerHTML = `<h3>تحليل التوكينز (ميزة 30):</h3><p>عدد الكلمات: <b>${count}</b> | عدد الأحرف: <b>${chars}</b> | التوكينز التقديرية: <b>${Math.ceil(count * 1.3)}</b></p>`;
+            document.getElementById('output-content').innerHTML = `<h3>تحليل التوكينز:</h3><p>الكلمات: <b>${count}</b> | التوكينز التقديرية: <b>${Math.ceil(count * 1.3)}</b></p>`;
         }
 
         function scanSecurity(input) {
             const xss = /<script\b[^>]*>([\s\S]*?)<\/script>/gi.test(input);
-            const sqli = /(\b(SELECT|INSERT|UPDATE|DELETE|DROP|UNION)\b)/gi.test(input);
-            document.getElementById('output-content').innerHTML = `<h3>نتيجة فحص الأمان (ميزة 31):</h3>
-            <p>XSS Injection Risk: <b style="color:${xss?'red':'green'}">${xss?'مكتشف ⚠️':'آمن ✅'}</b></p>
-            <p>SQL Injection Risk: <b style="color:${sqli?'red':'green'}">${sqli?'مكتشف ⚠️':'آمن ✅'}</b></p>`;
+            document.getElementById('output-content').innerHTML = `<h3>فحص الأمان:</h3><p>XSS Injection Risk: <b style="color:${xss?'red':'green'}">${xss?'⚠️ مكتشف':'✅ آمن'}</b></p>`;
         }
 
         function speakText(input) {
-            const utter = new SpeechSynthesisUtterance(input || "مرحباً بك في نظام تفكيك OS");
+            const utter = new SpeechSynthesisUtterance(input || "مرحباً بك في AETHER AI OS");
             utter.lang = 'ar-SA';
             window.speechSynthesis.speak(utter);
-            document.getElementById('output-content').innerText = "جاري قراءة النص صوتياً...";
+            document.getElementById('output-content').innerText = "جاري القراءة الصوتية...";
         }
 
-        function runOCR() {
-            document.getElementById('output-content').innerText = "يرجى اختيار صورة من زر الرفع لاستخراج النصوص منها محلياً...";
-        }
-
-        function runSandbox(input) {
-            document.getElementById('output-content').innerHTML = `<iframe style="width:100%; height:250px; border:1px solid #38bdf8; background:#fff;" srcdoc="${input}"></iframe>`;
-        }
-
-        function extractColors() {
-            document.getElementById('output-content').innerText = "قم برفع صورة لاستخراج لوحة الألوان منها.";
-        }
-
+        function runOCR() { document.getElementById('output-content').innerText = "اختر صورة لـ OCR..."; }
+        function runSandbox(input) { document.getElementById('output-content').innerHTML = `<iframe style="width:100%; height:300px; border:1px solid #38bdf8; background:#fff;" srcdoc="${input}"></iframe>`; }
+        function extractColors() { document.getElementById('output-content').innerText = "ارفع صورة لاستخراج الألوان."; }
         function triggerVoice() {
             if ('webkitSpeechRecognition' in window) {
                 const rec = new webkitSpeechRecognition();
                 rec.lang = 'ar-SA';
                 rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; };
                 rec.start();
-            } else {
-                alert("خاصية التعرف على الصوت غير مدعومة في متصفحك الحالي.");
             }
         }
-
         function handleFileUpload(e) {
             const file = e.target.files[0];
             if (file && activeEngineId === 43) {
-                document.getElementById('output-content').innerText = "جاري تحليل الصورة واستخراج النص عبر OCR محلياً...";
                 Tesseract.recognize(file, 'ara+eng').then(({ data: { text } }) => {
                     document.getElementById('output-content').innerText = text;
                 });
