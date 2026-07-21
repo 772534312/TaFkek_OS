@@ -3,320 +3,381 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AETHER AI OS | Next-Gen AI Platform Prototype</title>
+    <title>Tafkek OS - Ultra Neural Platform (v10.0)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
     
-    <!-- Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Core Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4/dist/tesseract.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 
     <style>
         :root {
-            --bg-dark: #05070a;
-            --panel-bg: rgba(13, 19, 33, 0.85);
-            --card-bg: #0d1117;
+            --bg-dark: #030712;
+            --panel-bg: rgba(15, 23, 42, 0.75);
             --border-color: rgba(56, 189, 248, 0.2);
-            --accent-cyan: #38bdf8;
-            --accent-indigo: #818cf8;
-            --accent-glow: rgba(56, 189, 248, 0.25);
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-glow: rgba(56, 189, 248, 0.4);
+            --success-green: #10b981;
+            --error-red: #f43f5e;
             --font-code: 'Fira Code', monospace;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-main); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
-        /* Header UI */
-        header {
-            background: var(--panel-bg); border-bottom: 1px solid var(--border-color);
-            padding: 12px 24px; display: flex; justify-content: space-between; align-items: center;
-            backdrop-filter: blur(12px); z-index: 10;
+        body.theme-cyberpunk {
+            --bg-dark: #0b0214; --panel-bg: rgba(24, 9, 38, 0.8);
+            --border-color: rgba(236, 72, 153, 0.3); --accent-blue: #ec4899; --accent-glow: rgba(236, 72, 153, 0.4);
         }
-        .brand { font-size: 1.2rem; font-weight: 900; color: #fff; display: flex; align-items: center; gap: 10px; }
-        .brand i { color: var(--accent-cyan); text-shadow: 0 0 10px var(--accent-cyan); }
-        .badge-tag { background: rgba(99, 102, 241, 0.2); border: 1px solid var(--accent-indigo); color: #c7d2fe; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; }
 
-        .status-badge { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: #4ade80; background: rgba(74, 222, 128, 0.1); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(74, 222, 128, 0.3); }
+        body.theme-matrix {
+            --bg-dark: #010a05; --panel-bg: rgba(4, 28, 15, 0.8);
+            --border-color: rgba(16, 185, 129, 0.3); --accent-blue: #10b981; --accent-glow: rgba(16, 185, 129, 0.4);
+        }
 
-        /* Layout Architecture */
-        .app-container { display: flex; flex: 1; overflow: hidden; }
-        
-        /* Collapsible Sidebar */
+        * { box-sizing: border-box; }
+        body {
+            margin: 0; padding: 0; background-color: var(--bg-dark);
+            color: var(--text-main); font-family: 'Cairo', sans-serif;
+            display: flex; height: 100vh; overflow: hidden; position: relative;
+        }
+
+        #neural-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1; opacity: 0.6;
+        }
+
         .sidebar {
-            width: 280px; background: var(--panel-bg); border-left: 1px solid var(--border-color);
-            display: flex; flex-direction: column; padding: 15px; gap: 12px; backdrop-filter: blur(10px);
+            width: 340px; background-color: var(--panel-bg);
+            backdrop-filter: blur(16px); border-left: 1px solid var(--border-color);
+            display: flex; flex-direction: column; padding: 20px; z-index: 2;
         }
-        .section-title { font-size: 0.75rem; color: var(--accent-cyan); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .tools-scroll { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+
+        .logo-area {
+            font-size: 22px; font-weight: 800; color: var(--text-main);
+            margin-bottom: 15px; border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-action-primary {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(56, 189, 248, 0.05));
+            border: 1px solid var(--accent-blue); color: var(--accent-blue);
+            padding: 10px; border-radius: 8px; cursor: pointer; font-weight: 700;
+            font-family: 'Cairo'; width: 100%; margin-bottom: 12px; transition: all 0.3s ease;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+        .btn-action-primary:hover { background: var(--accent-blue); color: #000; }
+
+        .search-input {
+            width: 100%; background: rgba(3, 7, 18, 0.6); border: 1px solid var(--border-color);
+            border-radius: 6px; padding: 8px 12px; color: var(--text-main);
+            font-size: 12px; font-family: 'Cairo'; margin-bottom: 15px; outline: none;
+        }
 
         .tool-btn {
-            background: transparent; border: 1px solid transparent; color: var(--text-muted);
-            padding: 10px 12px; border-radius: 8px; cursor: pointer; text-align: right;
-            display: flex; align-items: center; gap: 10px; font-size: 0.85rem; transition: all 0.2s;
+            background: none; border: 1px solid transparent; color: var(--text-muted);
+            padding: 10px; text-align: right; border-radius: 8px; cursor: pointer;
+            margin-bottom: 4px; transition: all 0.2s ease; font-size: 13px; font-family: 'Cairo';
+            display: flex; align-items: center; justify-content: space-between; width: 100%;
         }
+
         .tool-btn:hover, .tool-btn.active {
-            background: rgba(56, 189, 248, 0.12); color: var(--accent-cyan);
-            border-color: var(--border-color); box-shadow: 0 0 10px rgba(56, 189, 248, 0.1);
+            background-color: rgba(30, 41, 59, 0.7); color: var(--accent-blue);
+            border-color: var(--border-color);
         }
 
-        /* Split-Screen Canvas Workspace */
-        .workspace-split { flex: 1; display: flex; overflow: hidden; }
-        .chat-pane { flex: 1; display: flex; flex-direction: column; border-left: 1px solid var(--border-color); padding: 15px; gap: 12px; }
-        .canvas-pane { flex: 1; background: rgba(5, 7, 10, 0.6); padding: 15px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; }
+        .workspace {
+            flex: 1; display: flex; flex-direction: column; padding: 25px;
+            overflow-y: auto; z-index: 2; position: relative;
+        }
 
-        /* Omni Input Bar */
-        .omni-box {
-            background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
-            padding: 12px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        .interface-card {
+            background-color: var(--panel-bg); backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 20px; margin-bottom: 20px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
         }
-        textarea {
-            width: 100%; background: transparent; border: none; color: #fff;
-            font-size: 0.95rem; outline: none; resize: none; min-height: 80px;
+
+        .input-field {
+            width: 100%; background-color: rgba(3, 7, 18, 0.8);
+            border: 1px solid var(--border-color); border-radius: 8px;
+            padding: 15px; color: var(--text-main); font-size: 14.5px;
+            font-family: 'Cairo', sans-serif; resize: vertical; outline: none;
+            transition: border-color 0.3s ease;
         }
-        .omni-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .input-field:focus { border-color: var(--accent-blue); }
+
+        .output-panel {
+            background-color: var(--panel-bg); backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color); border-radius: 12px;
+            padding: 25px; min-height: 200px; line-height: 1.8; position: relative;
+        }
+
         .icon-btn {
-            background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border-color); color: var(--text-main);
-            padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
-            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border-color);
+            color: var(--text-muted); padding: 5px 10px; border-radius: 6px;
+            cursor: pointer; font-size: 11.5px; transition: all 0.2s; font-family: 'Cairo';
         }
-        .icon-btn:hover { background: var(--accent-cyan); color: #000; font-weight: bold; }
-        
-        /* Main Execute Button */
-        .btn-execute {
-            background: linear-gradient(135deg, #38bdf8, #818cf8);
-            color: #05070a;
-            font-weight: 800;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s;
-            box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
-        }
-        .btn-execute:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 20px rgba(56, 189, 248, 0.6);
+        .icon-btn:hover { color: var(--accent-blue); border-color: var(--accent-blue); }
+
+        .algo-stats {
+            display: flex; gap: 15px; font-size: 11px; color: var(--text-muted);
+            margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 10px;
+            font-family: var(--font-code);
         }
 
-        /* Display Output Box */
-        .output-box {
-            background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 12px;
-            padding: 18px; flex: 1; overflow-y: auto; line-height: 1.7; font-size: 0.95rem;
+        .sandbox-iframe {
+            width: 100%; height: 300px; border: 1px solid var(--border-color);
+            border-radius: 8px; margin-top: 15px; background: #fff; display: none;
         }
-        .mermaid { background: #fff; padding: 12px; border-radius: 8px; margin-top: 10px; text-align: center; }
+
+        pre code { font-family: var(--font-code) !important; font-size: 13px !important; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="brand">
-            <i class="fa-solid fa-atom"></i>
-            <span>AETHER AI OS</span>
-            <span class="badge-tag">v2.0 PROTOTYPE</span>
-        </div>
-        <div class="status-badge">
-            <i class="fa-solid fa-circle" style="font-size:0.5rem;"></i>
-            <span>النظام متصل وجاهز</span>
-        </div>
-    </header>
+    <canvas id="neural-canvas"></canvas>
 
-    <div class="app-container">
-        <!-- Sidebar Navigation -->
-        <div class="sidebar">
-            <div class="section-title">محركات AETHER OS</div>
-            <div class="tools-scroll" id="tools-list">
-                <!-- Generated by JS -->
+    <div class="sidebar">
+        <div class="logo-area">
+            <span>Tafkek OS</span>
+            <div style="display:flex; gap:4px;">
+                <button class="icon-btn" onclick="changeTheme('default')">🔵</button>
+                <button class="icon-btn" onclick="changeTheme('cyberpunk')">🔴</button>
+                <button class="icon-btn" onclick="changeTheme('matrix')">🟢</button>
             </div>
         </div>
 
-        <!-- Split Screen Canvas -->
-        <div class="workspace-split">
-            <!-- Left Pane: Omni Input & Controls -->
-            <div class="chat-pane">
-                <h4 id="engine-title" style="color:var(--accent-cyan); display:flex; align-items:center; gap:8px;">
-                    <i class="fa-solid fa-brain"></i> 1. سجل التفكير التفصيلي
-                </h4>
-                
-                <div class="omni-box">
-                    <textarea id="user-input" placeholder="اكتب أمرك هنا، واضغط على زر 'تنفيذ الطلب' أدناه..." onkeydown="handleKeyPress(event)"></textarea>
-                    <input type="file" id="file-input" style="display:none;" onchange="handleFileUpload(event)">
-                    
-                    <div class="omni-actions">
-                        <div style="display:flex; gap:6px;">
-                            <button class="icon-btn" onclick="document.getElementById('file-input').click()"><i class="fa-solid fa-paperclip"></i> إرفاق ملف</button>
-                            <button class="icon-btn" onclick="triggerVoice()"><i class="fa-solid fa-microphone"></i> تسجيل صوتي</button>
-                        </div>
-                        
-                        <!-- زر التنفيذ الرئيسي -->
-                        <button class="btn-execute" onclick="runActiveEngine()">
-                            <i class="fa-solid fa-paper-plane"></i> تنفيذ الطلب 🚀
-                        </button>
-                    </div>
-                </div>
+        <button class="btn-action-primary" onclick="startNewSession()">+ جلسة معالجة معززّة</button>
+        <input type="text" class="search-input" id="trie-search" placeholder="🔍 بحث خوارزمي في السجل..." oninput="trieSearchExecution(this.value)">
 
-                <div style="font-size:0.8rem; color:var(--text-muted); margin-top:10px; display:flex; justify-content:space-between;">
-                    <span><i class="fa-solid fa-circle-info"></i> الشاشة مقسمة تلقائياً للمعاينة.</span>
-                    <span id="router-indicator" style="color:var(--accent-cyan);">الموجه الذكي: نشط</span>
+        <div style="font-size: 11px; color: var(--text-muted); margin: 10px 0 5px 0;">محركات التفكيك المباشرة</div>
+        <div id="tools-list"></div>
+
+        <div style="font-size: 11px; color: var(--text-muted); margin: 15px 0 5px 0;">الذاكرة المؤقتة (LRU Cache)</div>
+        <div id="cache-history-list" style="overflow-y: auto; flex: 1;"></div>
+    </div>
+
+    <div class="workspace">
+        <div class="interface-card">
+            <h2 id="tool-title" style="margin:0 0 5px 0; font-size:20px;">بحث جوجل والتوثيق الفوري</h2>
+            <p id="tool-desc" style="margin:0 0 15px 0; font-size:13px; color:var(--text-muted);">تحليل ومعالجة البيانات المتقدمة بدعم المحركات الذكية.</p>
+
+            <textarea id="user-input" class="input-field" rows="4" placeholder="أدخل بياناتك أو الأكواد هنا للتحليل..." oninput="calculateComplexity(this.value)"></textarea>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-code);">
+                    الرموز التقديرية (Tokens): <span id="token-count" style="color:var(--accent-blue);">0</span> | التعقيد: <span id="complexity-score" style="color:var(--accent-blue);">0.0</span>
                 </div>
+                <button class="btn-action-primary" style="width: auto; padding: 8px 20px; margin:0;" onclick="runUltraProcess()">تشغيل الخوارزميات</button>
+            </div>
+        </div>
+
+        <div class="output-panel">
+            <div style="position: absolute; top: 12px; left: 15px; display: flex; gap: 6px;">
+                <button class="icon-btn" onclick="toggleSandbox()">⚡ محاكي الأكواد Live</button>
+                <button class="icon-btn" onclick="copyOutputText()">📋 نسخ</button>
             </div>
 
-            <!-- Right Pane: Interactive Output & Live Preview -->
-            <div class="canvas-pane">
-                <div class="section-title"><i class="fa-solid fa-desktop"></i> لوحة المعاينة التفاعلية (Infinite Canvas)</div>
-                <div class="output-box" id="output-content">
-                    مرحباً بك! اختر أداتك المفضلة، اكتب أمرك ثم اضغط <b>تنفيذ الطلب 🚀</b>.
-                </div>
-                <div id="mermaid-container" class="mermaid" style="display:none;"></div>
+            <div id="output-stream" style="margin-top: 15px; min-height: 100px;">في انتظار إدخال البيانات...</div>
+            <iframe id="sandbox-preview" class="sandbox-iframe"></iframe>
+
+            <div class="algo-stats">
+                <span>⏱️ زمن المعالجة: <strong id="stat-latency" style="color:var(--accent-blue);">0ms</strong></span>
+                <span>🧠 الخوارزمية المستخدمة: <strong id="stat-algo">Streaming Typewriter Buffer</strong></span>
+                <span>💾 الحالة: <strong id="stat-cache">Cache Miss</strong></span>
             </div>
         </div>
     </div>
 
     <script>
-        // المفتاح المدمج في الخفاء
-        const SYSTEM_API_KEY = "AQ.Ab8RN6JC2Nega32Bhj3MMo8lpV9A7zTzn3UhbCIYIh8QT0PLVA";
+        // 1. خوارزمية محاكاة الجزيئات العصبية للفيزياء (Quantum Neural Particles Engine)
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
 
-        mermaid.initialize({ startOnLoad: false });
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-        // Core Engines Architecture
-        const engines = [
-            { id: 1, name: "سجل التفكير التفصيلي", prompt: "قدم تحليل تفكيري خطوة بخطوة للمشكلة التالية:" },
-            { id: 2, name: "متحقق المصادر والحقائق", prompt: "تحقق من صحة المعلومات والحقائق التالية:" },
-            { id: 3, name: "كاشف المغالطات المنطقية", prompt: "استخرج أي مغالطات منطقية أو تناقضات في النص:" },
-            { id: 4, name: "المترجم البرمجي التكيفي", prompt: "اشرح أو حول هذا الكود ليناسب المستوى المطلوب:" },
-            { id: 5, name: "طاولة الذكاء المتعدد", prompt: "ناقش هذا الموضوع من وجهات نظر خبراء متعددين:" },
-            { id: 6, name: "Live Sandbox المعاينة الحية", local: true, action: runSandbox },
-            { id: 7, name: "صانع مخططات Mermaid", local: true, action: generateMermaid },
-            { id: 8, name: "مولد وسوم المنتجات", local: true, action: generateTags },
-            { id: 9, name: "حاسبة التوكينز", local: true, action: calculateTokens },
-            { id: 10, name: "فاحص الثغرات الأمنية", local: true, action: scanSecurity },
-            { id: 11, name: "الناطق الصوتي للنصوص", local: true, action: speakText }
-        ];
-
-        let activeEngineId = 1;
-
-        // Render Sidebar
-        const container = document.getElementById('tools-list');
-        engines.forEach(e => {
-            const btn = document.createElement('button');
-            btn.className = `tool-btn ${e.id === 1 ? 'active' : ''}`;
-            btn.innerHTML = `<i class="fa-solid fa-cube"></i> ${e.id}. ${e.name}`;
-            btn.onclick = () => {
-                document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                activeEngineId = e.id;
-                document.getElementById('engine-title').innerHTML = `<i class="fa-solid fa-brain"></i> ${e.id}. ${e.name}`;
-            };
-            container.appendChild(btn);
-        });
-
-        // Handle Ctrl+Enter Shortcut
-        function handleKeyPress(e) {
-            if (e.ctrlKey && e.key === 'Enter') {
-                runActiveEngine();
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 1.2;
+                this.vy = (Math.random() - 0.5) * 1.2;
+                this.radius = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent-blue') || '#38bdf8';
+                ctx.fill();
             }
         }
 
-        // Core Executor
-        async function runActiveEngine() {
-            const engine = engines.find(e => e.id === activeEngineId);
-            const input = document.getElementById('user-input').value;
-            const output = document.getElementById('output-content');
-            document.getElementById('mermaid-container').style.display = 'none';
+        for (let i = 0; i < 55; i++) particles.push(new Particle());
 
-            if (!input.trim() && !engine.local) {
-                return alert('يرجى كتابة نص أو أمر في صندوق الكتابة أولاً!');
-            }
-
-            if (engine.local) {
-                engine.action(input);
-            } else {
-                output.innerText = "جاري التفكير والتنفيذ عبر المحرك الذكي...";
-                try {
-                    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${SYSTEM_API_KEY}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ contents: [{ parts: [{ text: `${engine.prompt}\n\n${input}` }] }] })
-                    });
-                    const data = await res.json();
-                    
-                    if (data.error) {
-                        output.innerText = "خطأ في المعالجة: " + data.error.message;
-                        return;
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, index) => {
+                p.update(); p.draw();
+                for (let j = index + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 120) {
+                        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+                        ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--border-color');
+                        ctx.lineWidth = 0.5; ctx.stroke();
                     }
-
-                    const reply = data.candidates[0].content.parts[0].text;
-                    output.innerHTML = marked.parse(reply);
-                    Prism.highlightAllUnder(output);
-                } catch(err) {
-                    output.innerText = "تعذر الاتصال بالسيرفر. يرجى التحقق من اتصال الإنترنت والتجربة مجدداً.";
                 }
+            });
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // 2. خوارزمية الذاكرة المؤقتة التكيفية (LRU Cache Algorithm)
+        class LRUCache {
+            constructor(capacity = 10) { this.capacity = capacity; this.cache = new Map(); }
+            get(key) {
+                if (!this.cache.has(key)) return null;
+                const val = this.cache.get(key);
+                this.cache.delete(key); this.cache.set(key, val);
+                return val;
+            }
+            put(key, value) {
+                if (this.cache.has(key)) this.cache.delete(key);
+                else if (this.cache.size >= this.capacity) {
+                    this.cache.delete(this.cache.keys().next().value);
+                }
+                this.cache.set(key, value);
+                this.renderUI();
+            }
+            renderUI() {
+                const list = document.getElementById('cache-history-list');
+                list.innerHTML = '';
+                this.cache.forEach((v, k) => {
+                    const item = document.createElement('div');
+                    item.className = 'tool-btn';
+                    item.innerHTML = `<span>⚡ ${k.substring(0, 18)}...</span>`;
+                    item.onclick = () => {
+                        document.getElementById('user-input').value = k;
+                        document.getElementById('output-stream').innerHTML = window.marked.parse(v);
+                        document.getElementById('stat-cache').innerText = 'Cache Hit (0ms)';
+                    };
+                    list.prepend(item);
+                });
+            }
+        }
+        const lruEngine = new LRUCache(8);
+
+        // 3. خوارزمية حساب التعقيد والرموز (Token & Entropy Estimator)
+        function calculateComplexity(text) {
+            const tokens = text.trim() ? text.trim().split(/\s+/).length * 1.3 : 0;
+            document.getElementById('token-count').innerText = Math.round(tokens);
+            const entropy = (new Set(text).size / (text.length || 1)).toFixed(2);
+            document.getElementById('complexity-score').innerText = entropy;
+        }
+
+        // 4. خوارزمية تدفق النصوص (Streaming Typewriter Buffer)
+        function streamTextEffect(fullText, element, callback) {
+            element.innerHTML = '';
+            let index = 0;
+            const bufferSize = 4;
+            const timer = setInterval(() => {
+                if (index < fullText.length) {
+                    element.innerHTML = window.marked.parse(fullText.substring(0, index + bufferSize));
+                    index += bufferSize;
+                    Prism.highlightAllUnder(element);
+                } else {
+                    clearInterval(timer);
+                    element.innerHTML = window.marked.parse(fullText);
+                    Prism.highlightAllUnder(element);
+                    if (callback) callback();
+                }
+            }, 12);
+        }
+
+        // 5. أدوات المعالجة والتنفيذ
+        const toolsConfig = {
+            'grounding': { title: 'بحث جوجل والتوثيق الفوري', desc: 'إجابات موثوقة ومربوطة بالمصادر الحية.', api: '/api/deconstruct.js' },
+            'deconstruct': { title: 'التفكيك المعرفي واللغوي', desc: 'تحليل المنطق اللغوي وتفكيك المفاهيم.', api: '/api/deconstruct-groq.js' },
+            'loop-destroyer': { title: 'تتبع الأخطاء البرمجية', desc: 'اكتشاف ثغرات الـ Logic وحلقات التكرار.', api: '/api/loop-destroyer.js' }
+        };
+        let currentToolKey = 'grounding';
+
+        function renderTools() {
+            const container = document.getElementById('tools-list');
+            container.innerHTML = '';
+            Object.keys(toolsConfig).forEach(k => {
+                const b = document.createElement('button');
+                b.className = `tool-btn ${k === currentToolKey ? 'active' : ''}`;
+                b.innerHTML = `<span>${toolsConfig[k].title}</span>`;
+                b.onclick = () => {
+                    currentToolKey = k;
+                    document.getElementById('tool-title').innerText = toolsConfig[k].title;
+                    document.getElementById('tool-desc').innerText = toolsConfig[k].desc;
+                    renderTools();
+                };
+                container.appendChild(b);
+            });
+        }
+        renderTools();
+
+        async function runUltraProcess() {
+            const inputVal = document.getElementById('user-input').value.trim();
+            const outputStream = document.getElementById('output-stream');
+            if (!inputVal) return alert('الرجاء أدخل البيانات أولاً.');
+
+            const cachedResult = lruEngine.get(inputVal);
+            if (cachedResult) {
+                outputStream.innerHTML = window.marked.parse(cachedResult);
+                document.getElementById('stat-latency').innerText = '0ms';
+                document.getElementById('stat-cache').innerText = 'LRU Cache Hit';
+                return;
+            }
+
+            const startTime = performance.now();
+            outputStream.innerText = 'جاري تحليل ومعالجة البيانات باستخدام الخوارزميات...';
+            document.getElementById('stat-cache').innerText = 'Cache Miss';
+
+            try {
+                const response = await fetch(toolsConfig[currentToolKey].api, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: inputVal })
+                });
+                const data = await response.json();
+                const resultText = data.result || 'تمت المعالجة بنجاح.';
+
+                const endTime = performance.now();
+                document.getElementById('stat-latency').innerText = `${Math.round(endTime - startTime)}ms`;
+
+                // تطبيق خوارزمية التدفق
+                streamTextEffect(resultText, outputStream, () => {
+                    lruEngine.put(inputVal, resultText);
+                });
+
+            } catch (err) {
+                outputStream.innerText = `خطأ في المعالجة الخوارزمية: ${err.message}`;
             }
         }
 
-        // Local Functions
-        function generateMermaid(input) {
-            const mDiv = document.getElementById('mermaid-container');
-            mDiv.style.display = 'block';
-            mDiv.removeAttribute('data-processed');
-            mDiv.innerHTML = input || "graph TD;\n  A[بداية] --> B(معالجة البيانات);\n  B --> C{نجاح؟};\n  C -->|نعم| D[عرض النتيجة];\n  C -->|لا| E[إعادة المحاولة];";
-            mermaid.contentLoaded();
+        function toggleSandbox() {
+            const iframe = document.getElementById('sandbox-preview');
+            const code = document.getElementById('output-stream').innerText;
+            if (iframe.style.display === 'block') iframe.style.display = 'none';
+            else { iframe.style.display = 'block'; iframe.srcdoc = code; }
         }
 
-        function generateTags(input) {
-            const words = input.toLowerCase().match(/\b[a-z0-9]{3,}\b/g) || ["aether", "ai", "future"];
-            const tags = Array.from(new Set(words)).map(w => `#${w}`).join(', ');
-            document.getElementById('output-content').innerHTML = `<h3>وسوم المنتجات المقترحة:</h3><p>${tags}</p>`;
-        }
-
-        function calculateTokens(input) {
-            const count = input.trim().split(/\s+/).filter(Boolean).length;
-            document.getElementById('output-content').innerHTML = `<h3>تحليل التوكينز:</h3><p>الكلمات: <b>${count}</b> | التوكينز التقديرية: <b>${Math.ceil(count * 1.3)}</b></p>`;
-        }
-
-        function scanSecurity(input) {
-            const xss = /<script\b[^>]*>([\s\S]*?)<\/script>/gi.test(input);
-            document.getElementById('output-content').innerHTML = `<h3>فحص الأمان:</h3><p>XSS Injection Risk: <b style="color:${xss?'red':'green'}">${xss?'⚠️ مكتشف':'✅ آمن'}</b></p>`;
-        }
-
-        function speakText(input) {
-            const utter = new SpeechSynthesisUtterance(input || "مرحباً بك في AETHER AI OS");
-            utter.lang = 'ar-SA';
-            window.speechSynthesis.speak(utter);
-            document.getElementById('output-content').innerText = "جاري القراءة الصوتية...";
-        }
-
-        function runSandbox(input) { 
-            document.getElementById('output-content').innerHTML = `<iframe style="width:100%; height:350px; border:1px solid #38bdf8; border-radius:8px; background:#fff;" srcdoc="${input}"></iframe>`; 
-        }
-
-        function triggerVoice() {
-            if ('webkitSpeechRecognition' in window) {
-                const rec = new webkitSpeechRecognition();
-                rec.lang = 'ar-SA';
-                rec.onresult = (e) => { document.getElementById('user-input').value = e.results[0][0].transcript; };
-                rec.start();
-            } else {
-                alert('المتصفح لا يدعم التسجيل الصوتي المباشر.');
-            }
-        }
-
-        function handleFileUpload(e) {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('user-input').value += `\n[تم إرفاق الملف: ${file.name}]`;
-            }
-        }
+        function changeTheme(t) { document.body.className = t === 'default' ? '' : `theme-${t}`; }
+        function startNewSession() { document.getElementById('user-input').value = ''; document.getElementById('output-stream').innerText = 'في انتظار البيانات...'; }
+        function copyOutputText() { navigator.clipboard.writeText(document.getElementById('output-stream').innerText); alert('تم النسخ!'); }
     </script>
 </body>
 </html>
