@@ -10,11 +10,10 @@ export default async function handler(req, res) {
         const { prompt } = req.body;
         const apiKey = process.env.GEMINI_API_KEY;
 
+        const fullPrompt = `أنت نظام تفكيك تذاكر الدعم والتحليل النفسي للمحادثات (Support Ticket Sentiment Deconstructor). قم بقراءة نص المحادثة أو التذكرة، استخرج مشاعر العميل في جدول، لخص المشكلة التقنية، ثم صغ الرد الاحترافي المثالي الجاهز للإرسال الفوري لتهدئة العميل وحل المشكلة.\n\nبيانات التذكرة أو المحادثة:\n${prompt}`;
+
         const postData = JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            systemInstruction: {
-                parts: [{ text: "أنت نظام تفكيك تذاكر الدعم والتحليل النفسي للمحادثات (Support Ticket Sentiment Deconstructor). قم بقراءة نص المحادثة أو التذكرة، استخرج مشاعر العميل (غاضب، محبط، مستعجل) في جدول، لخص المشكلة التقنية أو التجارية بدقة، ثم صغ الرد الاحترافي المثالي الجاهز للإرسال الفوري لتهدئة العميل وحل المشكلة." }]
-            }
+            contents: [{ parts: [{ text: fullPrompt }] }]
         });
 
         const options = {
@@ -25,14 +24,28 @@ export default async function handler(req, res) {
             headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(postData) }
         };
 
-        const run = () => new Promise((res, rej) => {
+        const run = () => new Promise((resolve, reject) => {
             const r = https.request(options, response => {
-                let b = ''; response.on('data', c => b += c); response.on('end', () => res(JSON.parse(b)));
+                let b = ''; 
+                response.on('data', c => b += c); 
+                response.on('end', () => resolve({ status: response.statusCode, body: JSON.parse(b) }));
             });
-            r.on('error', rej); r.write(postData); r.end();
+            r.on('error', reject); 
+            r.write(postData); 
+            r.end();
         });
 
-        const data = await run();
-        return res.status(200).json({ result: data.candidates[0].content.parts[0].text, source: 'Tafkek Support Meta-Agent' });
-    } catch (e) { return res.status(500).json({ error: e.message }); }
+        const { status, body } = await run();
+
+        if (status !== 200 || !body.candidates) {
+            throw new Error(body.error?.message || 'فشل الاتصال بمحرك جوجل Gemini');
+        }
+
+        return res.status(200).json({ 
+            result: body.candidates[0].content.parts[0].text, 
+            source: 'Tafkek Support Meta-Agent' 
+        });
+    } catch (e) { 
+        return res.status(500).json({ error: e.message }); 
+    }
 }
