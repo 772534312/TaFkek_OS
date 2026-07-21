@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - البيئة الإدراكية والتفاعلية المتقدمة</title>
+    <title>Tafkek OS - المنصة الإدراكية العالمية</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     
-    <!-- مكتبة المارك داون والتظليل البرمجي -->
+    <!-- مكتبات التنسيق البرمجي والمارك داون -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
@@ -28,82 +28,60 @@
         }
 
         body {
-            margin: 0;
-            padding: 0;
+            margin: 0; padding: 0;
             background-color: var(--bg-dark);
             color: var(--text-main);
             font-family: 'Cairo', Tahoma, sans-serif;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
+            display: flex; height: 100vh;
+            overflow: hidden; position: relative;
         }
 
         #neural-canvas {
-            position: absolute;
-            top: 0; left: 0;
+            position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 1; opacity: 0.5;
+            pointer-events: none; z-index: 1; opacity: 0.5;
         }
 
         .sidebar {
-            width: 320px;
-            background-color: var(--panel-bg);
-            backdrop-filter: blur(12px);
-            border-left: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            padding: 25px;
-            box-sizing: border-box;
-            overflow-y: auto;
-            z-index: 2;
+            width: 320px; background-color: var(--panel-bg);
+            backdrop-filter: blur(12px); border-left: 1px solid var(--border-color);
+            display: flex; flex-direction: column; padding: 25px;
+            box-sizing: border-box; overflow-y: auto; z-index: 2;
         }
 
         .logo-area {
-            font-size: 22px; font-weight: 700;
-            color: var(--text-main);
-            margin-bottom: 25px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 15px;
-            display: flex; justify-content: space-between; align-items: center;
+            font-size: 22px; font-weight: 700; color: var(--text-main);
+            margin-bottom: 25px; border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px; display: flex; justify-content: space-between; align-items: center;
         }
 
         .cmd-hint {
-            font-size: 11px;
-            background: rgba(56, 189, 248, 0.1);
-            color: var(--accent-blue);
-            padding: 3px 8px; border-radius: 4px;
+            font-size: 11px; background: rgba(56, 189, 248, 0.1);
+            color: var(--accent-blue); padding: 3px 8px; border-radius: 4px;
             border: 1px solid rgba(56, 189, 248, 0.3);
         }
 
         .section-title {
-            font-size: 11px; text-transform: uppercase;
-            color: var(--text-muted); margin: 18px 0 10px 0;
-            letter-spacing: 1px; font-weight: 600;
+            font-size: 11px; text-transform: uppercase; color: var(--text-muted);
+            margin: 18px 0 10px 0; letter-spacing: 1px; font-weight: 600;
         }
 
         .tool-btn {
             background: none; border: 1px solid transparent;
-            color: var(--text-muted); padding: 12px 15px;
-            text-align: right; border-radius: 8px; cursor: pointer;
-            margin-bottom: 6px; transition: all 0.25s ease;
-            font-size: 13.5px; font-family: 'Cairo', sans-serif;
-            display: flex; align-items: center; gap: 10px; width: 100%;
-            box-sizing: border-box;
+            color: var(--text-muted); padding: 12px 15px; text-align: right;
+            border-radius: 8px; cursor: pointer; margin-bottom: 6px;
+            transition: all 0.25s ease; font-size: 13.5px; font-family: 'Cairo', sans-serif;
+            display: flex; align-items: center; gap: 10px; width: 100%; box-sizing: border-box;
         }
 
         .tool-btn:hover, .tool-btn.active {
-            background-color: rgba(30, 41, 59, 0.8);
-            color: var(--accent-blue);
-            border-color: rgba(56, 189, 248, 0.3);
-            box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+            background-color: rgba(30, 41, 59, 0.8); color: var(--accent-blue);
+            border-color: rgba(56, 189, 248, 0.3); box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
         }
 
         .workspace {
-            flex: 1; display: flex; flex-direction: column;
-            padding: 35px; box-sizing: border-box;
-            overflow-y: auto; z-index: 2; transition: all 0.3s ease;
+            flex: 1; display: flex; flex-direction: column; padding: 35px;
+            box-sizing: border-box; overflow-y: auto; z-index: 2; transition: all 0.3s ease;
         }
 
         .workspace.focus-mode .interface-card,
@@ -115,18 +93,13 @@
         .tool-header h1 { margin: 0 0 8px 0; font-size: 26px; font-weight: 700; color: var(--text-main); }
         .tool-header p { margin: 0; color: var(--text-muted); font-size: 14px; line-height: 1.6; }
 
-        /* الأمثلة الجاهزة Presets */
-        .preset-container {
-            display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;
-        }
+        .preset-container { display: flex; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
         .preset-chip {
             background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color);
             color: var(--accent-blue); font-size: 12px; padding: 5px 12px;
             border-radius: 20px; cursor: pointer; transition: all 0.2s;
         }
-        .preset-chip:hover {
-            background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue);
-        }
+        .preset-chip:hover { background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue); }
 
         .interface-card {
             background-color: var(--panel-bg); backdrop-filter: blur(10px);
@@ -151,10 +124,10 @@
         .controls-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; }
 
         .action-btn {
-            background-color: var(--accent-blue); color: #030712;
-            border: none; padding: 12px 28px; font-size: 15px; font-weight: 700;
-            border-radius: 8px; cursor: pointer; font-family: 'Cairo', sans-serif;
-            transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;
+            background-color: var(--accent-blue); color: #030712; border: none;
+            padding: 12px 28px; font-size: 15px; font-weight: 700; border-radius: 8px;
+            cursor: pointer; font-family: 'Cairo', sans-serif; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 8px;
         }
 
         .action-btn:hover { background-color: var(--accent-hover); transform: translateY(-1px); }
@@ -166,7 +139,6 @@
             position: relative; transition: all 0.3s ease;
         }
 
-        /* وضع الشاشة الكاملة Zen Mode */
         .output-panel.fullscreen {
             position: fixed; top: 20px; left: 20px; right: 20px; bottom: 20px;
             z-index: 200; height: auto; box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
@@ -183,7 +155,13 @@
         }
         .icon-btn:hover { color: var(--accent-blue); border-color: var(--accent-blue); }
 
-        /* مراحل التحميل Skeleton Process */
+        /* شريط الإجراءات السريعة عند تحديد النص */
+        .selection-toolbar {
+            position: absolute; display: none; background: #1e293b;
+            border: 1px solid var(--accent-blue); border-radius: 6px;
+            padding: 4px; gap: 5px; z-index: 150; box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
         .step-loader { display: none; margin-top: 20px; font-size: 13.5px; color: var(--accent-blue); }
         .step-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; opacity: 0.4; transition: all 0.3s; }
         .step-item.active { opacity: 1; font-weight: 600; }
@@ -194,6 +172,8 @@
         }
         .output-panel th { background-color: #1e293b; color: var(--accent-blue); padding: 14px; text-align: right; }
         .output-panel td { padding: 14px; border-bottom: 1px solid var(--border-color); background-color: #0b1324; color: #e2e8f0; }
+
+        .feedback-row { display: flex; gap: 10px; margin-top: 25px; border-top: 1px solid var(--border-color); padding-top: 15px; }
 
         .status-bar { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 15px; }
         .status-indicator { display: flex; align-items: center; gap: 8px; }
@@ -208,9 +188,8 @@
         }
 
         .cmd-palette {
-            width: 600px; background: var(--panel-bg);
-            border: 1px solid var(--accent-blue); border-radius: 12px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); overflow: hidden;
+            width: 600px; background: var(--panel-bg); border: 1px solid var(--accent-blue);
+            border-radius: 12px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); overflow: hidden;
         }
 
         .cmd-input {
@@ -229,7 +208,6 @@
 
         #output-image { max-width: 100%; border-radius: 12px; margin-top: 20px; display: none; border: 1px solid var(--border-color); }
 
-        /* الشاشات الصغيرة والتجاوب للهواتف */
         @media (max-width: 768px) {
             body { flex-direction: column; }
             .sidebar { width: 100%; height: auto; border-left: none; border-bottom: 1px solid var(--border-color); padding: 15px; }
@@ -241,6 +219,12 @@
 <body>
 
     <canvas id="neural-canvas"></canvas>
+
+    <!-- شريط الإجراءات السريعة للنصوص المحددة -->
+    <div id="selection-bar" class="selection-toolbar">
+        <button class="icon-btn" onclick="deconstructSelection()">🧠 تفكيك هذا الجزء</button>
+        <button class="icon-btn" onclick="copySelection()">📋 نسخ المحدد</button>
+    </div>
 
     <div class="sidebar">
         <div class="logo-area">
@@ -257,6 +241,9 @@
         <button class="tool-btn" onclick="switchTool('loop-destroyer', this)">⚡ تتبع وحرق الأخطاء البرمجية اللانهائية</button>
         <button class="tool-btn" onclick="switchTool('clean-image', this)">🎨 استوديو التصاميم النظيفة (بدون نصوص)</button>
         <button class="tool-btn" onclick="switchTool('support-agent', this)">🛠️ المساعد الذكي لقنوات وتذاكر الدعم</button>
+        
+        <div class="section-title">سجل الجلسة الأخير</div>
+        <div id="history-list" style="font-size: 12px; color: var(--text-muted);">لا توجد تحليلات محفوظة بعد.</div>
     </div>
 
     <div class="workspace" id="workspace">
@@ -265,9 +252,7 @@
             <p id="tool-desc">تلقي إجابات حية من الإنترنت مدعومة بروابط مصادر ومراجع حية وموثوقة.</p>
         </div>
 
-        <div class="preset-container" id="preset-area">
-            <!-- سيتم ملؤها برمجياً بالأمثلة -->
-        </div>
+        <div class="preset-container" id="preset-area"></div>
 
         <div class="interface-card" id="drop-zone">
             <textarea id="user-input" class="input-field" rows="5" placeholder="أدخل السجلات، الأكواد، الأوامر، أو اسحب ملفاتك هنا..."></textarea>
@@ -281,11 +266,10 @@
             <div class="output-toolbar">
                 <button class="icon-btn" onclick="toggleZenMode()">🖥️ الشاشة الكاملة</button>
                 <button class="icon-btn" onclick="toggleFocusMode()">👁️ وضع التركيز</button>
-                <button class="icon-btn" onclick="copyOutputText()">📋 نسخ</button>
+                <button class="icon-btn" onclick="copyOutputText()">📋 نسخ التقرير</button>
                 <button class="icon-btn" onclick="exportMarkdown()">💾 حفظ Markdown</button>
             </div>
             
-            <!-- مراحل المعالجة الذكية -->
             <div id="step-loader" class="step-loader">
                 <div class="step-item active" id="step-1">⚙️ جاري استقبال وتحليل المدخلات...</div>
                 <div class="step-item" id="step-2">🔍 فك تشفير البيانات والتحقق المنطقي...</div>
@@ -293,6 +277,13 @@
             </div>
 
             <div id="output-text-container" style="margin-top: 15px;">في انتظار البيانات...</div>
+
+            <!-- أزرار التقييم والملاحظات -->
+            <div class="feedback-row" id="feedback-area" style="display: none;">
+                <span style="font-size: 12px; color: var(--text-muted);">هل كانت هذه النتيجة دقيقة؟</span>
+                <button class="icon-btn" onclick="sendFeedback('positive')">👍 نعم، جودة عالية</button>
+                <button class="icon-btn" onclick="sendFeedback('negative')">👎 تحتاج تحسين</button>
+            </div>
         </div>
         <img id="output-image" alt="المخرجات البصرية" />
         
@@ -301,7 +292,7 @@
                 <div id="status-dot" class="dot"></div>
                 <span id="status-text">النواة: جاهزة</span>
             </div>
-            <div>ذاكرة المعالجة: <span id="ram-usage">0.24 MB</span> | Tafkek OS v6.0.0</div>
+            <div>ذاكرة المعالجة: <span id="ram-usage">0.24 MB</span> | Tafkek OS Ultra UX v7.0.0</div>
         </div>
     </div>
 
@@ -324,27 +315,27 @@
         const toolsConfig = {
             'grounding': {
                 title: 'بحث جوجل والتوثيق الفوري', desc: 'إجابات حية مدعومة برابط مصادر حقيقية من الإنترنت.', apiEndpoint: '/api/deconstruct.js', isImage: false,
-                presets: ['ما هي آخر تحديثات الذكاء الاصطناعي هذا الشهر؟', 'ابحث عن أحدث الممارسات في توزيع شحنات الجملة']
+                presets: ['ما هي أحدث تطورات الذكاء الاصطناعي هذا الشهر؟', 'ابحث عن أحدث الممارسات في توزيع الشحنات']
             },
             'deconstruct': {
                 title: 'التفكيك المعرفي واللغوي', desc: 'تحليل البنى النصية واستخراج الأفكار الأساسية.', apiEndpoint: '/api/deconstruct-groq.js', isImage: false,
-                presets: ['حلل هذه المقالة واستخرج المفاهيم الرئيسية منها', 'تفكيك هذا الخطاب السياسي واستخراج الأهداف الضمنية']
+                presets: ['حلل هذه المقالة واستخرج المفاهيم الرئيسية منها', 'تفكيك هذا النص واستخراج الأهداف الضمنية']
             },
             'ecom-deconstruct': {
                 title: 'تفكيك العمليات واللوجستيات الرقمية', desc: 'محاكاة حركة المخزون والشحنات واستباق المخاطر.', apiEndpoint: '/api/ecom-deconstruct.js', isImage: false,
-                presets: ['شحنة مكونة من 300 قطعة متأخرة في جمارك ميناء دبي', 'تحليل مخزون 1000 وحدة مع توقع أوقات نفاذ المخزون']
+                presets: ['شحنة مكونة من 300 قطعة متأخرة في جمارك ميناء دبي', 'تحليل مخزون 1000 وحدة مع توقع أوقات النفاذ']
             },
             'loop-destroyer': {
                 title: 'تتبع وحرق الأخطاء البرمجية اللانهائية', desc: 'محاكاة ذهنية سلوكية للكشف عن ثغرات وحلقات التجمد.', apiEndpoint: '/api/loop-destroyer.js', isImage: false,
-                presets: ['فحص دالة C++ تكرارية للقوائم الموصولة Linked Lists', 'تتبع حلقة for في JavaScript لا تخرج عند الشرط المطلوب']
+                presets: ['فحص دالة C++ تكرارية للقوائم الموصولة Linked Lists', 'تتبع حلقة for في JavaScript لا تخرج عند الشرط']
             },
             'clean-image': {
                 title: 'استوديو التصاميم النظيفة (بدون نصوص)', desc: 'توليد أصول بصرية خالية تماماً من الكلمات الجاهزة للتعديل.', apiEndpoint: '/api/generate-image.js', isImage: true,
-                presets: ['Futuristic Mars colony background, no text', 'Clean book cover art with deep galaxy nebula, clean surface']
+                presets: ['Futuristic Mars colony background, no text', 'Clean book cover art with deep galaxy nebula']
             },
             'support-agent': {
                 title: 'المساعد الذكي لقنوات وتذاكر الدعم', desc: 'تحليل نبرة العميل وتفكيك التذكرة وصياغة الرد المثالي.', apiEndpoint: '/api/support-agent.js', isImage: false,
-                presets: ['عميل غاضب يطالب بإعادة مستحقاته فوراً بسبب تأخر الشحن', 'تفسير تذكرة تقنية معقدة من مستخدم واجه خطأ 500']
+                presets: ['عميل غاضب يطالب بإعادة مستحقاته فوراً بسبب التأخير', 'تفسير تذكرة تقنية معقدة من مستخدم واجه خطأ 500']
             }
         };
 
@@ -406,7 +397,36 @@
         }
         animateCanvas();
 
-        // 2. الصوت التكتيكي
+        // 2. شريط الإجراءات المحددة للماوس (Selection Toolbar)
+        document.addEventListener('mouseup', (e) => {
+            const selection = window.getSelection();
+            const bar = document.getElementById('selection-bar');
+            if (selection.toString().trim().length > 0) {
+                bar.style.display = 'flex';
+                bar.style.top = `${e.pageY - 40}px`;
+                bar.style.left = `${e.pageX - 50}px`;
+            } else {
+                bar.style.display = 'none';
+            }
+        });
+
+        function deconstructSelection() {
+            const text = window.getSelection().toString();
+            document.getElementById('user-input').value = `تفكيك الجزء المحدد:\n${text}`;
+            document.getElementById('selection-bar').style.display = 'none';
+            executeProcess();
+        }
+
+        function copySelection() {
+            navigator.clipboard.writeText(window.getSelection().toString());
+            document.getElementById('selection-bar').style.display = 'none';
+        }
+
+        function sendFeedback(type) {
+            alert(type === 'positive' ? 'شكراً لك! تم تسجيل التقييم لرفع جودة المعالجة.' : 'تم تسجيل الملاحظة، سنقوم بتحسين هذا المسار.');
+        }
+
+        // 3. الصوت التكتيكي والأمثلة
         function playHapticBeep(freq = 600, duration = 0.05) {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -421,7 +441,6 @@
             } catch(e){}
         }
 
-        // 3. الأمثلة الجاهزة Presets
         function renderPresets() {
             const presetArea = document.getElementById('preset-area');
             presetArea.innerHTML = '';
@@ -430,16 +449,13 @@
                 const chip = document.createElement('div');
                 chip.className = 'preset-chip';
                 chip.innerText = `💡 ${p}`;
-                chip.onclick = () => {
-                    document.getElementById('user-input').value = p;
-                    playHapticBeep(700);
-                };
+                chip.onclick = () => { document.getElementById('user-input').value = p; playHapticBeep(700); };
                 presetArea.appendChild(chip);
             });
         }
         renderPresets();
 
-        // 4. الاختصارات والسحب والإسقاط
+        // 4. السحب والاختصارات
         window.addEventListener('keydown', (e) => {
             if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
                 e.preventDefault();
@@ -450,12 +466,7 @@
             if (e.key === 'Escape') closeCmdPalette();
         });
 
-        function closeCmdPalette(e) {
-            if (!e || e.target.id === 'cmd-overlay') {
-                document.getElementById('cmd-overlay').style.display = 'none';
-            }
-        }
-
+        function closeCmdPalette(e) { if (!e || e.target.id === 'cmd-overlay') document.getElementById('cmd-overlay').style.display = 'none'; }
         function selectCmd(key) { switchTool(key); closeCmdPalette(); }
 
         function filterCmds() {
@@ -478,7 +489,6 @@
             }
         });
 
-        // 5. أدوات التحكم بالنتائج
         function toggleZenMode() { document.getElementById('output-box').classList.toggle('fullscreen'); playHapticBeep(500); }
         function toggleFocusMode() { document.getElementById('workspace').classList.toggle('focus-mode'); playHapticBeep(400); }
         function copyOutputText() {
@@ -515,6 +525,7 @@
             const statusDot = document.getElementById('status-dot');
             const statusText = document.getElementById('status-text');
             const loader = document.getElementById('step-loader');
+            const feedbackArea = document.getElementById('feedback-area');
 
             if (!inputVal) { alert('الرجاء إدخال البيانات المطلوبة أولاً.'); return; }
 
@@ -522,12 +533,12 @@
             submitBtn.disabled = true;
             outputBox.innerText = '';
             loader.style.display = 'block';
+            feedbackArea.style.display = 'none';
             outputImg.style.display = 'none';
             statusDot.className = 'dot active';
             statusText.innerText = 'معالجة نشطة...';
             processingSpeedMultiplier = 3.5;
 
-            // محاكاة الخطوات الحية
             document.getElementById('step-1').className = 'step-item active';
             document.getElementById('step-2').className = 'step-item';
             document.getElementById('step-3').className = 'step-item';
@@ -557,8 +568,12 @@
                 } else {
                     document.getElementById('output-box').style.display = 'block';
                     outputBox.innerHTML = window.marked.parse(data.result);
-                    Prism.highlightAllUnder(outputBox); // تلوين الكود
+                    Prism.highlightAllUnder(outputBox);
+                    feedbackArea.style.display = 'flex';
                     statusText.innerText = `تمت المعالجة: [${data.source}]`;
+                    
+                    // حفظ في السجل المحلي
+                    document.getElementById('history-list').innerText = `• ${activeTool.title} (${new Date().toLocaleTimeString('ar')})`;
                 }
                 playHapticBeep(1200, 0.1);
             } catch (error) {
