@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - Gemini Studio (v13.0)</title>
+    <title>Tafkek OS - Gemini Studio (v14.0)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -153,8 +153,7 @@
         }
 
         .gemini-top-bar {
-            padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;
-            z-index: 10;
+            padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 10;
         }
 
         .gemini-model-selector {
@@ -186,7 +185,7 @@
 
         .gemini-hero-title { font-size: 28px; font-weight: 600; color: #ffffff; letter-spacing: -0.5px; }
 
-        .chat-row { display: flex; flex-direction: column; gap: 6px; max-width: 800px; width: 100%; margin: 0 auto; }
+        .chat-row { display: flex; flex-direction: column; gap: 8px; max-width: 800px; width: 100%; margin: 0 auto; }
         .chat-row.user-row { align-items: flex-end; }
         .chat-row.ai-row { align-items: flex-start; }
 
@@ -197,19 +196,65 @@
         .user-row .bubble { background: #23252b; color: #ffffff; border-bottom-left-radius: 6px; }
         .ai-row .bubble { background: transparent; color: #e3e3e3; width: 100%; padding-right: 0; }
 
-        .gemini-loader { display: flex; align-items: center; gap: 10px; color: var(--accent-blue); font-size: 14px; }
-
-        /* Floating Pill Bar */
-        .gemini-pill-container {
-            padding: 0 20px 24px 20px; width: 100%; max-width: 820px; margin: 0 auto;
-            display: flex; flex-direction: column; gap: 8px;
+        /* Media inside User Message Bubble */
+        .chat-media-container {
+            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; justify-content: flex-end;
+        }
+        .chat-media-card {
+            position: relative; border-radius: 16px; overflow: hidden;
+            max-width: 220px; max-height: 220px; border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .chat-media-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .chat-file-card {
+            display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 14px; font-size: 13px; color: #fff;
         }
 
-        /* Attachment Tag Display */
-        .attachment-preview-tag {
-            display: none; align-items: center; gap: 8px; background: rgba(255,255,255,0.08);
-            border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 12px;
-            font-size: 12px; color: var(--accent-blue); width: fit-content; margin-right: 15px;
+        .gemini-loader { display: flex; align-items: center; gap: 10px; color: var(--accent-blue); font-size: 14px; }
+
+        /* Floating Pill Bar Container */
+        .gemini-pill-container {
+            padding: 0 20px 24px 20px; width: 100%; max-width: 820px; margin: 0 auto;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        /* Attached Attachments Preview Area (Gemini Style Container) */
+        .attachments-preview-wrapper {
+            display: flex; align-items: center; gap: 10px; overflow-x: auto;
+            padding: 4px 10px; max-width: 100%; scrollbar-width: none;
+        }
+        .attachments-preview-wrapper::-webkit-scrollbar { display: none; }
+
+        /* Image Attachment Card Inside Input Bar */
+        .attachment-thumb-card {
+            position: relative; width: 64px; height: 64px; border-radius: 14px;
+            overflow: hidden; background: #28292e; border: 1px solid rgba(255,255,255,0.15);
+            flex-shrink: 0; animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes popIn { from { transform: scale(0.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .attachment-thumb-card img { width: 100%; height: 100%; object-fit: cover; }
+        .attachment-delete-btn {
+            position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
+            background: rgba(0, 0, 0, 0.75); color: #fff; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 11px; cursor: pointer; border: none; font-weight: bold;
+            transition: background 0.2s;
+        }
+        .attachment-delete-btn:hover { background: #f43f5e; }
+
+        /* File Attachment Card Inside Input Bar */
+        .attachment-file-card {
+            display: flex; align-items: center; gap: 8px; background: #28292e;
+            border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 14px;
+            font-size: 12px; color: var(--accent-blue); flex-shrink: 0; position: relative;
+        }
+
+        /* Option Mode Badge */
+        .option-mode-badge {
+            display: inline-flex; align-items: center; gap: 6px; background: rgba(var(--accent-rgb), 0.15);
+            border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 6px 12px;
+            border-radius: 16px; font-size: 12px; font-weight: 600; flex-shrink: 0;
         }
 
         .gemini-pill-bar {
@@ -247,9 +292,7 @@
         }
         .btn-live-wave:hover { transform: scale(1.05); }
 
-        /* ==========================================
-           GEMINI ATTACHMENT BOTTOM SHEET (تحديد المرفقات)
-        ========================================== */
+        /* Gemini Bottom Sheet */
         .sheet-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
@@ -274,10 +317,7 @@
             border-radius: 2px; margin: 0 auto 10px auto; cursor: pointer;
         }
 
-        /* Top Horizontal Cards (الصور، الكاميرا، الملفات) */
-        .sheet-cards-row {
-            display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
-        }
+        .sheet-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .sheet-card-btn {
             background: var(--gemini-card-bg); border: none; border-radius: 24px;
             padding: 18px 10px; display: flex; flex-direction: column; align-items: center;
@@ -291,10 +331,7 @@
         }
         .sheet-card-label { font-size: 13.5px; font-weight: 600; }
 
-        /* Vertical Options List (قائمة الخيارات المتقدمة) */
-        .sheet-menu-list {
-            display: flex; flex-direction: column; gap: 6px; margin-top: 5px;
-        }
+        .sheet-menu-list { display: flex; flex-direction: column; gap: 6px; margin-top: 5px; }
         .sheet-menu-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 12px 16px; border-radius: 16px; cursor: pointer;
@@ -340,9 +377,7 @@
         <button class="btn-new-chat" onclick="startNewSession()">+ محادثة سحابية جديدة</button>
         <input type="text" class="search-history-input" placeholder="🔍 بحث في سجل السحابة..." oninput="filterHistory(this.value)">
         
-        <div class="section-title-row">
-            <span class="section-title">الأدوات الحية</span>
-        </div>
+        <div class="section-title-row"><span class="section-title">الأدوات الحية</span></div>
         <button class="tool-btn active" onclick="switchTool('grounding', this)">🌐 بحث جوجل والتوثيق الفوري</button>
         <button class="tool-btn" onclick="switchTool('deconstruct', this)">🧠 التفكيك المعرفي واللغوي</button>
         <button class="tool-btn" onclick="switchTool('ecom-deconstruct', this)">📊 تفكيك اللوجستيات الرقمية</button>
@@ -350,15 +385,12 @@
         <button class="tool-btn" onclick="switchTool('clean-image', this)">🎨 استوديو التصاميم النظيفة</button>
         <button class="tool-btn" onclick="switchTool('support-agent', this)">🛠️ المساعد الذكي لقنوات الدعم</button>
         
-        <div class="section-title-row" style="margin-top: 18px;">
-            <span class="section-title">السجل السحابي للمستخدم</span>
-        </div>
+        <div class="section-title-row" style="margin-top: 18px;"><span class="section-title">السجل السحابي للمستخدم</span></div>
         <div id="session-history-list"></div>
     </div>
 
-    <!-- Main Gemini Workspace -->
+    <!-- Main Workspace -->
     <div class="workspace" id="main-workspace">
-        
         <div class="gemini-top-bar">
             <button class="icon-btn" title="سجل المحادثات" style="font-size:18px;">🖋️</button>
             <div class="gemini-model-selector">
@@ -376,9 +408,7 @@
                     <path d="M12 0C12 6.62742 6.62742 12 0 12C6.62742 12 12 17.3726 12 24C12 17.3726 17.3726 12 24 12C17.3726 12 12 6.62742 12 0Z" fill="url(#sparkle-grad)"/>
                     <defs>
                         <linearGradient id="sparkle-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-                            <stop stop-color="#38BDF8"/>
-                            <stop offset="0.5" stop-color="#818CF8"/>
-                            <stop offset="1" stop-color="#F43F5E"/>
+                            <stop stop-color="#38BDF8"/><stop offset="0.5" stop-color="#818CF8"/><stop offset="1" stop-color="#F43F5E"/>
                         </linearGradient>
                     </defs>
                 </svg>
@@ -386,15 +416,12 @@
             </div>
         </div>
 
-        <!-- Bottom Prompt Pill Container -->
+        <!-- Floating Prompt Pill Bar -->
         <div class="gemini-pill-container">
-            <div class="attachment-preview-tag" id="file-tag">
-                <span id="file-name-text">filename.png</span>
-                <span style="cursor:pointer; font-weight:bold; margin-right:6px;" onclick="clearAttachment()">✕</span>
-            </div>
+            <!-- Dynamic Attachments Preview Wrapper (Gemini Style) -->
+            <div class="attachments-preview-wrapper" id="attachments-preview-wrapper" style="display: none;"></div>
 
             <div class="gemini-pill-bar">
-                <!-- Plus Button to Trigger Gemini Attachment Bottom Sheet -->
                 <button class="btn-pill-action" title="إضافة ملف أو خيار" onclick="openBottomSheet()">
                     <span style="font-size: 24px; font-weight: 300;">+</span>
                 </button>
@@ -415,13 +442,12 @@
                 </button>
             </div>
         </div>
-
     </div>
 
-    <!-- Hidden Native File Inputs -->
-    <input type="file" id="native-image-input" accept="image/*" style="display:none;" onchange="handleFileSelect(event)">
-    <input type="file" id="native-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleFileSelect(event)">
-    <input type="file" id="native-file-input" style="display:none;" onchange="handleFileSelect(event)">
+    <!-- Hidden Native File Inputs (Multiple Files Support) -->
+    <input type="file" id="native-image-input" accept="image/*" multiple style="display:none;" onchange="handleFileSelect(event, 'image')">
+    <input type="file" id="native-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleFileSelect(event, 'camera')">
+    <input type="file" id="native-file-input" multiple style="display:none;" onchange="handleFileSelect(event, 'file')">
 
     <!-- Overlay Background -->
     <div class="sheet-overlay" id="sheet-overlay" onclick="closeBottomSheet()"></div>
@@ -430,51 +456,44 @@
     <div class="gemini-bottom-sheet" id="gemini-sheet">
         <div class="sheet-handle-bar" onclick="closeBottomSheet()"></div>
 
-        <!-- 3 Main Action Cards (الصور / الكاميرا / الملفات) -->
         <div class="sheet-cards-row">
             <button class="sheet-card-btn" onclick="triggerNativeInput('image')">
                 <div class="sheet-card-icon">🖼️</div>
                 <div class="sheet-card-label">الصور</div>
             </button>
-
             <button class="sheet-card-btn" onclick="triggerNativeInput('camera')">
                 <div class="sheet-card-icon">📷</div>
                 <div class="sheet-card-label">الكاميرا</div>
             </button>
-
             <button class="sheet-card-btn" onclick="triggerNativeInput('file')">
                 <div class="sheet-card-icon">📎</div>
                 <div class="sheet-card-label">الملفات</div>
             </button>
         </div>
 
-        <!-- Vertical Gemini Tool Options -->
         <div class="sheet-menu-list">
-            <div class="sheet-menu-item" onclick="selectSheetOption('إنشاء صور')">
+            <div class="sheet-menu-item" onclick="selectSheetOption('إنشاء صور', '🎨')">
                 <div class="sheet-item-text">
                     <span class="sheet-item-title">إنشاء صور</span>
                     <span class="sheet-item-desc">الإنشاء والتعديل</span>
                 </div>
                 <span class="sheet-item-icon">🎨</span>
             </div>
-
-            <div class="sheet-menu-item" onclick="selectSheetOption('موسيقى')">
+            <div class="sheet-menu-item" onclick="selectSheetOption('موسيقى', '🎵')">
                 <div class="sheet-item-text">
                     <span class="sheet-item-title">موسيقى</span>
                     <span class="sheet-item-desc">إنشاء مقاطع صوتية</span>
                 </div>
                 <span class="sheet-item-icon">🎵</span>
             </div>
-
-            <div class="sheet-menu-item" onclick="selectSheetOption('Canvas')">
+            <div class="sheet-menu-item" onclick="selectSheetOption('Canvas', '📝')">
                 <div class="sheet-item-text">
                     <span class="sheet-item-title">Canvas</span>
                     <span class="sheet-item-desc">الترميز أو الكتابة أو إنشاء الشرائح</span>
                 </div>
                 <span class="sheet-item-icon">📝</span>
             </div>
-
-            <div class="sheet-menu-item" onclick="selectSheetOption('Deep Research')">
+            <div class="sheet-menu-item" onclick="selectSheetOption('Deep Research', '🌐')">
                 <div class="sheet-item-text">
                     <span class="sheet-item-title">Deep Research</span>
                     <span class="sheet-item-desc">احصل على تقارير مفصلة</span>
@@ -488,7 +507,6 @@
         // Canvas Neural Network Animation
         const canvas = document.getElementById('neural-canvas');
         const ctx = canvas.getContext('2d');
-
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resizeCanvas);
         resizeCanvas();
@@ -612,7 +630,7 @@
             }
             const sorted = [...savedSessions].sort((a, b) => b.pinned - a.pinned);
             if (sorted.length === 0) {
-                list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">لا توجد جلسات معالجة محفوظة بعد.</div>';
+                list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">لا توجد جلسات محفوظة بعد.</div>';
                 return;
             }
             sorted.forEach(s => {
@@ -640,11 +658,16 @@
             if (!session) return;
             const chatStream = document.getElementById('chat-stream');
             chatStream.innerHTML = '';
-            appendUserBubble(session.prompt);
+            appendUserBubble(session.prompt, []);
             appendAiBubble(session.result);
         }
 
-        // Gemini Sheet & File Attachment Controls
+        // ==========================================
+        // ATTACHMENT & BOTTOM SHEET SYSTEM (GEMINI STYLE)
+        // ==========================================
+        let attachedItems = []; // Array of attached media/options
+        let activeOptionBadge = null;
+
         function openBottomSheet() {
             document.getElementById('sheet-overlay').classList.add('active');
             document.getElementById('gemini-sheet').classList.add('active');
@@ -662,27 +685,91 @@
             else if (type === 'file') document.getElementById('native-file-input').click();
         }
 
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (file) {
-                document.getElementById('file-name-text').innerText = file.name;
-                document.getElementById('file-tag').style.display = 'inline-flex';
-            }
+        function handleFileSelect(event, type) {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                const item = {
+                    id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+                    file: file,
+                    type: file.type.startsWith('image/') ? 'image' : 'file',
+                    name: file.name,
+                    url: null,
+                    base64: null
+                };
+
+                if (item.type === 'image') {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        item.url = e.target.result;
+                        item.base64 = e.target.result;
+                        renderAttachmentsPreview();
+                    };
+                    reader.readAsDataURL(file);
+                }
+                attachedItems.push(item);
+            });
+            renderAttachmentsPreview();
+            event.target.value = ''; // Reset input
         }
 
-        function clearAttachment() {
-            document.getElementById('file-tag').style.display = 'none';
-            document.getElementById('native-image-input').value = '';
-            document.getElementById('native-camera-input').value = '';
-            document.getElementById('native-file-input').value = '';
-        }
-
-        function selectSheetOption(title) {
+        function selectSheetOption(title, icon) {
             closeBottomSheet();
-            const input = document.getElementById('user-input');
-            input.value = `[وضع: ${title}] `;
-            autoResizeTextarea(input);
-            input.focus();
+            activeOptionBadge = { title, icon };
+            renderAttachmentsPreview();
+        }
+
+        function removeAttachment(id) {
+            attachedItems = attachedItems.filter(item => item.id !== id);
+            renderAttachmentsPreview();
+        }
+
+        function removeOptionBadge() {
+            activeOptionBadge = null;
+            renderAttachmentsPreview();
+        }
+
+        function renderAttachmentsPreview() {
+            const wrapper = document.getElementById('attachments-preview-wrapper');
+            wrapper.innerHTML = '';
+
+            if (attachedItems.length === 0 && !activeOptionBadge) {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            wrapper.style.display = 'flex';
+
+            // 1. Render Active Option Mode Badge (if selected)
+            if (activeOptionBadge) {
+                const badge = document.createElement('div');
+                badge.className = 'option-mode-badge';
+                badge.innerHTML = `
+                    <span>${activeOptionBadge.icon} ${activeOptionBadge.title}</span>
+                    <span style="cursor:pointer; opacity:0.8;" onclick="removeOptionBadge()">✕</span>
+                `;
+                wrapper.appendChild(badge);
+            }
+
+            // 2. Render Attached Files & Images
+            attachedItems.forEach(item => {
+                if (item.type === 'image') {
+                    const card = document.createElement('div');
+                    card.className = 'attachment-thumb-card';
+                    card.innerHTML = `
+                        <img src="${item.url || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'></svg>'}" alt="معاينة">
+                        <button class="attachment-delete-btn" onclick="removeAttachment('${item.id}')">✕</button>
+                    `;
+                    wrapper.appendChild(card);
+                } else {
+                    const card = document.createElement('div');
+                    card.className = 'attachment-file-card';
+                    card.innerHTML = `
+                        <span>📎 ${item.name}</span>
+                        <span style="cursor:pointer; font-weight:bold; margin-right:4px;" onclick="removeAttachment('${item.id}')">✕</span>
+                    `;
+                    wrapper.appendChild(card);
+                }
+            });
         }
 
         // Chat UI Operations
@@ -695,14 +782,33 @@
             }
         }
 
-        function appendUserBubble(text) {
+        function appendUserBubble(text, mediaItems = [], optionBadge = null) {
             const chatStream = document.getElementById('chat-stream');
             const hero = document.getElementById('gemini-hero');
             if (hero) hero.remove();
 
             const row = document.createElement('div');
             row.className = 'chat-row user-row';
-            row.innerHTML = `<div class="bubble">${text.replace(/\n/g, '<br>')}</div>`;
+
+            let mediaHtml = '';
+            if (mediaItems.length > 0) {
+                mediaHtml += `<div class="chat-media-container">`;
+                mediaItems.forEach(item => {
+                    if (item.type === 'image') {
+                        mediaHtml += `<div class="chat-media-card"><img src="${item.url}" alt="صورة مرفقة"></div>`;
+                    } else {
+                        mediaHtml += `<div class="chat-file-card">📄 <span>${item.name}</span></div>`;
+                    }
+                });
+                mediaHtml += `</div>`;
+            }
+
+            let badgePrefix = optionBadge ? `<b>[${optionBadge.icon} ${optionBadge.title}]</b><br>` : '';
+
+            row.innerHTML = `
+                ${mediaHtml}
+                <div class="bubble">${badgePrefix}${text.replace(/\n/g, '<br>')}</div>
+            `;
             chatStream.appendChild(row);
             chatStream.scrollTop = chatStream.scrollHeight;
         }
@@ -758,7 +864,7 @@
             } else { alert('المتصفح لا يدعم التعرف الصوتي.'); }
         }
 
-        // API Processes
+        // API Execution Logic
         let currentToolKey = 'grounding';
         const toolsConfig = {
             'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', apiEndpoint: '/api/deconstruct.js' },
@@ -771,14 +877,21 @@
 
         async function executeProcess() {
             const inputVal = document.getElementById('user-input').value.trim();
-            if (!inputVal) return;
+            if (!inputVal && attachedItems.length === 0 && !activeOptionBadge) return;
 
-            appendUserBubble(inputVal);
+            const currentMedia = [...attachedItems];
+            const currentBadge = activeOptionBadge;
+
+            // Render Message inside UI
+            appendUserBubble(inputVal, currentMedia, currentBadge);
             
+            // Clear Inputs
             const input = document.getElementById('user-input');
             input.value = '';
             input.style.height = 'auto';
-            clearAttachment();
+            attachedItems = [];
+            activeOptionBadge = null;
+            renderAttachmentsPreview();
 
             appendLoaderBubble();
 
@@ -786,7 +899,11 @@
                 const response = await fetch(toolsConfig[currentToolKey].apiEndpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: inputVal })
+                    body: JSON.stringify({ 
+                        prompt: inputVal,
+                        attachments: currentMedia,
+                        optionMode: currentBadge ? currentBadge.title : null
+                    })
                 });
                 const data = await response.json();
                 const resultText = data.result || 'لم يتم إرجاع نتائج.';
@@ -815,9 +932,7 @@
                         <path d="M12 0C12 6.62742 6.62742 12 0 12C6.62742 12 12 17.3726 12 24C12 17.3726 17.3726 12 24 12C17.3726 12 12 6.62742 12 0Z" fill="url(#sparkle-grad)"/>
                         <defs>
                             <linearGradient id="sparkle-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#38BDF8"/>
-                                <stop offset="0.5" stop-color="#818CF8"/>
-                                <stop offset="1" stop-color="#F43F5E"/>
+                                <stop stop-color="#38BDF8"/><stop offset="0.5" stop-color="#818CF8"/><stop offset="1" stop-color="#F43F5E"/>
                             </linearGradient>
                         </defs>
                     </svg>
@@ -825,7 +940,9 @@
                 </div>
             `;
             document.getElementById('user-input').value = '';
-            clearAttachment();
+            attachedItems = [];
+            activeOptionBadge = null;
+            renderAttachmentsPreview();
         }
 
         function changeTheme(theme) { document.body.className = theme === 'default' ? '' : `theme-${theme}`; }
