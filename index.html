@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - Gemini Studio (v14.0)</title>
+    <title>Tafkek OS - Gemini Studio (v15.0 Vision)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -196,13 +196,14 @@
         .user-row .bubble { background: #23252b; color: #ffffff; border-bottom-left-radius: 6px; }
         .ai-row .bubble { background: transparent; color: #e3e3e3; width: 100%; padding-right: 0; }
 
-        /* Media inside User Message Bubble */
+        /* Media Inside User Chat Bubble */
         .chat-media-container {
             display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; justify-content: flex-end;
         }
         .chat-media-card {
             position: relative; border-radius: 16px; overflow: hidden;
-            max-width: 220px; max-height: 220px; border: 1px solid rgba(255, 255, 255, 0.15);
+            max-width: 240px; max-height: 240px; border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
         .chat-media-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .chat-file-card {
@@ -212,20 +213,18 @@
 
         .gemini-loader { display: flex; align-items: center; gap: 10px; color: var(--accent-blue); font-size: 14px; }
 
-        /* Floating Pill Bar Container */
+        /* Dynamic Input Controls */
         .gemini-pill-container {
             padding: 0 20px 24px 20px; width: 100%; max-width: 820px; margin: 0 auto;
             display: flex; flex-direction: column; gap: 10px;
         }
 
-        /* Attached Attachments Preview Area (Gemini Style Container) */
         .attachments-preview-wrapper {
             display: flex; align-items: center; gap: 10px; overflow-x: auto;
             padding: 4px 10px; max-width: 100%; scrollbar-width: none;
         }
         .attachments-preview-wrapper::-webkit-scrollbar { display: none; }
 
-        /* Image Attachment Card Inside Input Bar */
         .attachment-thumb-card {
             position: relative; width: 64px; height: 64px; border-radius: 14px;
             overflow: hidden; background: #28292e; border: 1px solid rgba(255,255,255,0.15);
@@ -243,14 +242,12 @@
         }
         .attachment-delete-btn:hover { background: #f43f5e; }
 
-        /* File Attachment Card Inside Input Bar */
         .attachment-file-card {
             display: flex; align-items: center; gap: 8px; background: #28292e;
             border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 14px;
             font-size: 12px; color: var(--accent-blue); flex-shrink: 0; position: relative;
         }
 
-        /* Option Mode Badge */
         .option-mode-badge {
             display: inline-flex; align-items: center; gap: 6px; background: rgba(var(--accent-rgb), 0.15);
             border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 6px 12px;
@@ -292,7 +289,6 @@
         }
         .btn-live-wave:hover { transform: scale(1.05); }
 
-        /* Gemini Bottom Sheet */
         .sheet-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
@@ -395,7 +391,7 @@
             <button class="icon-btn" title="سجل المحادثات" style="font-size:18px;">🖋️</button>
             <div class="gemini-model-selector">
                 <span class="dot-blue"></span>
-                <span>Tafkek Flash</span>
+                <span>Tafkek Vision Pro</span>
                 <span style="font-size:12px; color:var(--text-muted);">⌄</span>
             </div>
             <button class="icon-btn" title="القائمة" style="font-size:20px;">☰</button>
@@ -416,9 +412,9 @@
             </div>
         </div>
 
-        <!-- Floating Prompt Pill Bar -->
+        <!-- Floating Prompt Pill Bar Container -->
         <div class="gemini-pill-container">
-            <!-- Dynamic Attachments Preview Wrapper (Gemini Style) -->
+            <!-- Dynamic Attachments Preview Area -->
             <div class="attachments-preview-wrapper" id="attachments-preview-wrapper" style="display: none;"></div>
 
             <div class="gemini-pill-bar">
@@ -426,7 +422,7 @@
                     <span style="font-size: 24px; font-weight: 300;">+</span>
                 </button>
 
-                <textarea id="user-input" class="pill-input" rows="1" placeholder="اسأل Tafkek OS" oninput="autoResizeTextarea(this)" onkeydown="handleKeyDown(event)"></textarea>
+                <textarea id="user-input" class="pill-input" rows="1" placeholder="اسأل Tafkek OS أو ارفع صورة لتحليلها..." oninput="autoResizeTextarea(this)" onkeydown="handleKeyDown(event)"></textarea>
 
                 <button class="btn-pill-action" title="الإدخال الصوتي" onclick="startVoiceInput()">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -444,7 +440,7 @@
         </div>
     </div>
 
-    <!-- Hidden Native File Inputs (Multiple Files Support) -->
+    <!-- Hidden Native File Inputs -->
     <input type="file" id="native-image-input" accept="image/*" multiple style="display:none;" onchange="handleFileSelect(event, 'image')">
     <input type="file" id="native-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleFileSelect(event, 'camera')">
     <input type="file" id="native-file-input" multiple style="display:none;" onchange="handleFileSelect(event, 'file')">
@@ -452,7 +448,7 @@
     <!-- Overlay Background -->
     <div class="sheet-overlay" id="sheet-overlay" onclick="closeBottomSheet()"></div>
 
-    <!-- Gemini Bottom Sheet for Attachments -->
+    <!-- Gemini Bottom Sheet -->
     <div class="gemini-bottom-sheet" id="gemini-sheet">
         <div class="sheet-handle-bar" onclick="closeBottomSheet()"></div>
 
@@ -504,7 +500,7 @@
     </div>
 
     <script>
-        // Canvas Neural Network Animation
+        // Neural Animation
         const canvas = document.getElementById('neural-canvas');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -544,7 +540,7 @@
         }
         animateNeuralNetwork();
 
-        // Firebase Logic
+        // Firebase Initializing
         const firebaseConfig = {
             apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
             authDomain: "tafkekos.firebaseapp.com",
@@ -663,9 +659,9 @@
         }
 
         // ==========================================
-        // ATTACHMENT & BOTTOM SHEET SYSTEM (GEMINI STYLE)
+        // ATTACHMENT & VISION PROCESSING SYSTEM
         // ==========================================
-        let attachedItems = []; // Array of attached media/options
+        let attachedItems = []; 
         let activeOptionBadge = null;
 
         function openBottomSheet() {
@@ -692,24 +688,25 @@
                     id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
                     file: file,
                     type: file.type.startsWith('image/') ? 'image' : 'file',
+                    mimeType: file.type,
                     name: file.name,
                     url: null,
-                    base64: null
+                    base64Data: null // Clean base64 string for Gemini API
                 };
 
-                if (item.type === 'image') {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        item.url = e.target.result;
-                        item.base64 = e.target.result;
-                        renderAttachmentsPreview();
-                    };
-                    reader.readAsDataURL(file);
-                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    item.url = e.target.result;
+                    // Extract raw Base64 without the data header scheme (data:image/jpeg;base64,)
+                    item.base64Data = e.target.result.split(',')[1];
+                    renderAttachmentsPreview();
+                };
+                reader.readAsDataURL(file);
+
                 attachedItems.push(item);
             });
             renderAttachmentsPreview();
-            event.target.value = ''; // Reset input
+            event.target.value = '';
         }
 
         function selectSheetOption(title, icon) {
@@ -739,7 +736,6 @@
 
             wrapper.style.display = 'flex';
 
-            // 1. Render Active Option Mode Badge (if selected)
             if (activeOptionBadge) {
                 const badge = document.createElement('div');
                 badge.className = 'option-mode-badge';
@@ -750,13 +746,12 @@
                 wrapper.appendChild(badge);
             }
 
-            // 2. Render Attached Files & Images
             attachedItems.forEach(item => {
                 if (item.type === 'image') {
                     const card = document.createElement('div');
                     card.className = 'attachment-thumb-card';
                     card.innerHTML = `
-                        <img src="${item.url || 'data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\'></svg>'}" alt="معاينة">
+                        <img src="${item.url || ''}" alt="معاينة المرفق">
                         <button class="attachment-delete-btn" onclick="removeAttachment('${item.id}')">✕</button>
                     `;
                     wrapper.appendChild(card);
@@ -772,7 +767,7 @@
             });
         }
 
-        // Chat UI Operations
+        // Chat UI Helpers
         function autoResizeTextarea(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
 
         function handleKeyDown(e) {
@@ -804,10 +799,11 @@
             }
 
             let badgePrefix = optionBadge ? `<b>[${optionBadge.icon} ${optionBadge.title}]</b><br>` : '';
+            let contentText = text ? text.replace(/\n/g, '<br>') : '*(صورة مرفقة للتحليل)*';
 
             row.innerHTML = `
                 ${mediaHtml}
-                <div class="bubble">${badgePrefix}${text.replace(/\n/g, '<br>')}</div>
+                <div class="bubble">${badgePrefix}${contentText}</div>
             `;
             chatStream.appendChild(row);
             chatStream.scrollTop = chatStream.scrollHeight;
@@ -838,7 +834,7 @@
             const loaderRow = document.createElement('div');
             loaderRow.className = 'chat-row ai-row';
             loaderRow.id = 'active-loader';
-            loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><span>جاري المعالجة...</span></div></div>`;
+            loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><span>🔍 جاري تحليل الوسائط والمعالجة...</span></div></div>`;
             chatStream.appendChild(loaderRow);
             chatStream.scrollTop = chatStream.scrollHeight;
         }
@@ -864,7 +860,7 @@
             } else { alert('المتصفح لا يدعم التعرف الصوتي.'); }
         }
 
-        // API Execution Logic
+        // Processing Execution Engine (Sends Vision Media to Gemini API)
         let currentToolKey = 'grounding';
         const toolsConfig = {
             'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', apiEndpoint: '/api/deconstruct.js' },
@@ -882,10 +878,10 @@
             const currentMedia = [...attachedItems];
             const currentBadge = activeOptionBadge;
 
-            // Render Message inside UI
+            // Render message bubble with attached images in UI
             appendUserBubble(inputVal, currentMedia, currentBadge);
             
-            // Clear Inputs
+            // Clear inputs & previews
             const input = document.getElementById('user-input');
             input.value = '';
             input.style.height = 'auto';
@@ -895,26 +891,36 @@
 
             appendLoaderBubble();
 
+            // Prepare inline vision payload structure for Gemini API
+            const inlineDataPayload = currentMedia
+                .filter(item => item.base64Data)
+                .map(item => ({
+                    inlineData: {
+                        mimeType: item.mimeType || "image/jpeg",
+                        data: item.base64Data
+                    }
+                }));
+
             try {
                 const response = await fetch(toolsConfig[currentToolKey].apiEndpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        prompt: inputVal,
-                        attachments: currentMedia,
+                        prompt: inputVal || "قم بتحليل هذه الصورة وشرح كل محتوياتها بالتفصيل الدقيق.",
+                        mediaParts: inlineDataPayload, // Gemini Multi-modal Payload
                         optionMode: currentBadge ? currentBadge.title : null
                     })
                 });
                 const data = await response.json();
-                const resultText = data.result || 'لم يتم إرجاع نتائج.';
+                const resultText = data.result || 'لم يتم استلام أي رد تحليل.';
                 
                 removeLoaderBubble();
                 appendAiBubble(resultText);
 
-                if (currentUser) await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal, resultText);
+                if (currentUser) await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal || "تحليل صورة", resultText);
             } catch (err) { 
                 removeLoaderBubble();
-                appendAiBubble(`⚠️ **حدث خطأ أثناء المعالجة:** ${err.message}`); 
+                appendAiBubble(`⚠️ **حدث خطأ أثناء معالجة الصورة:** ${err.message}`); 
             }
         }
 
