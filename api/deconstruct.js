@@ -27,18 +27,33 @@ export default async function handler(req, res) {
             parts.push({ text: "قم بتحليل هذه الصورة وتفسير محتوياتها بالتفصيل." });
         }
 
-        // إضافة الصور المرفقة وصياغتها للـ REST API
+       // الميمات المسموحة والمدمجة مباشرة في Gemini API
+        const supportedMimeTypes = [
+            'image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif',
+            'application/pdf', 'text/plain', 'text/csv', 'text/html'
+        ];
+
+        // إضافة الصور والملفات المرفقة
         if (mediaParts && Array.isArray(mediaParts)) {
-            mediaParts.forEach(item => {
+            for (const item of mediaParts) {
                 if (item.inlineData && item.inlineData.data) {
+                    const mime = item.inlineData.mimeType || "image/jpeg";
+
+                    // التحقق من توافق صيغة الملف
+                    if (!supportedMimeTypes.includes(mime)) {
+                        return res.status(200).json({ 
+                            result: `⚠️ الصيغة المرفقة (${mime}) غير مدعومة مباشرة.\n\n💡 **نصيحة:** يرجى تحويل ملف PowerPoint إلى **PDF** أو تحويل الشرائح إلى **صور (PNG/JPG)** ثم إعادة رفعها لتفكيكها وتحليلها.` 
+                        });
+                    }
+
                     parts.push({
                         inline_data: {
-                            mime_type: item.inlineData.mimeType || "image/jpeg",
+                            mime_type: mime,
                             data: item.inlineData.data
                         }
                     });
                 }
-            });
+            }
         }
 
         const postData = JSON.stringify({
