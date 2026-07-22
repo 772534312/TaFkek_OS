@@ -14,7 +14,8 @@ export default async function handler(req, res) {
             return res.status(500).json({ result: "⚠️ مفتاح GEMINI_API_KEY غير معرف في البيئة." });
         }
 
-        let targetModel = model || "gemini-1.5-flash";
+        // استخدام gemini-2.5-flash أو gemini-1.5-flash-latest لمنع خطأ الموديل غير الموجود
+        let targetModel = model || "gemini-2.5-flash";
 
         // تجهيز الأجزاء (Parts)
         const parts = [];
