@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - Full Cognitive Workspace (v9.0)</title>
+    <title>Tafkek OS - Enterprise Cloud Sync (v10.0)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -11,6 +11,11 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
@@ -20,6 +25,7 @@
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --accent-blue: #38bdf8;
+            --accent-rgb: 56, 189, 248;
             --accent-hover: #0ea5e9;
             --error-red: #f43f5e;
             --success-green: #10b981;
@@ -27,12 +33,12 @@
 
         body.theme-cyberpunk {
             --bg-dark: #0f051d; --panel-bg: rgba(26, 11, 46, 0.85);
-            --border-color: rgba(236, 72, 153, 0.3); --accent-blue: #f43f5e; --accent-hover: #e11d48;
+            --border-color: rgba(236, 72, 153, 0.3); --accent-blue: #f43f5e; --accent-rgb: 244, 63, 94; --accent-hover: #e11d48;
         }
 
         body.theme-matrix {
             --bg-dark: #020d08; --panel-bg: rgba(5, 26, 15, 0.85);
-            --border-color: rgba(16, 185, 129, 0.3); --accent-blue: #10b981; --accent-hover: #059669;
+            --border-color: rgba(16, 185, 129, 0.3); --accent-blue: #10b981; --accent-rgb: 16, 185, 129; --accent-hover: #059669;
         }
 
         body {
@@ -44,11 +50,11 @@
 
         #neural-canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 1; opacity: 0.5;
+            pointer-events: none; z-index: 1; opacity: 0.7;
         }
 
         .sidebar {
-            width: 330px; background-color: var(--panel-bg);
+            width: 340px; background-color: var(--panel-bg);
             backdrop-filter: blur(12px); border-left: 1px solid var(--border-color);
             display: flex; flex-direction: column; padding: 20px; box-sizing: border-box;
             overflow-y: auto; z-index: 2;
@@ -60,8 +66,29 @@
             padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
         }
 
+        /* كارت مستخدم الهوية */
+        .user-profile-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 10px; margin-bottom: 12px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .user-info { display: flex; align-items: center; gap: 10px; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-blue); display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; }
+        .user-details { display: flex; flex-direction: column; font-size: 11px; }
+        .user-name { font-weight: bold; color: var(--text-main); }
+        .user-email { color: var(--text-muted); font-size: 10px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        .btn-auth {
+            background: rgba(var(--accent-rgb), 0.15); border: 1px solid var(--accent-blue);
+            color: var(--accent-blue); padding: 8px; border-radius: 6px;
+            cursor: pointer; font-weight: 600; font-family: 'Cairo'; width: 100%;
+            margin-bottom: 12px; transition: all 0.2s; font-size: 12px;
+        }
+        .btn-auth:hover { background: var(--accent-blue); color: #000; }
+
         .btn-new-chat {
-            background: rgba(56, 189, 248, 0.1); border: 1px solid var(--accent-blue);
+            background: rgba(var(--accent-rgb), 0.1); border: 1px solid var(--accent-blue);
             color: var(--accent-blue); padding: 10px; border-radius: 8px;
             cursor: pointer; font-weight: 600; font-family: 'Cairo'; width: 100%;
             margin-bottom: 12px; transition: all 0.2s;
@@ -74,9 +101,13 @@
             font-size: 12px; font-family: 'Cairo'; margin-bottom: 15px; box-sizing: border-box;
         }
 
+        .section-title-row {
+            display: flex; justify-content: space-between; align-items: center; margin: 12px 0 6px 0;
+        }
+
         .section-title {
             font-size: 11px; text-transform: uppercase; color: var(--text-muted);
-            margin: 12px 0 6px 0; letter-spacing: 1px; font-weight: 600;
+            letter-spacing: 1px; font-weight: 600;
         }
 
         .tool-btn {
@@ -87,17 +118,13 @@
         }
 
         .tool-btn:hover, .tool-btn.active {
-            background-color: rgba(30, 41, 59, 0.8); color: var(--accent-blue); border-color: rgba(56, 189, 248, 0.3);
+            background-color: rgba(30, 41, 59, 0.8); color: var(--accent-blue); border-color: rgba(var(--accent-rgb), 0.3);
         }
 
         .workspace {
             flex: 1; display: flex; flex-direction: column; padding: 25px;
             box-sizing: border-box; overflow-y: auto; z-index: 2; transition: all 0.3s ease;
         }
-
-        .workspace.focus-mode .interface-card,
-        .workspace.focus-mode .tool-header,
-        .workspace.focus-mode .preset-container { opacity: 0.1; filter: blur(3px); pointer-events: none; }
 
         .tool-header h1 { margin: 0 0 6px 0; font-size: 24px; font-weight: 700; color: var(--text-main); }
         .tool-header p { margin: 0; color: var(--text-muted); font-size: 13.5px; }
@@ -108,7 +135,7 @@
             color: var(--accent-blue); font-size: 11.5px; padding: 4px 10px;
             border-radius: 20px; cursor: pointer; transition: all 0.2s;
         }
-        .preset-chip:hover { background: rgba(56, 189, 248, 0.15); border-color: var(--accent-blue); }
+        .preset-chip:hover { background: rgba(var(--accent-rgb), 0.15); border-color: var(--accent-blue); }
 
         .interface-card {
             background-color: var(--panel-bg); backdrop-filter: blur(10px);
@@ -123,24 +150,6 @@
             border: 1px solid var(--border-color); border-radius: 8px;
             padding: 15px; color: var(--text-main); font-size: 14.5px;
             font-family: 'Cairo', sans-serif; box-sizing: border-box; resize: vertical;
-        }
-
-        /* المعاين والموجات الصوتية */
-        .audio-wave-container {
-            display: none; align-items: center; justify-content: center; gap: 4px;
-            height: 25px; margin-top: 10px;
-        }
-        .audio-bar { width: 4px; height: 100%; background: var(--accent-blue); border-radius: 2px; animation: wave 1s infinite ease-in-out; }
-        .audio-bar:nth-child(2) { animation-delay: 0.2s; }
-        .audio-bar:nth-child(3) { animation-delay: 0.4s; }
-        .audio-bar:nth-child(4) { animation-delay: 0.6s; }
-
-        @keyframes wave { 0%, 100% { height: 6px; } 50% { height: 22px; } }
-
-        .file-preview-card {
-            display: none; align-items: center; justify-content: space-between;
-            background: rgba(30, 41, 59, 0.6); border: 1px solid var(--accent-blue);
-            padding: 8px 12px; border-radius: 6px; font-size: 12px; margin-bottom: 10px;
         }
 
         .controls-row { display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 10px; }
@@ -164,10 +173,6 @@
             padding: 25px; min-height: 150px; line-height: 1.8; position: relative;
         }
 
-        .output-panel.fullscreen { position: fixed; top: 15px; left: 15px; right: 15px; bottom: 15px; z-index: 200; height: auto; }
-
-        .output-toolbar { position: absolute; top: 12px; left: 15px; display: flex; gap: 6px; z-index: 5; flex-wrap: wrap; }
-
         .icon-btn {
             background: rgba(30, 41, 59, 0.6); border: 1px solid var(--border-color);
             color: var(--text-muted); padding: 4px 8px; border-radius: 6px;
@@ -175,27 +180,22 @@
         }
         .icon-btn:hover { color: var(--accent-blue); border-color: var(--accent-blue); }
 
-        .branch-controls { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--text-muted); margin-bottom: 10px; }
-
-        .followup-container { display: flex; gap: 8px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 15px; flex-wrap: wrap; }
-        .followup-btn {
-            background: rgba(30, 41, 59, 0.4); border: 1px solid var(--border-color);
-            color: var(--text-main); font-size: 12px; padding: 6px 12px; border-radius: 15px; cursor: pointer;
+        .session-item {
+            display: flex; flex-direction: column; gap: 4px;
+            padding: 8px 10px; border-radius: 8px; font-size: 12px; color: var(--text-muted);
+            cursor: pointer; margin-bottom: 6px; background: rgba(15, 22, 38, 0.5);
+            border: 1px solid transparent; transition: all 0.2s;
         }
-        .followup-btn:hover { border-color: var(--accent-blue); color: var(--accent-blue); }
+        .session-item:hover { background: rgba(30, 41, 59, 0.8); color: var(--text-main); border-color: var(--border-color); }
+        .session-item.pinned { border-right: 3px solid var(--accent-blue); background: rgba(var(--accent-rgb), 0.08); }
 
-        .live-preview-iframe { width: 100%; height: 250px; border: 1px solid var(--border-color); border-radius: 8px; margin-top: 15px; background: white; display: none; }
-
-        .session-item { display: flex; justify-content: space-between; align-items: center; padding: 6px; border-radius: 6px; font-size: 12px; color: var(--text-muted); cursor: pointer; }
-        .session-item:hover { background: rgba(30, 41, 59, 0.5); }
-        .session-item.pinned { border-right: 2px solid var(--accent-blue); }
+        .session-item-header { display: flex; justify-content: space-between; align-items: center; }
+        .session-meta { font-size: 10px; color: var(--text-muted); opacity: 0.7; }
 
         .status-bar { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-muted); margin-top: 15px; }
         .status-indicator { display: flex; align-items: center; gap: 8px; }
         .dot { width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-muted); }
         .dot.active { background-color: var(--success-green); box-shadow: 0 0 10px var(--success-green); }
-
-        #output-image { max-width: 100%; border-radius: 12px; margin-top: 15px; display: none; }
     </style>
 </head>
 <body>
@@ -212,10 +212,28 @@
             </div>
         </div>
 
+        <!-- كارت تسجيل الدخول والبروفايل -->
+        <div id="auth-section">
+            <button id="login-google-btn" class="btn-auth" onclick="loginWithGoogle()">🔑 تسجيل الدخول بواسطة Google</button>
+        </div>
+
+        <div id="user-card" class="user-profile-card" style="display: none;">
+            <div class="user-info">
+                <div id="user-avatar" class="user-avatar">U</div>
+                <div class="user-details">
+                    <span id="user-name" class="user-name">المستخدم</span>
+                    <span id="user-email" class="user-email">user@example.com</span>
+                </div>
+            </div>
+            <button class="icon-btn" onclick="logoutUser()" title="تسجيل الخروج">🚪</button>
+        </div>
+
         <button class="btn-new-chat" onclick="startNewSession()">+ جلسة معالجة جديدة</button>
-        <input type="text" class="search-history-input" placeholder="🔍 بحث في السجل..." oninput="filterHistory(this.value)">
+        <input type="text" class="search-history-input" placeholder="🔍 بحث في سجل السحابة..." oninput="filterHistory(this.value)">
         
-        <div class="section-title">الأدوات الحية</div>
+        <div class="section-title-row">
+            <span class="section-title">الأدوات الحية</span>
+        </div>
         <button class="tool-btn active" onclick="switchTool('grounding', this)">🌐 بحث جوجل والتوثيق الفوري</button>
         <button class="tool-btn" onclick="switchTool('deconstruct', this)">🧠 التفكيك المعرفي واللغوي</button>
         <button class="tool-btn" onclick="switchTool('ecom-deconstruct', this)">📊 تفكيك اللوجستيات الرقمية</button>
@@ -223,11 +241,13 @@
         <button class="tool-btn" onclick="switchTool('clean-image', this)">🎨 استوديو التصاميم النظيفة</button>
         <button class="tool-btn" onclick="switchTool('support-agent', this)">🛠️ المساعد الذكي لقنوات الدعم</button>
         
-        <div class="section-title">السجل والجلسات المثبتة</div>
+        <div class="section-title-row" style="margin-top: 18px;">
+            <span class="section-title">السجل السحابي للمستخدم</span>
+        </div>
         <div id="session-history-list"></div>
     </div>
 
-    <div class="workspace" id="workspace">
+    <div class="workspace">
         <div class="tool-header">
             <h1 id="tool-title">التوثيق والربط ببحث جوجل الفوري</h1>
             <p id="tool-desc">تلقي إجابات حية من الإنترنت مدعومة بروابط مصادر حقيقية.</p>
@@ -235,211 +255,224 @@
 
         <div class="preset-container" id="preset-area"></div>
 
-        <div class="interface-card" id="drop-zone">
-            <div id="file-preview" class="file-preview-card">
-                <span id="file-name">📄 filename.txt</span>
-                <button class="icon-btn" onclick="removeFile()">❌ إزالة</button>
-            </div>
-
+        <div class="interface-card">
             <div class="input-wrapper">
                 <textarea id="user-input" class="input-field" rows="4" placeholder="أدخل البيانات أو اسحب المرفقات هنا..."></textarea>
-                <button id="mic-btn" class="icon-btn" style="position: absolute; left: 12px; bottom: 15px;" onclick="toggleVoiceInput()">🎙️ تحدث</button>
-            </div>
-
-            <!-- الموجات الصوتية التفاعلية -->
-            <div id="audio-wave" class="audio-wave-container">
-                <div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div><div class="audio-bar"></div>
-                <span style="font-size: 11px; color: var(--accent-blue); margin-right: 8px;">جاري الاستماع...</span>
             </div>
 
             <div class="controls-row">
-                <div style="display: flex; gap: 8px; align-items: center;">
-                    <select id="output-style" class="style-select">
-                        <option value="detailed">أسلوب تفصيلي شامل</option>
-                        <option value="concise">مختصر ومباشر</option>
-                        <option value="code">تركيز على الأكواد فقط</option>
-                    </select>
-
-                    <select id="engine-select" class="style-select">
-                        <option value="fast">المحرك السريع (Ultra)</option>
-                        <option value="deep">المحرك العميق (Deep Logic)</option>
-                    </select>
-                </div>
+                <select id="output-style" class="style-select">
+                    <option value="detailed">أسلوب تفصيلي شامل</option>
+                    <option value="concise">مختصر ومباشر</option>
+                    <option value="code">تركيز على الأكواد فقط</option>
+                </select>
                 <button id="submit-btn" class="action-btn" onclick="executeProcess()">تشغيل النظام المعرفي</button>
             </div>
         </div>
 
         <div id="output-box" class="output-panel">
-            <div class="output-toolbar">
-                <button class="icon-btn" onclick="speakOutput()">🔊 استماع</button>
-                <button class="icon-btn" onclick="toggleLivePreview()">🌐 معاينة الـ HTML</button>
-                <button class="icon-btn" onclick="generateShareLink()">🔗 مشاركة</button>
-                <button class="icon-btn" onclick="toggleZenMode()">🖥️ الشاشة الكاملة</button>
-                <button class="icon-btn" onclick="copyOutputText()">📋 نسخ</button>
-            </div>
-
-            <!-- التحكم في الفروع -->
-            <div class="branch-controls">
-                <span>الفرع: </span>
-                <button class="icon-btn" onclick="changeBranch(-1)">&lt;</button>
-                <span id="branch-indicator">1 / 1</span>
-                <button class="icon-btn" onclick="changeBranch(1)">&gt;</button>
-            </div>
-
             <div id="output-text-container">في انتظار البيانات...</div>
-            <iframe id="live-iframe" class="live-preview-iframe"></iframe>
-
-            <!-- اقتراحات المتابعة الضمنية -->
-            <div id="followup-area" class="followup-container" style="display: none;">
-                <span style="font-size: 11px; color: var(--text-muted); width: 100%;">اقترحات المتابعة التلقائية:</span>
-                <button class="followup-btn" onclick="sendFollowup(this.innerText)">هل يمكنك إضافة كود توضيحي لذلك؟</button>
-                <button class="followup-btn" onclick="sendFollowup(this.innerText)">تفكيك الأسباب الجوهرية لهذه النتيجة</button>
-                <button class="followup-btn" onclick="sendFollowup(this.innerText)">تحويل التقرير إلى جدول نقاط</button>
-            </div>
         </div>
-
-        <img id="output-image" alt="المخرجات البصرية" />
 
         <div class="status-bar">
             <div class="status-indicator">
                 <div id="status-dot" class="dot active"></div>
-                <span id="status-text">النواة: جاهزة</span>
+                <span id="status-text">الحالة السحابية: جاهز للمزامنة</span>
             </div>
-            <div>Tafkek OS Enterprise v9.0</div>
+            <div>Tafkek OS Cloud v10.0</div>
         </div>
     </div>
 
     <script>
-        const toolsConfig = {
-            'grounding': { title: 'بحث جوجل والتوثيق الفوري', desc: 'إجابات حية مدعومة بروابط مصادر حقيقية.', apiEndpoint: '/api/deconstruct.js', presets: ['أحدث التطورات الذكاء الاصطناعي'] },
-            'deconstruct': { title: 'التفكيك المعرفي واللغوي', desc: 'تحليل البنى النصية واستخراج الأفكار.', apiEndpoint: '/api/deconstruct-groq.js', presets: ['حلل هذا النص واستخرج المفاهيم الرئيسية'] },
-            'ecom-deconstruct': { title: 'تفكيك العمليات واللوجستيات الرقمية', desc: 'محاكاة حركة الشحنات والمخاطر.', apiEndpoint: '/api/ecom-deconstruct.js', presets: ['تفكيك شحنة متأخرة في الجمارك'] },
-            'loop-destroyer': { title: 'تتبع وحرق الأخطاء البرمجية', desc: 'كشف ثغرات وحلقات التجمد.', apiEndpoint: '/api/loop-destroyer.js', presets: ['فحص دالة تكرارية للقوائم الموصولة'] },
-            'clean-image': { title: 'استوديو التصاميم النظيفة', desc: 'توليد أصول بصرية خالية من النصوص.', apiEndpoint: '/api/generate-image.js', isImage: true, presets: ['Galaxy book cover art'] },
-            'support-agent': { title: 'المساعد الذكي لقنوات الدعم', desc: 'تحليل وتفكيك تذاكر الدعم.', apiEndpoint: '/api/support-agent.js', presets: ['تفكيك تذكرة دعم تقنية معقدة'] }
+        // ==========================================
+        // 1. إعداد خدمات Firebase المزودة للسحابة
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
 
-        let currentToolKey = 'grounding';
-        let isRecording = false;
-        let recognition = null;
-        let activeBranches = [];
-        let currentBranchIndex = 0;
-
-        function changeTheme(theme) { document.body.className = theme === 'default' ? '' : `theme-${theme}`; }
-
-        // الإدخال الصوتي مع الموجات المرئية
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.lang = 'ar-SA';
-            recognition.onresult = (e) => { document.getElementById('user-input').value += ' ' + e.results[0][0].transcript; toggleVoiceInput(); };
-            recognition.onerror = () => toggleVoiceInput();
+        // تهيئة التطبيق
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
         }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
 
-        function toggleVoiceInput() {
-            const wave = document.getElementById('audio-wave');
-            if (isRecording) {
-                recognition.stop(); isRecording = false; wave.style.display = 'none';
-            } else if (recognition) {
-                recognition.start(); isRecording = true; wave.style.display = 'flex';
-            }
-        }
+        let currentUser = null;
+        let savedSessions = [];
 
-        function speakOutput() {
-            const text = document.getElementById('output-text-container').innerText;
-            const u = new SpeechSynthesisUtterance(text); u.lang = 'ar-SA'; window.speechSynthesis.speak(u);
-        }
-
-        // معاينة كود الـ HTML المباشر
-        function toggleLivePreview() {
-            const iframe = document.getElementById('live-iframe');
-            const text = document.getElementById('output-text-container').innerText;
-            if (iframe.style.display === 'block') { iframe.style.display = 'none'; }
-            else { iframe.style.display = 'block'; iframe.srcdoc = text; }
-        }
-
-        function generateShareLink() {
-            navigator.clipboard.writeText(window.location.href);
-            alert('تم نسخ رابط التقرير والمشاركة بنجاح!');
-        }
-
-        // التفريع والتنقل بين الأسئلة والإجابات (Branching)
-        function changeBranch(dir) {
-            if (activeBranches.length <= 1) return;
-            currentBranchIndex = Math.max(0, Math.min(activeBranches.length - 1, currentBranchIndex + dir));
-            document.getElementById('output-text-container').innerHTML = window.marked.parse(activeBranches[currentBranchIndex]);
-            document.getElementById('branch-indicator').innerText = `${currentBranchIndex + 1} / ${activeBranches.length}`;
-        }
-
-        function sendFollowup(text) {
-            document.getElementById('user-input').value = text;
-            executeProcess();
-        }
-
-        // معالجة الملفات المرفقة
-        const dropZone = document.getElementById('drop-zone');
-        dropZone.addEventListener('dragover', (e) => e.preventDefault());
-        dropZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                document.getElementById('file-name').innerText = `📄 ${files[0].name}`;
-                document.getElementById('file-preview').style.display = 'flex';
-                const r = new FileReader(); r.onload = (evt) => document.getElementById('user-input').value = evt.target.result;
-                r.readAsText(files[0]);
+        // مراقبة حالة تسجيل الدخول
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('auth-section').style.display = 'none';
+                document.getElementById('user-card').style.display = 'flex';
+                document.getElementById('user-name').innerText = user.displayName || 'مستخدم';
+                document.getElementById('user-email').innerText = user.email;
+                document.getElementById('user-avatar').innerText = (user.displayName || user.email)[0].toUpperCase();
+                
+                // جلب جلسات المستخدم من قاعدة البيانات السحابية
+                fetchUserSessionsCloud();
+            } else {
+                currentUser = null;
+                document.getElementById('auth-section').style.display = 'block';
+                document.getElementById('user-card').style.display = 'none';
+                savedSessions = [];
+                renderSessionHistory();
             }
         });
-        function removeFile() { document.getElementById('file-preview').style.display = 'none'; }
 
-        // تصفية وقائمة الجلسات المثبتة
-        function filterHistory(query) {
-            document.querySelectorAll('.session-item').forEach(el => el.style.display = el.innerText.includes(query) ? 'flex' : 'none');
+        function loginWithGoogle() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider).catch(error => alert("خطأ تسجيل الدخول: " + error.message));
         }
+
+        function logoutUser() {
+            auth.signOut();
+        }
+
+        // ==========================================
+        // 2. إدارة السجلات وقواعد البيانات السحابية (Firestore)
+        // ==========================================
+        function fetchUserSessionsCloud() {
+            if (!currentUser) return;
+
+            db.collection('users').doc(currentUser.uid).collection('sessions')
+              .orderBy('timestamp', 'desc')
+              .onSnapshot(snapshot => {
+                  savedSessions = [];
+                  snapshot.forEach(doc => {
+                      savedSessions.push({ id: doc.id, ...doc.data() });
+                  });
+                  renderSessionHistory();
+              });
+        }
+
+        async function saveSessionToCloud(title, prompt, result) {
+            if (!currentUser) return;
+
+            const sessionData = {
+                title: title,
+                toolKey: currentToolKey,
+                prompt: prompt,
+                result: result,
+                pinned: false,
+                charCount: result.length,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                date: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+            };
+
+            await db.collection('users').doc(currentUser.uid).collection('sessions').add(sessionData);
+        }
+
+        async function togglePinSession(id, event) {
+            event.stopPropagation();
+            if (!currentUser) return;
+            const session = savedSessions.find(s => s.id === id);
+            if (session) {
+                await db.collection('users').doc(currentUser.uid).collection('sessions').doc(id).update({
+                    pinned: !session.pinned
+                });
+            }
+        }
+
+        async function deleteSession(id, event) {
+            event.stopPropagation();
+            if (!currentUser) return;
+            await db.collection('users').doc(currentUser.uid).collection('sessions').doc(id).delete();
+        }
+
+        function renderSessionHistory() {
+            const list = document.getElementById('session-history-list');
+            list.innerHTML = '';
+
+            if (!currentUser) {
+                list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">يرجى تسجيل الدخول لحفظ واسترجاع محادثاتك.</div>';
+                return;
+            }
+
+            const sorted = [...savedSessions].sort((a, b) => b.pinned - a.pinned);
+
+            if (sorted.length === 0) {
+                list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">لا توجد جلسات معالجة محفوظة بعد.</div>';
+                return;
+            }
+
+            sorted.forEach(s => {
+                const item = document.createElement('div');
+                item.className = `session-item ${s.pinned ? 'pinned' : ''}`;
+                item.onclick = () => loadSessionData(s.id);
+                item.innerHTML = `
+                    <div class="session-item-header">
+                        <span style="font-weight:600; font-size:12px; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:170px;">${s.title}</span>
+                        <div style="display:flex; gap:3px;">
+                            <button class="icon-btn" onclick="togglePinSession('${s.id}', event)" title="تثبيت">${s.pinned ? '📍' : '📌'}</button>
+                            <button class="icon-btn" onclick="deleteSession('${s.id}', event)" title="حذف">🗑️</button>
+                        </div>
+                    </div>
+                    <div class="session-meta">
+                        <span>🕒 ${s.date || ''}</span> • <span>📝 ${s.charCount || 0} حرف</span>
+                    </div>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function loadSessionData(id) {
+            const session = savedSessions.find(s => s.id === id);
+            if (!session) return;
+
+            document.getElementById('user-input').value = session.prompt || '';
+            const outputBox = document.getElementById('output-text-container');
+            outputBox.innerHTML = window.marked.parse(session.result || '');
+            Prism.highlightAllUnder(outputBox);
+        }
+
+        // ==========================================
+        // 3. معالجة الطلبات وتشغيل الأدوات
+        // ==========================================
+        let currentToolKey = 'grounding';
+        const toolsConfig = {
+            'grounding': { title: 'بحث جوجل والتوثيق الفوري', desc: 'إجابات حية مدعومة بروابط مصادر حقيقية.', apiEndpoint: '/api/deconstruct.js' },
+            'deconstruct': { title: 'التفكيك المعرفي واللغوي', desc: 'تحليل البنى النصية واستخراج الأفكار.', apiEndpoint: '/api/deconstruct-groq.js' },
+            'ecom-deconstruct': { title: 'تفكيك العمليات واللوجستيات الرقمية', desc: 'محاكاة حركة الشحنات والمخاطر.', apiEndpoint: '/api/ecom-deconstruct.js' },
+            'loop-destroyer': { title: 'تتبع وحرق الأخطاء البرمجية', desc: 'كشف ثغرات وحلقات التجمد.', apiEndpoint: '/api/loop-destroyer.js' },
+            'clean-image': { title: 'استوديو التصاميم النظيفة', desc: 'توليد أصول بصرية خالية من النصوص.', apiEndpoint: '/api/generate-image.js' },
+            'support-agent': { title: 'المساعد الذكي لقنوات الدعم', desc: 'تحليل وتفكيك تذاكر الدعم.', apiEndpoint: '/api/support-agent.js' }
+        };
 
         async function executeProcess() {
             const inputVal = document.getElementById('user-input').value.trim();
-            const style = document.getElementById('output-style').value;
             const outputBox = document.getElementById('output-text-container');
-            const outputImg = document.getElementById('output-image');
-            const followupArea = document.getElementById('followup-area');
 
             if (!inputVal) return alert('أدخل نصاً أولاً.');
 
             outputBox.innerText = 'جاري المعالجة والتحليل المعرفي...';
-            followupArea.style.display = 'none';
 
             try {
                 const response = await fetch(toolsConfig[currentToolKey].apiEndpoint, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: `[النمط: ${style}] ${inputVal}` })
+                    body: JSON.stringify({ prompt: inputVal })
                 });
                 const data = await response.json();
+                const resultText = data.result || 'لم يتم إرجاع نتائج.';
                 
-                if (toolsConfig[currentToolKey].isImage && data.imageUrl) {
-                    document.getElementById('output-box').style.display = 'none';
-                    outputImg.src = data.imageUrl; outputImg.style.display = 'block';
-                } else {
-                    document.getElementById('output-box').style.display = 'block';
-                    activeBranches.push(data.result);
-                    currentBranchIndex = activeBranches.length - 1;
-                    outputBox.innerHTML = window.marked.parse(data.result);
-                    Prism.highlightAllUnder(outputBox);
-                    document.getElementById('branch-indicator').innerText = `${currentBranchIndex + 1} / ${activeBranches.length}`;
-                    followupArea.style.display = 'flex';
+                outputBox.innerHTML = window.marked.parse(resultText);
+                Prism.highlightAllUnder(outputBox);
 
-                    // إضافة للجلسات
-                    addSessionToHistory(toolsConfig[currentToolKey].title);
+                // حفظ الجلسة فوراً في سحابة المستخدم
+                if (currentUser) {
+                    await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal, resultText);
                 }
-            } catch (err) { outputBox.innerText = `خطأ: ${err.message}`; }
-        }
-
-        function addSessionToHistory(title) {
-            const list = document.getElementById('session-history-list');
-            const item = document.createElement('div');
-            item.className = 'session-item';
-            item.innerHTML = `<span>• ${title}</span><button class="icon-btn" onclick="this.parentElement.classList.toggle('pinned')">📌</button>`;
-            list.prepend(item);
+            } catch (err) { 
+                outputBox.innerText = `خطأ في المعالجة: ${err.message}`; 
+            }
         }
 
         function switchTool(key, el) {
@@ -453,11 +486,12 @@
         function startNewSession() {
             document.getElementById('user-input').value = '';
             document.getElementById('output-text-container').innerText = 'في انتظار البيانات...';
-            activeBranches = [];
         }
 
-        function toggleZenMode() { document.getElementById('output-box').classList.toggle('fullscreen'); }
-        function copyOutputText() { navigator.clipboard.writeText(document.getElementById('output-text-container').innerText); alert('تم النسخ!'); }
+        function changeTheme(theme) { document.body.className = theme === 'default' ? '' : `theme-${theme}`; }
+        function filterHistory(query) {
+            document.querySelectorAll('.session-item').forEach(el => el.style.display = el.innerText.includes(query) ? 'flex' : 'none');
+        }
     </script>
 </body>
 </html>
