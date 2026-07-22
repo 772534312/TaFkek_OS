@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - Enterprise Cloud Sync (v10.0)</title>
+    <title>Tafkek OS - Enterprise Cloud Sync & Neural Network (v10.2)</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
 
-    <!-- Firebase SDKs -->
+    <!-- Firebase SDKs (Compat Version for CDN) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
@@ -50,7 +50,7 @@
 
         #neural-canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 1; opacity: 0.7;
+            pointer-events: none; z-index: 1; opacity: 0.6;
         }
 
         .sidebar {
@@ -66,7 +66,6 @@
             padding-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* كارت مستخدم الهوية */
         .user-profile-card {
             background: rgba(30, 41, 59, 0.5);
             border: 1px solid var(--border-color);
@@ -130,12 +129,6 @@
         .tool-header p { margin: 0; color: var(--text-muted); font-size: 13.5px; }
 
         .preset-container { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
-        .preset-chip {
-            background: rgba(30, 41, 59, 0.5); border: 1px solid var(--border-color);
-            color: var(--accent-blue); font-size: 11.5px; padding: 4px 10px;
-            border-radius: 20px; cursor: pointer; transition: all 0.2s;
-        }
-        .preset-chip:hover { background: rgba(var(--accent-rgb), 0.15); border-color: var(--accent-blue); }
 
         .interface-card {
             background-color: var(--panel-bg); backdrop-filter: blur(10px);
@@ -212,7 +205,6 @@
             </div>
         </div>
 
-        <!-- كارت تسجيل الدخول والبروفايل -->
         <div id="auth-section">
             <button id="login-google-btn" class="btn-auth" onclick="loginWithGoogle()">🔑 تسجيل الدخول بواسطة Google</button>
         </div>
@@ -277,38 +269,90 @@
         <div class="status-bar">
             <div class="status-indicator">
                 <div id="status-dot" class="dot active"></div>
-                <span id="status-text">الحالة السحابية: جاهز للمزامنة</span>
+                <span id="status-text">الحالة السحابية: متصل بمشروع TafkekOS</span>
             </div>
-            <div>Tafkek OS Cloud v10.0</div>
+            <div>Tafkek OS Cloud v10.2</div>
         </div>
     </div>
 
     <script>
         // ==========================================
-        // 1. إعداد خدمات Firebase المزودة للسحابة
+        // 0. محرك رسم شبكة العصبونات المتحركة (Neural Canvas)
         // ==========================================
-       // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+        const canvas = document.getElementById('neural-canvas');
+        const ctx = canvas.getContext('2d');
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
-  authDomain: "tafkekos.firebaseapp.com",
-  projectId: "tafkekos",
-  storageBucket: "tafkekos.firebasestorage.app",
-  messagingSenderId: "402724924724",
-  appId: "1:402724924724:web:8cf9c04583ff3998c48961",
-  measurementId: "G-WT4BBKEKVK"
-};
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
-        // تهيئة التطبيق
+        let particles = [];
+        const particleCount = 45;
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 0.6,
+                vy: (Math.random() - 0.5) * 0.6,
+                radius: Math.random() * 2 + 1
+            });
+        }
+
+        function animateNeuralNetwork() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const computedStyle = getComputedStyle(document.documentElement);
+            let accentColor = computedStyle.getPropertyValue('--accent-blue').trim() || '#38bdf8';
+
+            ctx.fillStyle = accentColor;
+            ctx.strokeStyle = accentColor;
+
+            for (let i = 0; i < particles.length; i++) {
+                let p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+                ctx.fill();
+
+                for (let j = i + 1; j < particles.length; j++) {
+                    let p2 = particles[j];
+                    let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                    if (dist < 130) {
+                        ctx.beginPath();
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.globalAlpha = (1 - (dist / 130)) * 0.25;
+                        ctx.stroke();
+                        ctx.globalAlpha = 1.0;
+                    }
+                }
+            }
+            requestAnimationFrame(animateNeuralNetwork);
+        }
+        animateNeuralNetwork();
+
+        // ==========================================
+        // 1. إعداد خدمات Firebase المزودة بمفاتيحك الحقيقية
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
+            authDomain: "tafkekos.firebaseapp.com",
+            projectId: "tafkekos",
+            storageBucket: "tafkekos.firebasestorage.app",
+            messagingSenderId: "402724924724",
+            appId: "1:402724924724:web:8cf9c04583ff3998c48961",
+            measurementId: "G-WT4BBKEKVK"
+        };
+
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -318,7 +362,6 @@ const analytics = getAnalytics(app);
         let currentUser = null;
         let savedSessions = [];
 
-        // مراقبة حالة تسجيل الدخول
         auth.onAuthStateChanged(user => {
             if (user) {
                 currentUser = user;
@@ -327,8 +370,6 @@ const analytics = getAnalytics(app);
                 document.getElementById('user-name').innerText = user.displayName || 'مستخدم';
                 document.getElementById('user-email').innerText = user.email;
                 document.getElementById('user-avatar').innerText = (user.displayName || user.email)[0].toUpperCase();
-                
-                // جلب جلسات المستخدم من قاعدة البيانات السحابية
                 fetchUserSessionsCloud();
             } else {
                 currentUser = null;
@@ -362,6 +403,8 @@ const analytics = getAnalytics(app);
                       savedSessions.push({ id: doc.id, ...doc.data() });
                   });
                   renderSessionHistory();
+              }, error => {
+                  console.error("Firestore Error:", error);
               });
         }
 
@@ -478,7 +521,6 @@ const analytics = getAnalytics(app);
                 outputBox.innerHTML = window.marked.parse(resultText);
                 Prism.highlightAllUnder(outputBox);
 
-                // حفظ الجلسة فوراً في سحابة المستخدم
                 if (currentUser) {
                     await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal, resultText);
                 }
