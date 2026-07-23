@@ -24,61 +24,64 @@ const makeHttpsRequest = (options, postData) => {
 };
 
 // ==========================================
-// 🎨 2. خوارزمية DALL-E 3 الخرافية لتوليد صور واقعية 100%
+// 🎨 2. مترجم وتطوير طلبات الصور الذكي (لرفع الجودة)
 // ==========================================
-const generateDallE3Image = async (userPrompt) => {
-    const apiKey = process.env.OPENAI_API_KEY;
-    
-    // إذا لم يتوفر المفتاح، يتم الانتقال تلقائياً لمحرك احتياطي عالي الجودة
-    if (!apiKey) {
-        const safePrompt = encodeURIComponent(userPrompt);
-        return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&model=flux-realism&nologo=true)\n\n`;
-    }
+const translateAndExpandPrompt = async (arabicPrompt) => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return arabicPrompt;
+
+    const instructions = `
+You are an expert AI image prompt engineer. Translate the user's image request into a highly detailed, photo-realistic, cinematic English prompt for FLUX.
+Output ONLY the detailed English prompt text. No commentary.
+
+Request: "${arabicPrompt}"
+`;
 
     const postData = JSON.stringify({
-        model: "dall-e-3",
-        prompt: `Create a highly realistic, photorealistic image based on this description: ${userPrompt}. Focus on realistic textures, lighting, zero artifacts, accurate anatomy, and precise physical reflections.`,
-        n: 1,
-        size: "1024x1024",
-        quality: "hd" // إعداد الجودة العالية HD
+        contents: [{ role: 'user', parts: [{ text: instructions }] }]
     });
 
     const options = {
-        hostname: 'api.openai.com',
+        hostname: 'generativelanguage.googleapis.com',
         port: 443,
-        path: '/v1/images/generations',
+        path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
         method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-        }
+        headers: { 'Content-Type': 'application/json; charset=utf-8' }
     };
 
     try {
         const result = await makeHttpsRequest(options, postData);
-        if (result.status === 200 && result.data.data?.[0]?.url) {
-            const imageUrl = result.data.data[0].url;
-            return `![Tafkek Ultra Realistic Image](${imageUrl})\n\n`;
-        } else {
-            console.error("DALL-E 3 Error:", result.data);
+        if (result.status === 200 && result.data.candidates?.[0]?.content?.parts?.[0]?.text) {
+            return result.data.candidates[0].content.parts[0].text.trim();
         }
     } catch (e) {
-        console.error("DALL-E 3 Engine Exception:", e);
+        console.error("Image Prompt Expansion Error:", e);
     }
-
-    // Fallback في حال وجود مشكلة في الرصيد أو السيرفر
-    const safePrompt = encodeURIComponent(userPrompt);
-    return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&model=flux&nologo=true)\n\n`;
+    
+    return arabicPrompt.replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|draw|image|generate|picture|logo)/gi, '').trim();
 };
 
 // ==========================================
-// 🧠 3. محرك Gemini 2.5 Flash النصي
+// 🖼️ 3. محرك توليد الصور المباشر والسريع
+// ==========================================
+const generateFreeImage = (expandedPrompt) => {
+    const safePrompt = encodeURIComponent(expandedPrompt);
+    const randomSeed = Math.floor(Math.random() * 999999);
+    
+    const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&seed=${randomSeed}&model=flux&nologo=true`;
+
+    return `![Tafkek Generated Image](${imageUrl})\n\n`;
+};
+
+// ==========================================
+// 🧠 4. محرك Gemini 2.5 Flash النصي
 // ==========================================
 const tryGemini = async (prompt, history = [], mediaParts = []) => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return { error: "Missing Key" };
 
     const contents = [];
+
     if (history && Array.isArray(history)) {
         history.forEach(msg => {
             contents.push({
@@ -105,7 +108,7 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
         contents: contents,
         tools: [{ googleSearch: {} }],
         systemInstruction: {
-            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة، اعلم أن محرك DALL-E 3 سيولدها تلقائياً، فلا تقل أنك لا تستطيع إنشاء الصور." }]
+            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة، اعلم أن محرك الصور المدمج سيولدها تلقائياً، فلا تقل أنك لا تستطيع إنشاء الصور. قم بالإجابة على باقي الأجزاء النصية والبرمجية من الطلب بدقة وتنسيق Markdown." }]
         }
     });
 
@@ -128,14 +131,14 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
 };
 
 // ==========================================
-// 💻 4. محرك OpenAI ChatGPT (GPT-4o)
+// 💻 5. محرك OpenAI ChatGPT (GPT-4o)
 // ==========================================
 const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return { error: "Missing Key" };
 
     const messages = [
-        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في حل الأكواد والتحليل المنطقي." }
+        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في حل الأكواد والتحليل المنطقي. إذا طلب المستخدم صورة، قم بإجابة الأجزاء البرمجية والنصية فقط بأسلوب متناسق." }
     ];
 
     if (history && Array.isArray(history)) {
@@ -182,7 +185,7 @@ const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
 };
 
 // ==========================================
-// 🚀 5. محرك DeepSeek Chat
+// 🚀 6. محرك DeepSeek Chat
 // ==========================================
 const tryDeepSeek = async (prompt, history = []) => {
     const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -224,7 +227,7 @@ const tryDeepSeek = async (prompt, history = []) => {
 };
 
 // ==========================================
-// 🎯 6. المعالج الرئيسي الذكي (Handler)
+// 🎯 7. المعالج الرئيسي الذكي وموجه المهام (Handler)
 // ==========================================
 export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -237,15 +240,17 @@ export default async function handler(req, res) {
         const { prompt, history, mediaParts } = req.body;
         const userPrompt = prompt || "قم بتحليل هذا الطلب.";
 
+        // 🔍 1. الفحص الشامل لطلبات الصور + التطوير والترجمة الذكية
         const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "draw", "image", "generate", "picture", "logo"];
         const isImageRequest = userPrompt && imageKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
         let imageMarkdown = "";
         if (isImageRequest) {
-            // استخدام DALL-E 3 المباشر للواقعية القصوى
-            imageMarkdown = await generateDallE3Image(userPrompt);
+            const expandedPrompt = await translateAndExpandPrompt(userPrompt);
+            imageMarkdown = generateFreeImage(expandedPrompt);
         }
 
+        // 🎯 2. التوجيه الذكي للمحركات النصية
         const codeKeywords = ["code", "function", "javascript", "python", "c++", "c#", "bug", "error", "كود", "برمجة", "دالة", "خطأ", "حل مشكلة", "تطبيق"];
         const isCodingTask = codeKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
@@ -259,6 +264,7 @@ export default async function handler(req, res) {
             { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) }
         ];
 
+        // 🔄 3. التنفيذ الذكي مع التعافي (Fallback)
         let finalTextResult = null;
         let errors = [];
 
@@ -276,6 +282,7 @@ export default async function handler(req, res) {
             }
         }
 
+        // 📤 4. تجميع وإرسال النتيجة النهائية
         if (finalTextResult) {
             const combinedOutput = imageMarkdown 
                 ? `${imageMarkdown}${finalTextResult.result}` 
@@ -286,10 +293,15 @@ export default async function handler(req, res) {
                 source: `Tafkek Router -> ${finalTextResult.source}`
             });
         } else {
+            if (imageMarkdown) {
+                return res.status(200).json({
+                    result: `${imageMarkdown}\n⚠️ تم توليد الصورة بنجاح، لكن تعذر جلب الرد النصي.\n التفاصيل:\n- ${errors.join('\n- ')}`,
+                    source: "Tafkek Image Engine Only"
+                });
+            }
+
             return res.status(200).json({ 
-                result: imageMarkdown 
-                    ? `${imageMarkdown}\n⚠️ تم توليد الصورة، لكن تعذر جلب الرد النصي.` 
-                    : `⚠️ تعذر الحصول على رد من جميع المحركات.`
+                result: `⚠️ تعذر الحصول على رد من جميع المحركات.\n التفاصيل:\n- ${errors.join('\n- ')}`
             });
         }
 
