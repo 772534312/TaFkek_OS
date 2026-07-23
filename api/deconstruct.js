@@ -4,11 +4,23 @@ import https from 'https';
 // 🎨 1. محرك توليد الصور المجاني السريع (FLUX Engine)
 // ==========================================
 const generateFreeImage = (prompt) => {
-    const cleanPrompt = encodeURIComponent(prompt.trim());
+    // تنظيف النص وإزالة الكلمات العربية الشائعة لإنشاء وصف إنجليزي بسيط يضمن تحكم المحرك
+    let cleanPrompt = prompt
+        .toLowerCase()
+        .replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|شعار|draw|image|generate|picture|logo)/g, '')
+        .trim();
+
+    if (!cleanPrompt) cleanPrompt = "futuristic space exploration crystal planet neon fantasy";
+
+    // ترميز النص ليكون آمن للـ URL
+    const encodedPrompt = encodeURIComponent(cleanPrompt);
     const seed = Math.floor(Math.random() * 1000000);
-    const imageUrl = `https://pollinations.ai/p/${cleanPrompt}?width=1024&height=1024&model=flux&seed=${seed}&nologo=true`;
+    const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${seed}&nologo=true`;
     
-    return `\n\n![Generated Image](${imageUrl})\n\n`;
+    // إرجاع كود HTML مباشر بأسلوب أنيق لضمان العرض
+    return `<div style="text-align: center; margin: 15px 0;">
+        <img src="${imageUrl}" alt="Tafkek Generated Image" style="max-width:100%; border-radius:12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);" onerror="this.onerror=null; this.src='https://via.placeholder.com/1024x1024?text=Image+Generation+Failed';" />
+    </div>\n\n`;
 };
 
 // ==========================================
@@ -35,7 +47,7 @@ const makeHttpsRequest = (options, postData) => {
 };
 
 // ==========================================
-// 🧠 3. محرك Gemini 2.5 Flash (يدعم البحث والذاكرة والوسائط)
+// 🧠 3. محرك Gemini 2.5 Flash
 // ==========================================
 const tryGemini = async (prompt, history = [], mediaParts = []) => {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -43,7 +55,6 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
 
     const contents = [];
 
-    // دمج السجل والذاكرة
     if (history && Array.isArray(history)) {
         history.forEach(msg => {
             contents.push({
@@ -53,7 +64,6 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
         });
     }
 
-    // بناء الرسالة الحالية مع الأوساط إن وجدت
     const currentParts = [{ text: prompt }];
     if (mediaParts && Array.isArray(mediaParts)) {
         mediaParts.forEach(item => {
@@ -71,7 +81,7 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
         contents: contents,
         tools: [{ googleSearch: {} }],
         systemInstruction: {
-            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. لديك ذاكرة حية للمحادثة، أجب بدقة وفصاحة، واستخدم التنسيق الأنيق المعتمد على Markdown والأكواد المنظمة." }]
+            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة، اعلم أن محرك الصور المدمج سيولدها تلقائياً، فلا تقل أنك لا تستطيع إنشاء الصور. قم بالإجابة على باقي الأجزاء النصية والبرمجية من الطلب بدقة وتنسيق Markdown." }]
         }
     });
 
@@ -87,21 +97,21 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
     if (result.status === 200 && result.data.candidates?.[0]?.content?.parts) {
         let output = "";
         result.data.candidates[0].content.parts.forEach(p => { if (p.text) output += p.text; });
-        return { result: output, source: "Gemini 2.5 Flash (Google Search Supported)" };
+        return { result: output, source: "Gemini 2.5 Flash" };
     }
     if (result.status === 429) return { error: "Quota Exceeded (429)" };
     return { error: result.data?.error?.message || `Gemini Error Status ${result.status}` };
 };
 
 // ==========================================
-// 💻 4. محرك OpenAI ChatGPT (GPT-4o للبرمجة والمنطق)
+// 💻 4. محرك OpenAI ChatGPT (GPT-4o)
 // ==========================================
 const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return { error: "Missing Key" };
 
     const messages = [
-        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في حل الأكواد والتحليل المنطقي. استخدم التنسيق الأنيق بـ Markdown." }
+        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في حل الأكواد والتحليل المنطقي. إذا طلب المستخدم صورة، قم بإجابة الأجزاء البرمجية والنصية فقط بأسلوب متناسق." }
     ];
 
     if (history && Array.isArray(history)) {
@@ -148,7 +158,7 @@ const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
 };
 
 // ==========================================
-// 🚀 5. محرك DeepSeek Chat (السرعة والبرمجة)
+// 🚀 5. محرك DeepSeek Chat
 // ==========================================
 const tryDeepSeek = async (prompt, history = []) => {
     const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -207,26 +217,24 @@ export default async function handler(req, res) {
         const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "draw", "image", "generate", "picture", "logo"];
         const isImageRequest = userPrompt && imageKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
-        let imageMarkdown = "";
+        let imageHtml = "";
         if (isImageRequest) {
-            imageMarkdown = generateFreeImage(userPrompt);
+            imageHtml = generateFreeImage(userPrompt);
         }
 
-        // 🎯 2. التوجيه الذكي وترتيب الأولويات (Smart Task-Based Routing)
+        // 🎯 2. التوجيه الذكي
         const codeKeywords = ["code", "function", "javascript", "python", "c++", "c#", "bug", "error", "كود", "برمجة", "دالة", "خطأ", "حل مشكلة", "تطبيق"];
         const isCodingTask = codeKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
         let priorityList = [];
 
         if (isCodingTask) {
-            // للطلبات البرمجية: إعطاء الأولوية لـ ChatGPT ثم DeepSeek ثم Gemini
             priorityList = [
                 { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
                 { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) },
                 { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) }
             ];
         } else {
-            // للطلبات العامة والبحث: Gemini أولاً ثم ChatGPT ثم DeepSeek
             priorityList = [
                 { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) },
                 { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
@@ -234,7 +242,7 @@ export default async function handler(req, res) {
             ];
         }
 
-        // 🔄 3. التنفيذ الذكي مع التعافي عند الحظر أو انتهاء الكوتا (Fallback Execution)
+        // 🔄 3. التنفيذ الذكي مع التعافي
         let finalTextResult = null;
         let errors = [];
 
@@ -254,8 +262,8 @@ export default async function handler(req, res) {
 
         // 📤 4. تجميع وإرسال النتيجة النهائية
         if (finalTextResult) {
-            const combinedOutput = imageMarkdown 
-                ? `${imageMarkdown}\n${finalTextResult.result}` 
+            const combinedOutput = imageHtml 
+                ? `${imageHtml}\n${finalTextResult.result}` 
                 : finalTextResult.result;
 
             return res.status(200).json({ 
@@ -263,10 +271,9 @@ export default async function handler(req, res) {
                 source: `Tafkek Router -> ${finalTextResult.source}`
             });
         } else {
-            // إذا تعذرت كافة المحركات النصية ولكن توجد صورة
-            if (imageMarkdown) {
+            if (imageHtml) {
                 return res.status(200).json({
-                    result: `${imageMarkdown}\n⚠️ تم توليد الصورة بنجاح، لكن تعذر جلب الرد النصي من السيرفرات.\n التفاصيل:\n- ${errors.join('\n- ')}`,
+                    result: `${imageHtml}\n⚠️ تم توليد الصورة بنجاح، لكن تعذر جلب الرد النصي.\n التفاصيل:\n- ${errors.join('\n- ')}`,
                     source: "Tafkek Image Engine Only"
                 });
             }
