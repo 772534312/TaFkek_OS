@@ -1,27 +1,52 @@
 import https from 'https';
 
 // ==========================================
-// 🎨 1. محرك توليد الصور المجاني المضمون (FLUX Engine)
+// 🎨 1. محرك توليد الصور المجاني المضمون (Clean Markdown Image)
 // ==========================================
 const generateFreeImage = (prompt) => {
-    // استخراج الكلمات الأساسية وتنظيفها كلياً
-    let cleanPrompt = prompt
-        .toLowerCase()
-        .replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|شعار|draw|image|generate|picture|logo)/g, '')
-        .trim();
-
-    if (!cleanPrompt) cleanPrompt = "futuristic space exploration crystal planet neon fantasy";
-
-    // تنظيف الرموز لضمان عمل الرابط في جميع المتصفحات
-    const safePrompt = encodeURIComponent(cleanPrompt);
-    const seed = Math.floor(Math.random() * 100000);
+    // خريطة مصطلحات سريعة لترجمة أهم الكلمات لضمان بناء Prompt إنجليزي سليم
+    let cleaned = prompt.toLowerCase();
     
-    // استخدام نموذج FLUX المباشر بطلب سريع وبسيط
-    const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?model=flux&seed=${seed}&width=800&height=800&nologo=true`;
+    // تنظيف الكلمات الأمرية
+    cleaned = cleaned.replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|draw|image|generate|picture|logo)/g, '').trim();
 
-    return `<div style="width:100%; text-align:center; margin:15px 0;">
-        <img src="${imageUrl}" alt="Tafkek Design" style="max-width:100%; height:auto; border-radius:12px; border:1px solid #333; box-shadow:0 8px 24px rgba(0,0,0,0.5);" loading="lazy" />
-    </div>\n\n`;
+    // استبدال بعض الكلمات العربية الشائعة بالإنجليزية
+    const translationMap = {
+        "رواد فضاء": "astronauts",
+        "رائد فضاء": "astronaut",
+        "كوكب": "planet",
+        "كريستالي": "crystal",
+        "كريستال": "crystal",
+        "فضاء": "space",
+        "ازرق": "blue",
+        "أزرق": "blue",
+        "سيارة": "car",
+        "مدينة": "city",
+        "مستقبلية": "futuristic",
+        "شعار": "logo"
+    };
+
+    let englishKeywords = [];
+    Object.keys(translationMap).forEach(arWord => {
+        if (cleaned.includes(arWord)) {
+            englishKeywords.push(translationMap[arWord]);
+        }
+    });
+
+    let finalPrompt = englishKeywords.join(" ");
+    if (!finalPrompt) {
+        // إذا لم يتعرف على الكلمات العربية، يتم استخدام الكلمات بدون رموز خاصة
+        finalPrompt = cleaned.replace(/[^\w\s]/gi, '').trim() || "futuristic crystal planet space exploration";
+    }
+
+    const safePrompt = encodeURIComponent(finalPrompt);
+    const seed = Math.floor(Math.random() * 99999);
+    
+    // استخدام رابط Pollinations مباشر وبسيط جداً بصيغة Markdown
+    const imageUrl = `https://pollinations.ai/p/${safePrompt}?width=800&height=800&model=flux&seed=${seed}&nologo=true`;
+
+    // إرجاع صيغة Markdown القياسية المضمونة في جميع واجهات التات
+    return `![Generated Image](${imageUrl})\n\n`;
 };
 
 // ==========================================
@@ -82,7 +107,7 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
         contents: contents,
         tools: [{ googleSearch: {} }],
         systemInstruction: {
-            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة، اعلم أن محرك الصور المدمج سيولدها تلقائياً، فلا تقل أنك لا تستطيع إنشاء الصور. قم بالإجابة على باقي الأجزاء النصية والبرمجية من الطلب بدقة وتنسيق Markdown." }]
+            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة، اعلم أن محرك الصور المدمج سيولدها تلقائياً بالكامل، فلا تذكر أنك لا تستطيع إنشاء الصور. قم بالإجابة على باقي الأجزاء النصية والبرمجية من الطلب بدقة وبأسلوب Markdown." }]
         }
     });
 
@@ -218,9 +243,9 @@ export default async function handler(req, res) {
         const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "draw", "image", "generate", "picture", "logo"];
         const isImageRequest = userPrompt && imageKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
-        let imageHtml = "";
+        let imageMarkdown = "";
         if (isImageRequest) {
-            imageHtml = generateFreeImage(userPrompt);
+            imageMarkdown = generateFreeImage(userPrompt);
         }
 
         // 🎯 2. التوجيه الذكي
@@ -263,8 +288,8 @@ export default async function handler(req, res) {
 
         // 📤 4. تجميع وإرسال النتيجة النهائية
         if (finalTextResult) {
-            const combinedOutput = imageHtml 
-                ? `${imageHtml}\n${finalTextResult.result}` 
+            const combinedOutput = imageMarkdown 
+                ? `${imageMarkdown}${finalTextResult.result}` 
                 : finalTextResult.result;
 
             return res.status(200).json({ 
@@ -272,9 +297,9 @@ export default async function handler(req, res) {
                 source: `Tafkek Router -> ${finalTextResult.source}`
             });
         } else {
-            if (imageHtml) {
+            if (imageMarkdown) {
                 return res.status(200).json({
-                    result: `${imageHtml}\n⚠️ تم توليد الصورة بنجاح، لكن تعذر جلب الرد النصي.\n التفاصيل:\n- ${errors.join('\n- ')}`,
+                    result: `${imageMarkdown}\n⚠️ تم توليد الصورة بنجاح، لكن تعذر جلب الرد النصي.\n التفاصيل:\n- ${errors.join('\n- ')}`,
                     source: "Tafkek Image Engine Only"
                 });
             }
