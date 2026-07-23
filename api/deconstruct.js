@@ -1,10 +1,10 @@
 import https from 'https';
 
 // ==========================================
-// 🎨 1. محرك توليد الصور المجاني السريع (FLUX Engine)
+// 🎨 1. محرك توليد الصور المجاني المضمون (FLUX Engine)
 // ==========================================
 const generateFreeImage = (prompt) => {
-    // تنظيف النص وإزالة الكلمات العربية الشائعة لإنشاء وصف إنجليزي بسيط يضمن تحكم المحرك
+    // استخراج الكلمات الأساسية وتنظيفها كلياً
     let cleanPrompt = prompt
         .toLowerCase()
         .replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|شعار|draw|image|generate|picture|logo)/g, '')
@@ -12,14 +12,15 @@ const generateFreeImage = (prompt) => {
 
     if (!cleanPrompt) cleanPrompt = "futuristic space exploration crystal planet neon fantasy";
 
-    // ترميز النص ليكون آمن للـ URL
-    const encodedPrompt = encodeURIComponent(cleanPrompt);
-    const seed = Math.floor(Math.random() * 1000000);
-    const imageUrl = `https://pollinations.ai/p/${encodedPrompt}?width=1024&height=1024&model=flux&seed=${seed}&nologo=true`;
+    // تنظيف الرموز لضمان عمل الرابط في جميع المتصفحات
+    const safePrompt = encodeURIComponent(cleanPrompt);
+    const seed = Math.floor(Math.random() * 100000);
     
-    // إرجاع كود HTML مباشر بأسلوب أنيق لضمان العرض
-    return `<div style="text-align: center; margin: 15px 0;">
-        <img src="${imageUrl}" alt="Tafkek Generated Image" style="max-width:100%; border-radius:12px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);" onerror="this.onerror=null; this.src='https://via.placeholder.com/1024x1024?text=Image+Generation+Failed';" />
+    // استخدام نموذج FLUX المباشر بطلب سريع وبسيط
+    const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?model=flux&seed=${seed}&width=800&height=800&nologo=true`;
+
+    return `<div style="width:100%; text-align:center; margin:15px 0;">
+        <img src="${imageUrl}" alt="Tafkek Design" style="max-width:100%; height:auto; border-radius:12px; border:1px solid #333; box-shadow:0 8px 24px rgba(0,0,0,0.5);" loading="lazy" />
     </div>\n\n`;
 };
 
