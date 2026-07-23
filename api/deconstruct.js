@@ -6,25 +6,16 @@ import https from 'https';
 const makeHttpsRequest = (options, postData) => {
     return new Promise((resolve, reject) => {
         const request = https.request(options, response => {
-            let body = response.headers['content-type']?.includes('json') || response.headers['content-type']?.includes('text') ? '' : [];
-            
-            if (typeof body === 'string') {
-                response.setEncoding('utf-8');
-                response.on('data', chunk => body += chunk);
-                response.on('end', () => {
-                    try {
-                        resolve({ status: response.statusCode, data: JSON.parse(body) });
-                    } catch (err) {
-                        resolve({ status: response.statusCode, data: body });
-                    }
-                });
-            } else {
-                response.on('data', chunk => body.push(chunk));
-                response.on('end', () => {
-                    const buffer = Buffer.concat(body);
-                    resolve({ status: response.statusCode, buffer: buffer });
-                });
-            }
+            response.setEncoding('utf-8');
+            let body = '';
+            response.on('data', chunk => body += chunk);
+            response.on('end', () => {
+                try {
+                    resolve({ status: response.statusCode, data: JSON.parse(body) });
+                } catch (err) {
+                    reject(new Error("فشل في معالجة الاستجابة من السيرفر"));
+                }
+            });
         });
         request.on('error', reject);
         if (postData) request.write(postData, 'utf-8');
@@ -33,84 +24,55 @@ const makeHttpsRequest = (options, postData) => {
 };
 
 // ==========================================
-// 🎨 2. مترجم وتطوير طلبات الصور الذكي
+// 🎨 2. خوارزمية DALL-E 3 الخرافية لتوليد صور واقعية 100%
 // ==========================================
-const translateAndExpandPrompt = async (arabicPrompt) => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) return arabicPrompt;
-
-    const instructions = `
-You are an expert AI image prompt engineer. Translate and enhance the user's image prompt to generate a highly accurate, vivid, photo-realistic image using FLUX.
-Output ONLY the detailed English prompt text.
-
-Request: "${arabicPrompt}"
-`;
+const generateDallE3Image = async (userPrompt) => {
+    const apiKey = process.env.OPENAI_API_KEY;
+    
+    // إذا لم يتوفر المفتاح، يتم الانتقال تلقائياً لمحرك احتياطي عالي الجودة
+    if (!apiKey) {
+        const safePrompt = encodeURIComponent(userPrompt);
+        return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&model=flux-realism&nologo=true)\n\n`;
+    }
 
     const postData = JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: instructions }] }]
+        model: "dall-e-3",
+        prompt: `Create a highly realistic, photorealistic image based on this description: ${userPrompt}. Focus on realistic textures, lighting, zero artifacts, accurate anatomy, and precise physical reflections.`,
+        n: 1,
+        size: "1024x1024",
+        quality: "hd" // إعداد الجودة العالية HD
     });
 
     const options = {
-        hostname: 'generativelanguage.googleapis.com',
+        hostname: 'api.openai.com',
         port: 443,
-        path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json; charset=utf-8' }
-    };
-
-    try {
-        const result = await makeHttpsRequest(options, postData);
-        if (result.status === 200 && result.data.candidates?.[0]?.content?.parts?.[0]?.text) {
-            return result.data.candidates[0].content.parts[0].text.trim();
-        }
-    } catch (e) {
-        console.error("Image Prompt Expansion Error:", e);
-    }
-    
-    return arabicPrompt.replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|draw|image|generate|picture|logo)/gi, '').trim();
-};
-
-// ==========================================
-// 🖼️ 3. محرك توليد الصور عبر Hugging Face FLUX
-// ==========================================
-const generateHuggingFaceImage = async (expandedPrompt) => {
-    const hfToken = process.env.HF_TOKEN; // قم بإضافة مفتاح Hugging Face في Vercel
-    if (!hfToken) {
-        // Fallback إلى رابط مجاني بديل ومعدل برؤية أفضل
-        const safePrompt = encodeURIComponent(expandedPrompt);
-        const seed = Math.floor(Math.random() * 999999);
-        return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&seed=${seed}&model=flux-realism&nologo=true)\n\n`;
-    }
-
-    const postData = JSON.stringify({ inputs: expandedPrompt });
-    const options = {
-        hostname: 'api-inference.huggingface.co',
-        port: 443,
-        path: '/models/black-forest-labs/FLUX.1-schnell',
+        path: '/v1/images/generations',
         method: 'POST',
         headers: {
-            'Authorization': `Bearer ${hfToken}`,
+            'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json'
         }
     };
 
     try {
-        const response = await makeHttpsRequest(options, postData);
-        if (response.status === 200 && response.buffer) {
-            const base64Image = response.buffer.toString('base64');
-            return `![Generated Image](data:image/jpeg;base64,${base64Image})\n\n`;
+        const result = await makeHttpsRequest(options, postData);
+        if (result.status === 200 && result.data.data?.[0]?.url) {
+            const imageUrl = result.data.data[0].url;
+            return `![Tafkek Ultra Realistic Image](${imageUrl})\n\n`;
+        } else {
+            console.error("DALL-E 3 Error:", result.data);
         }
     } catch (e) {
-        console.error("Hugging Face Engine Error:", e);
+        console.error("DALL-E 3 Engine Exception:", e);
     }
 
-    // fallback
-    const safePrompt = encodeURIComponent(expandedPrompt);
-    return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&nologo=true)\n\n`;
+    // Fallback في حال وجود مشكلة في الرصيد أو السيرفر
+    const safePrompt = encodeURIComponent(userPrompt);
+    return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&model=flux&nologo=true)\n\n`;
 };
 
 // ==========================================
-// 🧠 4. محرك Gemini 2.5 Flash النصي
+// 🧠 3. محرك Gemini 2.5 Flash النصي
 // ==========================================
 const tryGemini = async (prompt, history = [], mediaParts = []) => {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -143,7 +105,7 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
         contents: contents,
         tools: [{ googleSearch: {} }],
         systemInstruction: {
-            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة، اعلم أن محرك الصور المدمج سيولدها تلقائياً، فلا تقل أنك لا تستطيع إنشاء الصور. قم بالإجابة على باقي الأجزاء النصية والبرمجية من الطلب بدقة وتنسيق Markdown." }]
+            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة، اعلم أن محرك DALL-E 3 سيولدها تلقائياً، فلا تقل أنك لا تستطيع إنشاء الصور." }]
         }
     });
 
@@ -166,14 +128,14 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
 };
 
 // ==========================================
-// 💻 5. محرك OpenAI ChatGPT (GPT-4o)
+// 💻 4. محرك OpenAI ChatGPT (GPT-4o)
 // ==========================================
 const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) return { error: "Missing Key" };
 
     const messages = [
-        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في حل الأكواد والتحليل المنطقي. إذا طلب المستخدم صورة، قم بإجابة الأجزاء البرمجية والنصية فقط بأسلوب متناسق." }
+        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في حل الأكواد والتحليل المنطقي." }
     ];
 
     if (history && Array.isArray(history)) {
@@ -220,7 +182,7 @@ const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
 };
 
 // ==========================================
-// 🚀 6. محرك DeepSeek Chat
+// 🚀 5. محرك DeepSeek Chat
 // ==========================================
 const tryDeepSeek = async (prompt, history = []) => {
     const apiKey = process.env.DEEPSEEK_API_KEY;
@@ -262,7 +224,7 @@ const tryDeepSeek = async (prompt, history = []) => {
 };
 
 // ==========================================
-// 🎯 7. المعالج الرئيسي الذكي (Handler)
+// 🎯 6. المعالج الرئيسي الذكي (Handler)
 // ==========================================
 export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -280,8 +242,8 @@ export default async function handler(req, res) {
 
         let imageMarkdown = "";
         if (isImageRequest) {
-            const expandedPrompt = await translateAndExpandPrompt(userPrompt);
-            imageMarkdown = await generateHuggingFaceImage(expandedPrompt);
+            // استخدام DALL-E 3 المباشر للواقعية القصوى
+            imageMarkdown = await generateDallE3Image(userPrompt);
         }
 
         const codeKeywords = ["code", "function", "javascript", "python", "c++", "c#", "bug", "error", "كود", "برمجة", "دالة", "خطأ", "حل مشكلة", "تطبيق"];
