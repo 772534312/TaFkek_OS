@@ -24,18 +24,15 @@ const makeHttpsRequest = (options, postData) => {
 };
 
 // ==========================================
-// 🎨 2. مترجم وتطوير طلبات الصور الذكي (لرفع الجودة)
+// 🎨 2. مترجم وتطوير طلبات الصور الذكي
 // ==========================================
-const translateAndExpandPrompt = async (arabicPrompt) => {
+const translateAndExpandPrompt = async (arabicPrompt, isEditing = false) => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return arabicPrompt;
 
-    const instructions = `
-You are an expert AI image prompt engineer. Translate the user's image request into a highly detailed, photo-realistic, cinematic English prompt for FLUX.
-Output ONLY the detailed English prompt text. No commentary.
-
-Request: "${arabicPrompt}"
-`;
+    const instructions = isEditing 
+        ? `You are an AI image editing assistant. The user wants to MODIFY an existing image. Translate their Arabic modification request into a clear English instruction focusing ONLY on the specific changes requested. Keep it concise. Request: "${arabicPrompt}"`
+        : `You are an expert AI image prompt engineer. Translate the user's image request into a highly detailed, photo-realistic, cinematic English prompt for FLUX. Output ONLY the detailed English prompt text. Request: "${arabicPrompt}"`;
 
     const postData = JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: instructions }] }]
@@ -58,18 +55,27 @@ Request: "${arabicPrompt}"
         console.error("Image Prompt Expansion Error:", e);
     }
     
-    return arabicPrompt.replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|draw|image|generate|picture|logo)/gi, '').trim();
+    return arabicPrompt.replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|عدل|غير|اضف|احذف|draw|image|generate|edit|modify)/gi, '').trim();
 };
 
 // ==========================================
-// 🖼️ 3. محرك توليد الصور المباشر والسريع
+// 🖼️ 3. محرك الصور الذكي (يقبل Text-to-Image و Image-to-Image)
 // ==========================================
-const generateFreeImage = (expandedPrompt) => {
+const generateSmartImage = (expandedPrompt, base64Image = null) => {
     const safePrompt = encodeURIComponent(expandedPrompt);
-    const randomSeed = Math.floor(Math.random() * 999999);
-    
-    const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&seed=${randomSeed}&model=flux&nologo=true`;
+    const seed = 42; // تثبيت البذرة للحفاظ على التناسق البصري
 
+    // أ. إذا وجد صورة مرفوعة -> نستخدم تقنية Image-to-Image / Reference
+    if (base64Image) {
+        // نمرر الصورة كمرجع بصري مع تحديد قوة التعديل (strength)
+        const imageRef = encodeURIComponent(`data:image/jpeg;base64,${base64Image}`);
+        const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&model=flux&seed=${seed}&image=${imageRef}&nologo=true`;
+        return `![Edited Image](${imageUrl})\n\n*(تم التعديل بناءً على الصورة المرفوعة)*\n\n`;
+    }
+
+    // ب. توليد صورة جديدة من الصفر
+    const randomSeed = Math.floor(Math.random() * 999999);
+    const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&seed=${randomSeed}&model=flux&nologo=true`;
     return `![Tafkek Generated Image](${imageUrl})\n\n`;
 };
 
@@ -108,7 +114,7 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
         contents: contents,
         tools: [{ googleSearch: {} }],
         systemInstruction: {
-            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة، اعلم أن محرك الصور المدمج سيولدها تلقائياً، فلا تقل أنك لا تستطيع إنشاء الصور. قم بالإجابة على باقي الأجزاء النصية والبرمجية من الطلب بدقة وتنسيق Markdown." }]
+            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة أو تعديل صورة، اعلم أن محرك الصور المدمج يتكفل بذلك تلقائياً." }]
         }
     });
 
@@ -138,7 +144,7 @@ const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
     if (!apiKey) return { error: "Missing Key" };
 
     const messages = [
-        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في حل الأكواد والتحليل المنطقي. إذا طلب المستخدم صورة، قم بإجابة الأجزاء البرمجية والنصية فقط بأسلوب متناسق." }
+        { role: "system", content: "أنت نظام Tafkek OS الذكي ومتخصص في حل الأكواد والتحليل المنطقي." }
     ];
 
     if (history && Array.isArray(history)) {
@@ -227,7 +233,7 @@ const tryDeepSeek = async (prompt, history = []) => {
 };
 
 // ==========================================
-// 🎯 7. المعالج الرئيسي الذكي وموجه المهام (Handler)
+// 🎯 7. المعالج الرئيسي الذكي (Handler)
 // ==========================================
 export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -240,17 +246,27 @@ export default async function handler(req, res) {
         const { prompt, history, mediaParts } = req.body;
         const userPrompt = prompt || "قم بتحليل هذا الطلب.";
 
-        // 🔍 1. الفحص الشامل لطلبات الصور + التطوير والترجمة الذكية
-        const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "draw", "image", "generate", "picture", "logo"];
+        // 🔍 1. البحث عن صورة مرفوعة في الطلب الحالي (Base64)
+        let inputBase64Image = null;
+        if (mediaParts && Array.isArray(mediaParts) && mediaParts.length > 0) {
+            const imgPart = mediaParts.find(p => p.inlineData && p.inlineData.mimeType.startsWith('image/'));
+            if (imgPart) {
+                inputBase64Image = imgPart.inlineData.data;
+            }
+        }
+
+        // 🔍 2. اكتشاف كلمات التعديل وتوليد الصور
+        const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "عدل", "غير", "اضف", "احذف", "draw", "image", "generate", "picture", "logo", "edit", "modify"];
         const isImageRequest = userPrompt && imageKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
         let imageMarkdown = "";
-        if (isImageRequest) {
-            const expandedPrompt = await translateAndExpandPrompt(userPrompt);
-            imageMarkdown = generateFreeImage(expandedPrompt);
+        if (isImageRequest || inputBase64Image) {
+            const isEditing = !!inputBase64Image;
+            const expandedPrompt = await translateAndExpandPrompt(userPrompt, isEditing);
+            imageMarkdown = generateSmartImage(expandedPrompt, inputBase64Image);
         }
 
-        // 🎯 2. التوجيه الذكي للمحركات النصية
+        // 🎯 3. التوجيه الذكي للمحركات النصية
         const codeKeywords = ["code", "function", "javascript", "python", "c++", "c#", "bug", "error", "كود", "برمجة", "دالة", "خطأ", "حل مشكلة", "تطبيق"];
         const isCodingTask = codeKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
@@ -264,7 +280,7 @@ export default async function handler(req, res) {
             { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) }
         ];
 
-        // 🔄 3. التنفيذ الذكي مع التعافي (Fallback)
+        // 🔄 4. التنفيذ والتعافي
         let finalTextResult = null;
         let errors = [];
 
@@ -282,7 +298,6 @@ export default async function handler(req, res) {
             }
         }
 
-        // 📤 4. تجميع وإرسال النتيجة النهائية
         if (finalTextResult) {
             const combinedOutput = imageMarkdown 
                 ? `${imageMarkdown}${finalTextResult.result}` 
@@ -293,15 +308,10 @@ export default async function handler(req, res) {
                 source: `Tafkek Router -> ${finalTextResult.source}`
             });
         } else {
-            if (imageMarkdown) {
-                return res.status(200).json({
-                    result: `${imageMarkdown}\n⚠️ تم توليد الصورة بنجاح، لكن تعذر جلب الرد النصي.\n التفاصيل:\n- ${errors.join('\n- ')}`,
-                    source: "Tafkek Image Engine Only"
-                });
-            }
-
             return res.status(200).json({ 
-                result: `⚠️ تعذر الحصول على رد من جميع المحركات.\n التفاصيل:\n- ${errors.join('\n- ')}`
+                result: imageMarkdown 
+                    ? `${imageMarkdown}\n⚠️ تم التعديل/التوليد بنجاح، لكن تعذر جلب الرد النصي.` 
+                    : `⚠️ تعذر الحصول على رد من جميع المحركات.`
             });
         }
 
