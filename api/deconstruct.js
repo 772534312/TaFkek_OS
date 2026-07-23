@@ -6,19 +6,28 @@ import https from 'https';
 const makeHttpsRequest = (options, postData) => {
     return new Promise((resolve, reject) => {
         const request = https.request(options, response => {
-            response.setEncoding('utf-8');
-            let body = '';
-            response.on('data', chunk => body += chunk);
-            response.on('end', () => {
-                try {
-                    resolve({ status: response.statusCode, data: JSON.parse(body) });
-                } catch (err) {
-                    reject(new Error("فشل في معالجة الاستجابة من السيرفر"));
-                }
-            });
+            let body = response.headers['content-type']?.includes('json') || response.headers['content-type']?.includes('text') ? '' : [];
+            
+            if (typeof body === 'string') {
+                response.setEncoding('utf-8');
+                response.on('data', chunk => body += chunk);
+                response.on('end', () => {
+                    try {
+                        resolve({ status: response.statusCode, data: JSON.parse(body) });
+                    } catch (err) {
+                        resolve({ status: response.statusCode, data: body });
+                    }
+                });
+            } else {
+                response.on('data', chunk => body.push(chunk));
+                response.on('end', () => {
+                    const buffer = Buffer.concat(body);
+                    resolve({ status: response.statusCode, buffer: buffer });
+                });
+            }
         });
         request.on('error', reject);
-        request.write(postData, 'utf-8');
+        if (postData) request.write(postData, 'utf-8');
         request.end();
     });
 };
@@ -31,15 +40,10 @@ const translateAndExpandPrompt = async (arabicPrompt) => {
     if (!apiKey) return arabicPrompt;
 
     const instructions = `
-You are an expert AI image prompt engineer. Your task is to convert the user's image request into a highly detailed, high-quality, professional English prompt for FLUX/SDXL image models.
+You are an expert AI image prompt engineer. Translate and enhance the user's image prompt to generate a highly accurate, vivid, photo-realistic image using FLUX.
+Output ONLY the detailed English prompt text.
 
-Rules:
-1. Translate the Arabic description to English accurately.
-2. Expand it with professional details (lighting, resolution, style, colors, environment, camera perspective).
-3. Do NOT include words like "draw", "generate", or "create".
-4. Output ONLY the refined English prompt text. No introductory or extra commentary.
-
-User Request: "${arabicPrompt}"
+Request: "${arabicPrompt}"
 `;
 
     const postData = JSON.stringify({
@@ -63,20 +67,46 @@ User Request: "${arabicPrompt}"
         console.error("Image Prompt Expansion Error:", e);
     }
     
-    // في حال تعثر الترجمة يتم تنظيف النص العربي وإرساله
     return arabicPrompt.replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|draw|image|generate|picture|logo)/gi, '').trim();
 };
 
 // ==========================================
-// 🖼️ 3. محرك توليد الصور المباشر
+// 🖼️ 3. محرك توليد الصور عبر Hugging Face FLUX
 // ==========================================
-const generateFreeImage = (expandedPrompt) => {
-    const safePrompt = encodeURIComponent(expandedPrompt);
-    const randomSeed = Math.floor(Math.random() * 999999);
-    
-    const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&seed=${randomSeed}&model=flux&nologo=true`;
+const generateHuggingFaceImage = async (expandedPrompt) => {
+    const hfToken = process.env.HF_TOKEN; // قم بإضافة مفتاح Hugging Face في Vercel
+    if (!hfToken) {
+        // Fallback إلى رابط مجاني بديل ومعدل برؤية أفضل
+        const safePrompt = encodeURIComponent(expandedPrompt);
+        const seed = Math.floor(Math.random() * 999999);
+        return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&seed=${seed}&model=flux-realism&nologo=true)\n\n`;
+    }
 
-    return `![Tafkek Generated Image](${imageUrl})\n\n`;
+    const postData = JSON.stringify({ inputs: expandedPrompt });
+    const options = {
+        hostname: 'api-inference.huggingface.co',
+        port: 443,
+        path: '/models/black-forest-labs/FLUX.1-schnell',
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${hfToken}`,
+            'Content-Type': 'application/json'
+        }
+    };
+
+    try {
+        const response = await makeHttpsRequest(options, postData);
+        if (response.status === 200 && response.buffer) {
+            const base64Image = response.buffer.toString('base64');
+            return `![Generated Image](data:image/jpeg;base64,${base64Image})\n\n`;
+        }
+    } catch (e) {
+        console.error("Hugging Face Engine Error:", e);
+    }
+
+    // fallback
+    const safePrompt = encodeURIComponent(expandedPrompt);
+    return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&nologo=true)\n\n`;
 };
 
 // ==========================================
@@ -87,7 +117,6 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
     if (!apiKey) return { error: "Missing Key" };
 
     const contents = [];
-
     if (history && Array.isArray(history)) {
         history.forEach(msg => {
             contents.push({
@@ -233,7 +262,7 @@ const tryDeepSeek = async (prompt, history = []) => {
 };
 
 // ==========================================
-// 🎯 7. المعالج الرئيسي الذكي وموجه المهام (Handler)
+// 🎯 7. المعالج الرئيسي الذكي (Handler)
 // ==========================================
 export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -246,38 +275,28 @@ export default async function handler(req, res) {
         const { prompt, history, mediaParts } = req.body;
         const userPrompt = prompt || "قم بتحليل هذا الطلب.";
 
-        // 🔍 1. الفحص الشامل لطلبات الصور
         const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "draw", "image", "generate", "picture", "logo"];
         const isImageRequest = userPrompt && imageKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
         let imageMarkdown = "";
         if (isImageRequest) {
-            // ترجمة وتطوير الوصف عبر Gemini أولاً
             const expandedPrompt = await translateAndExpandPrompt(userPrompt);
-            imageMarkdown = generateFreeImage(expandedPrompt);
+            imageMarkdown = await generateHuggingFaceImage(expandedPrompt);
         }
 
-        // 🎯 2. التوجيه الذكي للمحركات النصية
         const codeKeywords = ["code", "function", "javascript", "python", "c++", "c#", "bug", "error", "كود", "برمجة", "دالة", "خطأ", "حل مشكلة", "تطبيق"];
         const isCodingTask = codeKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
-        let priorityList = [];
+        let priorityList = isCodingTask ? [
+            { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
+            { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) },
+            { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) }
+        ] : [
+            { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) },
+            { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
+            { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) }
+        ];
 
-        if (isCodingTask) {
-            priorityList = [
-                { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
-                { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) },
-                { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) }
-            ];
-        } else {
-            priorityList = [
-                { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) },
-                { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
-                { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) }
-            ];
-        }
-
-        // 🔄 3. التنفيذ الذكي مع التعافي (Fallback)
         let finalTextResult = null;
         let errors = [];
 
@@ -295,7 +314,6 @@ export default async function handler(req, res) {
             }
         }
 
-        // 📤 4. تجميع وإرسال النتيجة النهائية
         if (finalTextResult) {
             const combinedOutput = imageMarkdown 
                 ? `${imageMarkdown}${finalTextResult.result}` 
@@ -306,15 +324,10 @@ export default async function handler(req, res) {
                 source: `Tafkek Router -> ${finalTextResult.source}`
             });
         } else {
-            if (imageMarkdown) {
-                return res.status(200).json({
-                    result: `${imageMarkdown}\n⚠️ تم توليد الصورة بنجاح، لكن تعذر جلب الرد النصي.\n التفاصيل:\n- ${errors.join('\n- ')}`,
-                    source: "Tafkek Image Engine Only"
-                });
-            }
-
             return res.status(200).json({ 
-                result: `⚠️ تعذر الحصول على رد من جميع المحركات.\n التفاصيل:\n- ${errors.join('\n- ')}`
+                result: imageMarkdown 
+                    ? `${imageMarkdown}\n⚠️ تم توليد الصورة، لكن تعذر جلب الرد النصي.` 
+                    : `⚠️ تعذر الحصول على رد من جميع المحركات.`
             });
         }
 
