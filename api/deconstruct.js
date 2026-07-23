@@ -1,6 +1,8 @@
 import https from 'https';
 
-// 🎨 دالة توليد الصور المجانية السريعة (Pollinations - Flux Engine)
+// ==========================================
+// 🎨 1. محرك توليد الصور المجاني السريع (FLUX Engine)
+// ==========================================
 const generateFreeImage = (prompt) => {
     const cleanPrompt = encodeURIComponent(prompt.trim());
     const seed = Math.floor(Math.random() * 1000000);
@@ -9,7 +11,9 @@ const generateFreeImage = (prompt) => {
     return `\n\n![Generated Image](${imageUrl})\n\n`;
 };
 
-// --- دوال المساعدة لطلبات HTTPS ---
+// ==========================================
+// 🛠️ 2. دالة المساعدة الموحدة لطلبات HTTPS
+// ==========================================
 const makeHttpsRequest = (options, postData) => {
     return new Promise((resolve, reject) => {
         const request = https.request(options, response => {
@@ -20,7 +24,7 @@ const makeHttpsRequest = (options, postData) => {
                 try {
                     resolve({ status: response.statusCode, data: JSON.parse(body) });
                 } catch (err) {
-                    reject(new Error("فشل في معالجة الاستجابة"));
+                    reject(new Error("فشل في معالجة الاستجابة من السيرفر"));
                 }
             });
         });
@@ -31,13 +35,15 @@ const makeHttpsRequest = (options, postData) => {
 };
 
 // ==========================================
-// محرك Gemini 2.5 Flash مع الذاكرة
+// 🧠 3. محرك Gemini 2.5 Flash (يدعم البحث والذاكرة والوسائط)
 // ==========================================
 const tryGemini = async (prompt, history = [], mediaParts = []) => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return { error: "Missing Key" };
 
     const contents = [];
+
+    // دمج السجل والذاكرة
     if (history && Array.isArray(history)) {
         history.forEach(msg => {
             contents.push({
@@ -47,6 +53,7 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
         });
     }
 
+    // بناء الرسالة الحالية مع الأوساط إن وجدت
     const currentParts = [{ text: prompt }];
     if (mediaParts && Array.isArray(mediaParts)) {
         mediaParts.forEach(item => {
@@ -62,8 +69,9 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
 
     const postData = JSON.stringify({
         contents: contents,
+        tools: [{ googleSearch: {} }],
         systemInstruction: {
-            parts: [{ text: "أنت نظام Tafkek OS الذكي. لديك ذاكرة للمحادثة الحالية من خلال السجل المرفق معك، أجب بدقة وفصاحة واستخدم تنسيق Markdown." }]
+            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. لديك ذاكرة حية للمحادثة، أجب بدقة وفصاحة، واستخدم التنسيق الأنيق المعتمد على Markdown والأكواد المنظمة." }]
         }
     });
 
@@ -79,13 +87,110 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
     if (result.status === 200 && result.data.candidates?.[0]?.content?.parts) {
         let output = "";
         result.data.candidates[0].content.parts.forEach(p => { if (p.text) output += p.text; });
-        return { result: output, source: "Gemini 2.5 Flash" };
+        return { result: output, source: "Gemini 2.5 Flash (Google Search Supported)" };
     }
-    return { error: result.data?.error?.message || "Gemini Error" };
+    if (result.status === 429) return { error: "Quota Exceeded (429)" };
+    return { error: result.data?.error?.message || `Gemini Error Status ${result.status}` };
 };
 
 // ==========================================
-// المعالج الرئيسي الذكي (Smart Handler)
+// 💻 4. محرك OpenAI ChatGPT (GPT-4o للبرمجة والمنطق)
+// ==========================================
+const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return { error: "Missing Key" };
+
+    const messages = [
+        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في حل الأكواد والتحليل المنطقي. استخدم التنسيق الأنيق بـ Markdown." }
+    ];
+
+    if (history && Array.isArray(history)) {
+        history.forEach(msg => {
+            messages.push({
+                role: msg.role === 'user' ? 'user' : 'assistant',
+                content: msg.content
+            });
+        });
+    }
+
+    const currentContent = [{ type: "text", text: prompt }];
+    if (mediaParts && Array.isArray(mediaParts)) {
+        mediaParts.forEach(item => {
+            if (item.inlineData) {
+                currentContent.push({
+                    type: "image_url",
+                    image_url: { url: `data:${item.inlineData.mimeType};base64,${item.inlineData.data}` }
+                });
+            }
+        });
+    }
+
+    messages.push({ role: "user", content: currentContent });
+
+    const postData = JSON.stringify({ model: "gpt-4o", messages: messages });
+    const options = {
+        hostname: 'api.openai.com',
+        port: 443,
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json; charset=utf-8'
+        }
+    };
+
+    const result = await makeHttpsRequest(options, postData);
+    if (result.status === 200 && result.data.choices?.[0]?.message?.content) {
+        return { result: result.data.choices[0].message.content, source: "ChatGPT (GPT-4o Engine)" };
+    }
+    if (result.status === 429) return { error: "Quota Exceeded (429)" };
+    return { error: result.data?.error?.message || `ChatGPT Error Status ${result.status}` };
+};
+
+// ==========================================
+// 🚀 5. محرك DeepSeek Chat (السرعة والبرمجة)
+// ==========================================
+const tryDeepSeek = async (prompt, history = []) => {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) return { error: "Missing Key" };
+
+    const messages = [
+        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في البرمجة والحلول التقنية السريعة." }
+    ];
+
+    if (history && Array.isArray(history)) {
+        history.forEach(msg => {
+            messages.push({
+                role: msg.role === 'user' ? 'user' : 'assistant',
+                content: msg.content
+            });
+        });
+    }
+
+    messages.push({ role: "user", content: prompt });
+
+    const postData = JSON.stringify({ model: "deepseek-chat", messages: messages });
+    const options = {
+        hostname: 'api.deepseek.com',
+        port: 443,
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json; charset=utf-8'
+        }
+    };
+
+    const result = await makeHttpsRequest(options, postData);
+    if (result.status === 200 && result.data.choices?.[0]?.message?.content) {
+        return { result: result.data.choices[0].message.content, source: "DeepSeek Chat Engine" };
+    }
+    if (result.status === 429) return { error: "Quota Exceeded (429)" };
+    return { error: result.data?.error?.message || `DeepSeek Error Status ${result.status}` };
+};
+
+// ==========================================
+// 🎯 6. المعالج الرئيسي الذكي وموجه المهام (Smart Router & Handler)
 // ==========================================
 export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -98,8 +203,8 @@ export default async function handler(req, res) {
         const { prompt, history, mediaParts } = req.body;
         const userPrompt = prompt || "قم بتحليل هذا الطلب.";
 
-        // 🔍 1. الفحص الذكي للصور (تحسين الكشف)
-        const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "draw", "image", "generate", "picture"];
+        // 🔍 1. الفحص الشامل لطلبات الصور
+        const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "draw", "image", "generate", "picture", "logo"];
         const isImageRequest = userPrompt && imageKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
         let imageMarkdown = "";
@@ -107,20 +212,67 @@ export default async function handler(req, res) {
             imageMarkdown = generateFreeImage(userPrompt);
         }
 
-        // 🧠 2. جلب الرد النصي مع الذاكرة
-        const textResponse = await tryGemini(userPrompt, history, mediaParts);
+        // 🎯 2. التوجيه الذكي وترتيب الأولويات (Smart Task-Based Routing)
+        const codeKeywords = ["code", "function", "javascript", "python", "c++", "c#", "bug", "error", "كود", "برمجة", "دالة", "خطأ", "حل مشكلة", "تطبيق"];
+        const isCodingTask = codeKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
-        if (textResponse.result) {
-            // دمج الصورة مع النص إن وجدت
-            const finalCombinedOutput = imageMarkdown ? `${imageMarkdown}\n${textResponse.result}` : textResponse.result;
-            
+        let priorityList = [];
+
+        if (isCodingTask) {
+            // للطلبات البرمجية: إعطاء الأولوية لـ ChatGPT ثم DeepSeek ثم Gemini
+            priorityList = [
+                { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
+                { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) },
+                { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) }
+            ];
+        } else {
+            // للطلبات العامة والبحث: Gemini أولاً ثم ChatGPT ثم DeepSeek
+            priorityList = [
+                { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) },
+                { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
+                { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) }
+            ];
+        }
+
+        // 🔄 3. التنفيذ الذكي مع التعافي عند الحظر أو انتهاء الكوتا (Fallback Execution)
+        let finalTextResult = null;
+        let errors = [];
+
+        for (const model of priorityList) {
+            try {
+                const response = await model.func();
+                if (response.result) {
+                    finalTextResult = response;
+                    break;
+                } else {
+                    errors.push(`${model.name}: ${response.error}`);
+                }
+            } catch (e) {
+                errors.push(`${model.name}: ${e.message}`);
+            }
+        }
+
+        // 📤 4. تجميع وإرسال النتيجة النهائية
+        if (finalTextResult) {
+            const combinedOutput = imageMarkdown 
+                ? `${imageMarkdown}\n${finalTextResult.result}` 
+                : finalTextResult.result;
+
             return res.status(200).json({ 
-                result: finalCombinedOutput.trim(), 
-                source: `Tafkek Smart Engine -> ${textResponse.source}`
+                result: combinedOutput.trim().replace(/\uFFFD/g, ''), 
+                source: `Tafkek Router -> ${finalTextResult.source}`
             });
         } else {
+            // إذا تعذرت كافة المحركات النصية ولكن توجد صورة
+            if (imageMarkdown) {
+                return res.status(200).json({
+                    result: `${imageMarkdown}\n⚠️ تم توليد الصورة بنجاح، لكن تعذر جلب الرد النصي من السيرفرات.\n التفاصيل:\n- ${errors.join('\n- ')}`,
+                    source: "Tafkek Image Engine Only"
+                });
+            }
+
             return res.status(200).json({ 
-                result: imageMarkdown ? `${imageMarkdown}\n⚠️ تعذر جلب الرد النصي.` : `⚠️ حدث خطأ: ${textResponse.error}`
+                result: `⚠️ تعذر الحصول على رد من جميع المحركات.\n التفاصيل:\n- ${errors.join('\n- ')}`
             });
         }
 
