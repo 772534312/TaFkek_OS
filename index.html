@@ -500,8 +500,6 @@
     </div>
 
     <script>
-        
-    // 1. تعريف الذاكرة المحلية
     let chatHistory = [];
 
     // Neural Animation
@@ -828,11 +826,11 @@
             </div>
         `;
         chatStream.appendChild(row);
-        Prism.highlightAllAllUnder ? Prism.highlightAllUnder(row) : null;
+        if (window.Prism && window.Prism.highlightAllUnder) Prism.highlightAllUnder(row);
         chatStream.scrollTop = chatStream.scrollHeight;
     }
 
-    function appendLoaderBubble(msg = "🔍 جاري رفع الوسائط والمشاهدة...") {
+    function appendLoaderBubble(msg = "⚡ جاري معالجة الطلب والصورة...") {
         const chatStream = document.getElementById('chat-stream');
         const loaderRow = document.createElement('div');
         loaderRow.className = 'chat-row ai-row';
@@ -863,27 +861,6 @@
         } else { alert('المتصفح لا يدعم التعرف الصوتي.'); }
     }
 
-    // 🌐 دالة لرفع الصورة سحابياً والحصول على رابط مباشر
-    async function uploadImageToCloud(base64Image) {
-        try {
-            const formData = new FormData();
-            formData.append('image', base64Image);
-            
-            // رفع الصورة سحابياً عبر ImgBB API المجاني
-            const res = await fetch('https://api.imgbb.com/1/upload?key=8e681c2fdf3ed4987f4f66dbef009df9', {
-                method: 'POST',
-                body: formData
-            });
-            const data = await res.json();
-            if (data && data.data && data.data.url) {
-                return data.data.url; // إرجاع رابط مباشر وقصير ينتهي بـ png/jpg
-            }
-        } catch (e) {
-            console.error("Cloud Upload Failed:", e);
-        }
-        return null;
-    }
-
     let currentToolKey = 'grounding';
     const toolsConfig = {
         'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', apiEndpoint: '/api/deconstruct.js' },
@@ -894,7 +871,7 @@
         'support-agent': { title: '🛠️ المساعد الذكي لقنوات الدعم', apiEndpoint: '/api/support-agent.js' }
     };
 
-    // 🚀 تنفيذ الطلب مع دعم التعديل السحابي التلقائي
+    // 🚀 تنفيذ الطلب المباشر والموثوق
     async function executeProcess() {
         const inputVal = document.getElementById('user-input').value.trim();
         if (!inputVal && attachedItems.length === 0 && !activeOptionBadge) return;
@@ -911,16 +888,9 @@
         activeOptionBadge = null;
         renderAttachmentsPreview();
 
-        appendLoaderBubble("☁️ جاري معالجة الصورة وإعداد التعديل...");
+        appendLoaderBubble("⚡ جاري معالجة المحتوى وإرساله للذكاء الاصطناعي...");
 
-        let uploadedImageUrl = null;
-        const imageItem = currentMedia.find(item => item.type === 'image' && item.base64Data);
-
-        // إذا أرفق المستخدم صورة -> نرفعها سحابياً أولاً للحصول على رابط مباشر
-        if (imageItem) {
-            uploadedImageUrl = await uploadImageToCloud(imageItem.base64Data);
-        }
-
+        // تجهيز مصفوفة المرفقات بصيغة Base64 النظيفة للـ API
         const inlineDataPayload = currentMedia
             .filter(item => item.base64Data)
             .map(item => ({
@@ -930,26 +900,28 @@
                 }
             }));
 
-        // إضافة السؤال للذاكرة
-        chatHistory.push({ role: 'user', content: inputVal || "تعديل الصورة" });
+        chatHistory.push({ role: 'user', content: inputVal || "تعديل وتحليل الصورة" });
 
         try {
             const response = await fetch(toolsConfig[currentToolKey].apiEndpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ 
-                    prompt: inputVal || "قم بتحليل أو تعديل هذه الصورة.",
+                    prompt: inputVal || "قم بتحليل الصورة والرد بالشكل المطلوب.",
                     history: chatHistory.slice(-6),
                     mediaParts: inlineDataPayload,
-                    imageUrl: uploadedImageUrl, // 👈 إرسال رابط الصورة السحابي الصريح لـ deconstruct.js
                     optionMode: currentBadge ? currentBadge.title : null
                 })
             });
             
             const data = await response.json();
-            const resultText = data.result || 'لم يتم استلام أي رد تحليل.';
             
-            // حفظ الرد في الذاكرة
+            if (!response.ok) {
+                throw new Error(data.error || `خطأ استجابة من السيرفر: ${response.status}`);
+            }
+
+            const resultText = data.result || 'لم يتم استلام أي رد.';
+            
             chatHistory.push({ role: 'assistant', content: resultText });
 
             removeLoaderBubble();
@@ -958,7 +930,7 @@
             if (currentUser) await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal || "تحليل صورة", resultText);
         } catch (err) { 
             removeLoaderBubble();
-            appendAiBubble(`⚠️ **حدث خطأ أثناء المعالجة:** ${err.message}`); 
+            appendAiBubble(`⚠️ **حدث خطأ أثناء المعالجة:**\n\`\`\`\n${err.message}\n\`\`\``); 
         }
     }
 
