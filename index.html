@@ -145,21 +145,17 @@
         .session-item-header { display: flex; justify-content: space-between; align-items: center; }
         .session-meta { font-size: 10px; color: var(--text-muted); opacity: 0.7; }
 
-        /* Left Workspace */
+        /* Workspace */
         .workspace {
             flex: 1; display: flex; flex-direction: column;
             overflow: hidden; z-index: 2; position: relative;
             background: radial-gradient(circle at 50% 100%, rgba(20, 35, 60, 0.25), transparent 70%);
         }
 
-        .gemini-top-bar {
-            padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 10;
-        }
-
+        .gemini-top-bar { padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
         .gemini-model-selector {
             display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 600;
-            color: var(--text-main); cursor: pointer; padding: 6px 12px; border-radius: 20px;
-            transition: background 0.2s;
+            color: var(--text-main); cursor: pointer; padding: 6px 12px; border-radius: 20px; transition: background 0.2s;
         }
         .gemini-model-selector:hover { background: rgba(255, 255, 255, 0.08); }
         .gemini-model-selector span.dot-blue { width: 8px; height: 8px; background: var(--accent-blue); border-radius: 50%; }
@@ -174,10 +170,7 @@
             justify-content: center; text-align: center; gap: 20px; padding-bottom: 40px;
         }
 
-        .gemini-sparkle-logo {
-            width: 48px; height: 48px;
-            animation: pulseGlow 3s infinite alternate ease-in-out;
-        }
+        .gemini-sparkle-logo { width: 48px; height: 48px; animation: pulseGlow 3s infinite alternate ease-in-out; }
         @keyframes pulseGlow {
             0% { transform: scale(0.95); filter: drop-shadow(0 0 10px rgba(56,189,248,0.4)); }
             100% { transform: scale(1.05); filter: drop-shadow(0 0 25px rgba(56,189,248,0.8)); }
@@ -196,10 +189,7 @@
         .user-row .bubble { background: #23252b; color: #ffffff; border-bottom-left-radius: 6px; }
         .ai-row .bubble { background: transparent; color: #e3e3e3; width: 100%; padding-right: 0; }
 
-        /* Media Inside User Chat Bubble */
-        .chat-media-container {
-            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; justify-content: flex-end;
-        }
+        .chat-media-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; justify-content: flex-end; }
         .chat-media-card {
             position: relative; border-radius: 16px; overflow: hidden;
             max-width: 240px; max-height: 240px; border: 1px solid rgba(255, 255, 255, 0.15);
@@ -237,8 +227,7 @@
             position: absolute; top: 4px; right: 4px; width: 20px; height: 20px;
             background: rgba(0, 0, 0, 0.75); color: #fff; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
-            font-size: 11px; cursor: pointer; border: none; font-weight: bold;
-            transition: background 0.2s;
+            font-size: 11px; cursor: pointer; border: none; font-weight: bold; transition: background 0.2s;
         }
         .attachment-delete-btn:hover { background: #f43f5e; }
 
@@ -255,21 +244,15 @@
         }
 
         .gemini-pill-bar {
-            background-color: var(--gemini-pill-bg);
-            border-radius: 35px; padding: 8px 16px 8px 12px;
-            display: flex; align-items: center; gap: 10px;
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
+            background-color: var(--gemini-pill-bg); border-radius: 35px; padding: 8px 16px 8px 12px;
+            display: flex; align-items: center; gap: 10px; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s ease;
         }
-        .gemini-pill-bar:focus-within {
-            border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
-        }
+        .gemini-pill-bar:focus-within { border-color: rgba(255, 255, 255, 0.2); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); }
 
         .btn-pill-action {
-            background: transparent; border: none; color: #9ca3af;
-            font-size: 20px; cursor: pointer; display: flex; align-items: center;
-            justify-content: center; width: 36px; height: 36px; border-radius: 50%;
+            background: transparent; border: none; color: #9ca3af; font-size: 20px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%;
             transition: background 0.2s, color 0.2s;
         }
         .btn-pill-action:hover { color: #ffffff; background: rgba(255, 255, 255, 0.1); }
@@ -282,10 +265,9 @@
         .pill-input::placeholder { color: #8e8e93; }
 
         .btn-live-wave {
-            background-color: var(--gemini-active-blue); color: #ffffff;
-            border: none; width: 42px; height: 42px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: transform 0.2s; box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+            background-color: var(--gemini-active-blue); color: #ffffff; border: none;
+            width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center;
+            justify-content: center; cursor: pointer; transition: transform 0.2s; box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
         }
         .btn-live-wave:hover { transform: scale(1.05); }
 
@@ -297,42 +279,26 @@
         .sheet-overlay.active { display: block; opacity: 1; }
 
         .gemini-bottom-sheet {
-            position: fixed; bottom: -100%; left: 0; width: 100vw;
-            background-color: var(--gemini-sheet-bg);
-            border-top-left-radius: 32px; border-top-right-radius: 32px;
-            padding: 12px 24px 32px 24px; z-index: 101;
-            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7);
-            transition: bottom 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
-            display: flex; flex-direction: column; gap: 20px;
-            max-width: 600px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: -100%; left: 0; width: 100vw; background-color: var(--gemini-sheet-bg);
+            border-top-left-radius: 32px; border-top-right-radius: 32px; padding: 12px 24px 32px 24px; z-index: 101;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7); transition: bottom 0.35s cubic-bezier(0.1, 0.9, 0.2, 1);
+            display: flex; flex-direction: column; gap: 20px; max-width: 600px; left: 50%; transform: translateX(-50%);
         }
         .gemini-bottom-sheet.active { bottom: 0; }
 
-        .sheet-handle-bar {
-            width: 38px; height: 4px; background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px; margin: 0 auto 10px auto; cursor: pointer;
-        }
-
+        .sheet-handle-bar { width: 38px; height: 4px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; margin: 0 auto 10px auto; cursor: pointer; }
         .sheet-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .sheet-card-btn {
-            background: var(--gemini-card-bg); border: none; border-radius: 24px;
-            padding: 18px 10px; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; gap: 10px; color: #ffffff; cursor: pointer;
-            transition: background 0.2s, transform 0.15s; font-family: 'Cairo';
+            background: var(--gemini-card-bg); border: none; border-radius: 24px; padding: 18px 10px;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+            color: #ffffff; cursor: pointer; transition: background 0.2s, transform 0.15s; font-family: 'Cairo';
         }
         .sheet-card-btn:hover { background: rgba(255, 255, 255, 0.12); transform: translateY(-2px); }
-        .sheet-card-icon {
-            width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center; font-size: 20px;
-        }
+        .sheet-card-icon { width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; }
         .sheet-card-label { font-size: 13.5px; font-weight: 600; }
 
         .sheet-menu-list { display: flex; flex-direction: column; gap: 6px; margin-top: 5px; }
-        .sheet-menu-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; border-radius: 16px; cursor: pointer;
-            transition: background 0.2s; color: #ffffff;
-        }
+        .sheet-menu-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 16px; cursor: pointer; transition: background 0.2s; color: #ffffff; }
         .sheet-menu-item:hover { background: rgba(255, 255, 255, 0.06); }
         .sheet-item-text { display: flex; flex-direction: column; text-align: right; }
         .sheet-item-title { font-size: 15px; font-weight: 600; }
@@ -414,7 +380,6 @@
 
         <!-- Floating Prompt Pill Bar Container -->
         <div class="gemini-pill-container">
-            <!-- Dynamic Attachments Preview Area -->
             <div class="attachments-preview-wrapper" id="attachments-preview-wrapper" style="display: none;"></div>
 
             <div class="gemini-pill-bar">
@@ -500,36 +465,10 @@
     </div>
 
     <script>
-        
-    // 1. تعريف الذاكرة المحلية
-    let chatHistory = [];
+        // 1. إدارة الذاكرة السياقية (Chat History Array)
+        let chatHistory = [];
 
-    async function sendMessageToTafkek(userText, mediaData = null) {
-        // إضافة سؤال المستخدم للذاكرة
-        chatHistory.push({ role: 'user', content: userText });
-
-        const response = await fetch('/api/deconstruct', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                prompt: userText,
-                history: chatHistory.slice(-6), // إرسال آخر 6 رسائل فقط للحفاظ على السرعة والذاكرة
-                mediaParts: mediaData
-            })
-        });
-
-        const data = await response.json();
-        
-        if (data.result) {
-            // إضافة رد النظام للذاكرة
-            chatHistory.push({ role: 'assistant', content: data.result });
-            
-            // عرض الرد في الشاشة
-            renderMessage(data.result, data.source);
-        }
-    }
-
-        // Neural Animation
+        // Neural Canvas Animation
         const canvas = document.getElementById('neural-canvas');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -569,7 +508,7 @@
         }
         animateNeuralNetwork();
 
-        // Firebase Initializing
+        // Firebase Setup
         const firebaseConfig = {
             apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
             authDomain: "tafkekos.firebaseapp.com",
@@ -687,9 +626,7 @@
             appendAiBubble(session.result);
         }
 
-        // ==========================================
-        // ATTACHMENT & VISION PROCESSING SYSTEM
-        // ==========================================
+        // Attachment & Multi-modal Processing System
         let attachedItems = []; 
         let activeOptionBadge = null;
 
@@ -710,31 +647,63 @@
             else if (type === 'file') document.getElementById('native-file-input').click();
         }
 
-        function handleFileSelect(event, type) {
-            const files = Array.from(event.target.files);
-            files.forEach(file => {
-                const item = {
-                    id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-                    file: file,
-                    type: file.type.startsWith('image/') ? 'image' : 'file',
-                    mimeType: file.type,
-                    name: file.name,
-                    url: null,
-                    base64Data: null // Clean base64 string for Gemini API
-                };
-
+        // دالة تحويل وضغط الصور لتفادي الأخطاء الكبيرة والحفاظ على سرعة الخادم
+        function compressAndConvertToBase64(file, maxWidth = 1024, quality = 0.7) {
+            return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = (e) => {
-                    item.url = e.target.result;
-                    // Extract raw Base64 without the data header scheme (data:image/jpeg;base64,)
-                    item.base64Data = e.target.result.split(',')[1];
-                    renderAttachmentsPreview();
-                };
                 reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    if (!file.type.startsWith('image/')) {
+                        resolve(event.target.result.split(',')[1]);
+                        return;
+                    }
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
 
-                attachedItems.push(item);
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+                        resolve(dataUrl.split(',')[1]);
+                    };
+                    img.onerror = (err) => reject(err);
+                };
+                reader.onerror = (err) => reject(err);
             });
-            renderAttachmentsPreview();
+        }
+
+        async function handleFileSelect(event, type) {
+            const files = Array.from(event.target.files);
+            for (const file of files) {
+                try {
+                    const base64Clean = await compressAndConvertToBase64(file);
+                    const item = {
+                        id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+                        file: file,
+                        type: file.type.startsWith('image/') ? 'image' : 'file',
+                        mimeType: file.type.startsWith('image/') ? 'image/jpeg' : file.type,
+                        name: file.name,
+                        url: file.type.startsWith('image/') ? `data:image/jpeg;base64,${base64Clean}` : null,
+                        base64Data: base64Clean
+                    };
+                    attachedItems.push(item);
+                    renderAttachmentsPreview();
+                } catch (e) {
+                    console.error("فشل قراءة الملف:", e);
+                }
+            }
             event.target.value = '';
         }
 
@@ -796,7 +765,7 @@
             });
         }
 
-        // Chat UI Helpers
+        // Chat UI Elements Handling
         function autoResizeTextarea(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
 
         function handleKeyDown(e) {
@@ -828,7 +797,7 @@
             }
 
             let badgePrefix = optionBadge ? `<b>[${optionBadge.icon} ${optionBadge.title}]</b><br>` : '';
-            let contentText = text ? text.replace(/\n/g, '<br>') : '*(صورة مرفقة للتحليل)*';
+            let contentText = text ? text.replace(/\n/g, '<br>') : '*(تحليل ملف مرفق)*';
 
             row.innerHTML = `
                 ${mediaHtml}
@@ -863,7 +832,7 @@
             const loaderRow = document.createElement('div');
             loaderRow.className = 'chat-row ai-row';
             loaderRow.id = 'active-loader';
-            loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><span>🔍 جاري تحليل الوسائط والمعالجة...</span></div></div>`;
+            loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><span>⚡ جاري التفكير المعرفي والمعالجة...</span></div></div>`;
             chatStream.appendChild(loaderRow);
             chatStream.scrollTop = chatStream.scrollHeight;
         }
@@ -875,7 +844,7 @@
 
         function copyTextFromElement(id) {
             const el = document.getElementById(id);
-            if (el) { navigator.clipboard.writeText(el.innerText); alert('تم نسخ الإجابة بنجاح!'); }
+            if (el) { navigator.clipboard.writeText(el.innerText); alert('تم نسخ النص بنجاح!'); }
         }
 
         function startVoiceInput() {
@@ -889,17 +858,18 @@
             } else { alert('المتصفح لا يدعم التعرف الصوتي.'); }
         }
 
-        // Processing Execution Engine (Sends Vision Media to Gemini API)
+        // Tools Configurations & Endpoints
         let currentToolKey = 'grounding';
         const toolsConfig = {
-            'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', apiEndpoint: '/api/deconstruct.js' },
-            'deconstruct': { title: '🧠 التفكيك المعرفي واللغوي', apiEndpoint: '/api/deconstruct-groq.js' },
-            'ecom-deconstruct': { title: '📊 تفكيك اللوجستيات الرقمية', apiEndpoint: '/api/ecom-deconstruct.js' },
-            'loop-destroyer': { title: '⚡ تتبع وحرق الأخطاء البرمجية', apiEndpoint: '/api/loop-destroyer.js' },
-            'clean-image': { title: '🎨 استوديو التصاميم النظيفة', apiEndpoint: '/api/generate-image.js' },
-            'support-agent': { title: '🛠️ المساعد الذكي لقنوات الدعم', apiEndpoint: '/api/support-agent.js' }
+            'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', apiEndpoint: '/api/process' },
+            'deconstruct': { title: '🧠 التفكيك المعرفي واللغوي', apiEndpoint: '/api/process' },
+            'ecom-deconstruct': { title: '📊 تفكيك اللوجستيات الرقمية', apiEndpoint: '/api/process' },
+            'loop-destroyer': { title: '⚡ تتبع وحرق الأخطاء البرمجية', apiEndpoint: '/api/process' },
+            'clean-image': { title: '🎨 استوديو التصاميم النظيفة', apiEndpoint: '/api/process' },
+            'support-agent': { title: '🛠️ المساعد الذكي لقنوات الدعم', apiEndpoint: '/api/process' }
         };
 
+        // Execution Processing Logic with Advanced Error Guard
         async function executeProcess() {
             const inputVal = document.getElementById('user-input').value.trim();
             if (!inputVal && attachedItems.length === 0 && !activeOptionBadge) return;
@@ -907,10 +877,12 @@
             const currentMedia = [...attachedItems];
             const currentBadge = activeOptionBadge;
 
-            // Render message bubble with attached images in UI
             appendUserBubble(inputVal, currentMedia, currentBadge);
-            
-            // Clear inputs & previews
+
+            // حفظ الطلب في ذاكرة المحادثة المحتفظة بالسياق
+            chatHistory.push({ role: 'user', content: inputVal || "تحليل ملف/صورة" });
+
+            // تفريغ الإدخال والواجهة
             const input = document.getElementById('user-input');
             input.value = '';
             input.style.height = 'auto';
@@ -920,7 +892,6 @@
 
             appendLoaderBubble();
 
-            // Prepare inline vision payload structure for Gemini API
             const inlineDataPayload = currentMedia
                 .filter(item => item.base64Data)
                 .map(item => ({
@@ -935,21 +906,43 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        prompt: inputVal || "قم بتحليل هذه الصورة وشرح كل محتوياتها بالتفصيل الدقيق.",
-                        mediaParts: inlineDataPayload, // Gemini Multi-modal Payload
+                        prompt: inputVal || "قم بتحليل هذا المحتوى المرفق شرحاً كاملاً.",
+                        history: chatHistory.slice(-6),
+                        mediaParts: inlineDataPayload,
                         optionMode: currentBadge ? currentBadge.title : null
                     })
                 });
-                const data = await response.json();
-                const resultText = data.result || 'لم يتم استلام أي رد تحليل.';
-                
+
+                const rawText = await response.text();
+                let data;
+
+                try {
+                    data = JSON.parse(rawText);
+                } catch (jsonParseErr) {
+                    console.error("Non-JSON Server Output:", rawText);
+                    if (rawText.includes("A server error")) {
+                        throw new Error("تجاوز الطلب الحدود الزمانية أو حجم الصورة المعالجة أكبر من المسموح.");
+                    }
+                    throw new Error(`استجابة السيرفر غير مصاغة كـ JSON:\n${rawText.substring(0, 200)}...`);
+                }
+
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || `خطأ سيرفر بالحالة: ${response.status}`);
+                }
+
+                const resultText = data.result || 'لم يتم استلام أي رد.';
+
+                // حفظ الاستجابة في السياق
+                chatHistory.push({ role: 'assistant', content: resultText });
+
                 removeLoaderBubble();
                 appendAiBubble(resultText);
 
-                if (currentUser) await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal || "تحليل صورة", resultText);
+                if (currentUser) await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal || "معالجة وسائط", resultText);
+
             } catch (err) { 
                 removeLoaderBubble();
-                appendAiBubble(`⚠️ **حدث خطأ أثناء معالجة الصورة:** ${err.message}`); 
+                appendAiBubble(`⚠️ **حدث خطأ أثناء المعالجة:**\n\`\`\`\n${err.message}\n\`\`\``); 
             }
         }
 
@@ -960,6 +953,7 @@
         }
 
         function startNewSession() {
+            chatHistory = []; // تفريغ ذاكرة السياق للبدء من جديد
             const chatStream = document.getElementById('chat-stream');
             chatStream.innerHTML = `
                 <div class="gemini-hero-center" id="gemini-hero">
