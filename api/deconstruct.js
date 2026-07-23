@@ -1,49 +1,25 @@
 import https from 'https';
 
 // ==========================================
-// 🎨 1. محرك توليد الصور المجاني المضمون
+// 🎨 1. محرك توليد الصور الدقيق (Dynamic Prompt Engine)
 // ==========================================
 const generateFreeImage = (prompt) => {
-    // 1. تنظيف النص بالكامل واستخراج الكلمات المفتاحية بالإنجليزية فقط
+    // 1. تنظيف النص من أفعال الأمر فقط دون المساس بالمضمون
     let cleanPrompt = prompt
-        .toLowerCase()
-        .replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|draw|image|generate|picture|logo)/g, '')
+        .replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|draw|image|generate|picture|logo)/gi, '')
         .trim();
 
-    // خريطة مصطلحات سريعة لضمان إرسال كلمات إنجليزية مائة بالمائة
-    const map = {
-        "فضاء": "space",
-        "رواد": "astronauts",
-        "رائد": "astronaut",
-        "كوكب": "planet",
-        "كريستال": "crystal",
-        "كريستالي": "crystal",
-        "ازرق": "blue",
-        "أزرق": "blue",
-        "سيارة": "car",
-        "مدينة": "city"
-    };
+    // 2. إذا كان النص فارغاً، نستخدم وصف بسيط محايد
+    if (!cleanPrompt) cleanPrompt = "abstract digital art highly detailed";
 
-    let englishWords = [];
-    Object.keys(map).forEach(key => {
-        if (cleanPrompt.includes(key)) {
-            englishWords.push(map[key]);
-        }
-    });
-
-    let finalPrompt = englishWords.length > 0 
-        ? englishWords.join(" ") 
-        : "futuristic crystal planet astronauts space exploration";
-
-    // تنظيف تام لأي رموز أو مسافات غريبة
-    const encodedPrompt = encodeURIComponent(finalPrompt);
+    // 3. ترميز الوصف بالكامل لضمان بقائه دقيقاً مع دعم العربية والأجنبية في URL
+    const safePrompt = encodeURIComponent(cleanPrompt);
     const randomSeed = Math.floor(Math.random() * 999999);
     
-    // رابط سريع وخفيف جداً لضمان التحميل المباشر
-    const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=800&height=800&seed=${randomSeed}&nologo=true`;
+    // استخدام نموذج Flux المباشر الذي يفهم السياق العربي والأجنبي بدقة دون قيم افتراضية ثابتة
+    const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=800&height=800&seed=${randomSeed}&model=flux&nologo=true`;
 
-    // إرجاع صيغة Markdown مبسطة ومباشرة
-    return `![Tafkek Image](${imageUrl})\n\n`;
+    return `![Tafkek Generated Image](${imageUrl})\n\n`;
 };
 
 // ==========================================
@@ -223,7 +199,7 @@ const tryDeepSeek = async (prompt, history = []) => {
 };
 
 // ==========================================
-// 🎯 6. المعالج الرئيسي الذكي وموجه المهام (Smart Router & Handler)
+// 🎯 6. المعالج الرئيسي الذكي وموجه المهام
 // ==========================================
 export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
