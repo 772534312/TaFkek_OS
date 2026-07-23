@@ -1,5 +1,140 @@
 import https from 'https';
 
+const makeHttpsRequest = (options, postData) => {
+    return new Promise((resolve, reject) => {
+        const request = https.request(options, response => {
+            response.setEncoding('utf-8');
+            let body = '';
+            response.on('data', chunk => body += chunk);
+            response.on('end', () => {
+                try {
+                    resolve({ status: response.statusCode, data: JSON.parse(body) });
+                } catch (err) {
+                    reject(new Error("فشل في معالجة الاستجابة"));
+                }
+            });
+        });
+        request.on('error', reject);
+        request.write(postData, 'utf-8');
+        request.end();
+    });
+};
+
+// ==========================================
+// 1. محرك Gemini (يدعم البحث والملفات والذاكرة)
+// ==========================================
+const tryGemini = async (prompt, history = [], mediaParts = []) => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return { error: "Missing Key" };
+
+    const contents = [];
+
+    // إضافة الذاكرة السابقة (History)
+    if (history && Array.isArray(history)) {
+        history.forEach(msg => {
+            contents.push({
+                role: msg.role === 'user' ? 'user' : 'model',
+                parts: [{ text: msg.content }]
+            });
+        });
+    }
+
+    // إضافة الرسالة الحالية
+    const currentParts = [{ text: prompt }];
+
+    if (mediaParts && Array.isArray(mediaParts)) {
+        mediaParts.forEach(item => {
+            if (item.inlineData) {
+                currentParts.push({ 
+                    inline_data: { mime_type: item.inlineData.mimeType, data: item.inlineData.data } 
+                });
+            }
+        });
+    }
+
+    contents.push({ role: 'user', parts: currentParts });
+
+    const postData = JSON.stringify({
+        contents: contents,
+        tools: [{ googleSearch: {} }],
+        systemInstruction: {
+            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. أجب بدقة وفصاحة، واستخدم التنسيق الأنيق المعتمد على Markdown والأكواد المنظمة." }]
+        }
+    });
+
+    const options = {
+        hostname: 'generativelanguage.googleapis.com',
+        port: 443,
+        path: `/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json; charset=utf-8' }
+    };
+
+    const result = await makeHttpsRequest(options, postData);
+    if (result.status === 200 && result.data.candidates?.[0]?.content?.parts) {
+        let output = "";
+        result.data.candidates[0].content.parts.forEach(p => { if (p.text) output += p.text; });
+        return { result: output, source: "Gemini 2.5 Flash (Grounding Supported)" };
+    }
+    return { error: result.data?.error?.message || "Gemini Error", status: result.status };
+};
+
+// ==========================================
+// 2. محرك ChatGPT (GPT-4o للبرمجة والمنطق)
+// ==========================================
+const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) return { error: "Missing Key" };
+
+    const messages = [
+        { role: "system", content: "أنت محرك Tafkek OS المطور برمجياً. قدم حلولاً برمجية دقيقة مع تنسيق الأكواد والشرح الواضح." }
+    ];
+
+    if (history && Array.isArray(history)) {
+        history.forEach(msg => {
+            messages.push({
+                role: msg.role === 'user' ? 'user' : 'assistant',
+                content: msg.content
+            });
+        });
+    }
+
+    const currentContent = [{ type: "text", text: prompt }];
+    if (mediaParts && Array.isArray(mediaParts)) {
+        mediaParts.forEach(item => {
+            if (item.inlineData) {
+                currentContent.push({
+                    type: "image_url",
+                    image_url: { url: `data:${item.inlineData.mimeType};base64,${item.inlineData.data}` }
+                });
+            }
+        });
+    }
+
+    messages.push({ role: "user", content: currentContent });
+
+    const postData = JSON.stringify({ model: "gpt-4o", messages: messages });
+    const options = {
+        hostname: 'api.openai.com',
+        port: 443,
+        path: '/v1/chat/completions',
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json; charset=utf-8'
+        }
+    };
+
+    const result = await makeHttpsRequest(options, postData);
+    if (result.status === 200 && result.data.choices?.[0]?.message?.content) {
+        return { result: result.data.choices[0].message.content, source: "ChatGPT (GPT-4o Engine)" };
+    }
+    return { error: result.data?.error?.message || "OpenAI Error", status: result.status };
+};
+
+// ==========================================
+// 3. المعالج الأساسي وموجه المهام (Smart Router)
+// ==========================================
 export default async function handler(req, res) {
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,159 +143,59 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     try {
-        const { prompt, mediaParts, model } = req.body;
-        const apiKey = process.env.GEMINI_API_KEY;
+        const { prompt, history, mediaParts } = req.body;
+        const userPrompt = prompt || "قم بتحليل هذا الطلب.";
 
-        if (!apiKey) {
-            return res.status(500).json({ result: "⚠️ مفتاح GEMINI_API_KEY غير معرف في البيئة." });
-        }
+        // 🎯 التوجيه الذكي (Smart Routing Logic)
+        const codeKeywords = ["code", "function", "javascript", "python", "c++", "bug", "error", "كود", "برمجة", "دالة", "خطأ"];
+        const isCodingTask = codeKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
-        // 🔍 الفحص الذكي: هل يطلب المستخدم توليد صورة؟
-        const imageKeywords = ["ارسم", "أنشئ صورة", "انشئ صورة", "صمم صورة", "توليد صورة", "generate image", "draw", "create image"];
-        const isImageGenerationRequest = prompt && imageKeywords.some(kw => prompt.toLowerCase().includes(kw));
+        let priorityList = [];
 
-        // 🎨 المسار الأول: طلب توليد صورة باستخدام Imagen 3
-        if (isImageGenerationRequest) {
-            const imagenPostData = JSON.stringify({
-                instances: [{ prompt: prompt }],
-                parameters: { sampleCount: 1, aspectRatio: "1:1" }
-            });
-
-            const imagenOptions = {
-                hostname: 'generativelanguage.googleapis.com',
-                port: 443,
-                path: `/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`,
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json; charset=utf-8',
-                    'Content-Length': Buffer.byteLength(imagenPostData, 'utf-8')
-                }
-            };
-
-            const generateImagePromise = () => {
-                return new Promise((resolve, reject) => {
-                    const request = https.request(imagenOptions, response => {
-                        let body = '';
-                        response.on('data', chunk => body += chunk);
-                        response.on('end', () => resolve({ status: response.statusCode, data: JSON.parse(body) }));
-                    });
-                    request.on('error', reject);
-                    request.write(imagenPostData, 'utf-8');
-                    request.end();
-                });
-            };
-
-            const imgResult = await generateImagePromise();
-
-            if (imgResult.status === 200 && imgResult.data.predictions?.[0]?.bytesBase64Encoded) {
-                const base64Image = imgResult.data.predictions[0].bytesBase64Encoded;
-                const mimeType = imgResult.data.predictions[0].mimeType || "image/png";
-                
-                // إعادة الصورة بتنسيق HTML جاهز للعرض مباشرة في الواجهة
-                const imgHtml = `Here is your generated design:\n\n<img src="data:${mimeType};base64,${base64Image}" alt="Generated Design" style="max-width:100%; border-radius:12px; margin-top:10px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);" />`;
-                
-                return res.status(200).json({ 
-                    result: imgHtml, 
-                    source: "Tafkek Image Generator Engine (Imagen 3)" 
-                });
-            }
-        }
-
-        // 🧠 المسار الثاني: المعالجة العادية (تحليل صور / نصوص / بحث في الإنترنت)
-        let targetModel = model || "gemini-2.5-flash";
-        const supportedMimeTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/heic', 'image/heif', 'application/pdf', 'text/plain'];
-
-        const parts = [];
-
-        if (prompt && prompt.trim() !== '') {
-            parts.push({ text: prompt });
+        if (isCodingTask && process.env.OPENAI_API_KEY) {
+            // للطلبات البرمجية: إعطاء الأولوية لـ ChatGPT ثم Gemini
+            priorityList = [
+                { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
+                { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) }
+            ];
         } else {
-            parts.push({ text: "قم بتحليل هذه الصورة وتفكيك محتوياتها وشرحها بالتفصيل." });
+            // للطلبات العامة والبحث الحفاظ على Gemini كأولوية
+            priorityList = [
+                { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) },
+                { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) }
+            ];
         }
 
-        if (mediaParts && Array.isArray(mediaParts)) {
-            for (const item of mediaParts) {
-                if (item.inlineData && item.inlineData.data) {
-                    const mime = item.inlineData.mimeType || "image/jpeg";
-                    if (!supportedMimeTypes.includes(mime)) {
-                        return res.status(200).json({ 
-                            result: `⚠️ الصيغة المرفقة (${mime}) غير مدعومة مباشرة.\n\n💡 **نصيحة:** يرجى تحويل ملف PowerPoint إلى **PDF** أو تحويل الشرائح إلى **صور (PNG/JPG)** ثم إعادة رفعها.` 
-                        });
-                    }
+        let finalResponse = null;
+        let errors = [];
 
-                    parts.push({
-                        inline_data: { mime_type: mime, data: item.inlineData.data }
-                    });
+        for (const model of priorityList) {
+            try {
+                const response = await model.func();
+                if (response.result) {
+                    finalResponse = response;
+                    break;
+                } else {
+                    errors.push(`${model.name}: ${response.error}`);
                 }
+            } catch (e) {
+                errors.push(`${model.name}: ${e.message}`);
             }
         }
 
-        const postData = JSON.stringify({
-            contents: [{ parts: parts }],
-            tools: [{ googleSearch: {} }],
-            systemInstruction: {
-                parts: [{ text: "أنت محرك التفكيك والتحليل الفوري لـ Tafkek OS. ابحث في الإنترنت عند الحاجة ووفر إجابات دقيقة بلغة عربية واضحة وبدون رموز غريبة." }]
-            }
-        });
-
-        const options = {
-            hostname: 'generativelanguage.googleapis.com',
-            port: 443,
-            path: `/v1beta/models/${targetModel}:generateContent?key=${apiKey}`,
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json; charset=utf-8', 
-                'Content-Length': Buffer.byteLength(postData, 'utf-8') 
-            }
-        };
-
-        const reqPromise = () => {
-            return new Promise((resolve, reject) => {
-                const request = https.request(options, response => {
-                    response.setEncoding('utf-8');
-                    let body = '';
-                    response.on('data', chunk => body += chunk);
-                    response.on('end', () => {
-                        try {
-                            resolve({ status: response.statusCode, data: JSON.parse(body) });
-                        } catch (err) {
-                            reject(new Error("فشل في معالجة استجابة السيرفر"));
-                        }
-                    });
-                });
-                request.on('error', reject);
-                request.write(postData, 'utf-8');
-                request.end();
+        if (finalResponse) {
+            return res.status(200).json({ 
+                result: finalResponse.result.trim().replace(/\uFFFD/g, ''), 
+                source: `Tafkek Smart Router -> ${finalResponse.source}`
             });
-        };
-
-        const result = await reqPromise();
-
-        if (result.status !== 200 || result.data.error) {
-            const errDetails = result.data.error?.message || `كود الاستجابة ${result.status}`;
-            return res.status(200).json({ result: `⚠️ خطأ من سيرفر جوجل: ${errDetails}` });
+        } else {
+            return res.status(200).json({ 
+                result: `⚠️ تعذر الحصول على رد من المحركات الحالية.\n التفاصيل:\n- ${errors.join('\n- ')}`
+            });
         }
-
-        const candidateParts = result.data.candidates?.[0]?.content?.parts || [];
-        let outputText = "";
-
-        candidateParts.forEach(p => {
-            if (p.text) outputText += p.text + "\n";
-        });
-
-        outputText = outputText.replace(/\uFFFD/g, '');
-
-        if (!outputText.trim()) {
-            outputText = "لم يتم الحصول على تحليل نصي من النموذج، يرجى إعادة المحاولة.";
-        }
-
-        return res.status(200).json({ 
-            result: outputText.trim(), 
-            source: `Tafkek Grounding & Vision Engine (${targetModel.toUpperCase()})` 
-        });
 
     } catch (e) {
-        console.error("Deconstruct API Error:", e);
-        return res.status(200).json({ result: `⚠️ حدث خطأ في النظام: ${e.message}` });
+        console.error("Routing Error:", e);
+        return res.status(500).json({ error: e.message });
     }
 }
