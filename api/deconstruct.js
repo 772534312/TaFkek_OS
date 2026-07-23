@@ -1,17 +1,12 @@
 import https from 'https';
 
-// 🎨 1. دالة توليد الصور المجانية السريعة (Pollinations - Flux Engine)
+// 🎨 دالة توليد الصور المجانية السريعة (Pollinations - Flux Engine)
 const generateFreeImage = (prompt) => {
     const cleanPrompt = encodeURIComponent(prompt.trim());
     const seed = Math.floor(Math.random() * 1000000);
     const imageUrl = `https://pollinations.ai/p/${cleanPrompt}?width=1024&height=1024&model=flux&seed=${seed}&nologo=true`;
     
-    const imgHtml = `إليك التصميم الذي طلبته:\n\n<img src="${imageUrl}" alt="Generated Design" style="max-width:100%; border-radius:12px; margin-top:10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" />`;
-    
-    return {
-        result: imgHtml,
-        source: "Tafkek Free Vision Engine (FLUX / Pollinations)"
-    };
+    return `\n\n![Generated Image](${imageUrl})\n\n`;
 };
 
 // --- دوال المساعدة لطلبات HTTPS ---
@@ -36,7 +31,7 @@ const makeHttpsRequest = (options, postData) => {
 };
 
 // ==========================================
-// 1. محرك Gemini 2.5 Flash
+// محرك Gemini 2.5 Flash مع الذاكرة
 // ==========================================
 const tryGemini = async (prompt, history = [], mediaParts = []) => {
     const apiKey = process.env.GEMINI_API_KEY;
@@ -67,9 +62,8 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
 
     const postData = JSON.stringify({
         contents: contents,
-        tools: [{ googleSearch: {} }],
         systemInstruction: {
-            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. أجب بدقة وفصاحة، واستخدم التنسيق الأنيق المعتمد على Markdown والأكواد المنظمة." }]
+            parts: [{ text: "أنت نظام Tafkek OS الذكي. لديك ذاكرة للمحادثة الحالية من خلال السجل المرفق معك، أجب بدقة وفصاحة واستخدم تنسيق Markdown." }]
         }
     });
 
@@ -87,98 +81,7 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
         result.data.candidates[0].content.parts.forEach(p => { if (p.text) output += p.text; });
         return { result: output, source: "Gemini 2.5 Flash" };
     }
-    if (result.status === 429) return { error: "Quota Exceeded" };
     return { error: result.data?.error?.message || "Gemini Error" };
-};
-
-// ==========================================
-// 2. محرك OpenAI ChatGPT (GPT-4o)
-// ==========================================
-const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) return { error: "Missing Key" };
-
-    const messages = [
-        { role: "system", content: "أنت نظام Tafkek OS الذكي المتكامل. أجب بدقة باستخدام Markdown والتنسيق الأنيق." }
-    ];
-
-    if (history && Array.isArray(history)) {
-        history.forEach(msg => {
-            messages.push({ role: msg.role === 'user' ? 'user' : 'assistant', content: msg.content });
-        });
-    }
-
-    const currentContent = [{ type: "text", text: prompt }];
-    if (mediaParts && Array.isArray(mediaParts)) {
-        mediaParts.forEach(item => {
-            if (item.inlineData) {
-                currentContent.push({
-                    type: "image_url",
-                    image_url: { url: `data:${item.inlineData.mimeType};base64,${item.inlineData.data}` }
-                });
-            }
-        });
-    }
-
-    messages.push({ role: "user", content: currentContent });
-
-    const postData = JSON.stringify({ model: "gpt-4o", messages: messages });
-    const options = {
-        hostname: 'api.openai.com',
-        port: 443,
-        path: '/v1/chat/completions',
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json; charset=utf-8'
-        }
-    };
-
-    const result = await makeHttpsRequest(options, postData);
-    if (result.status === 200 && result.data.choices?.[0]?.message?.content) {
-        return { result: result.data.choices[0].message.content, source: "ChatGPT (GPT-4o)" };
-    }
-    if (result.status === 429) return { error: "Quota Exceeded" };
-    return { error: result.data?.error?.message || "OpenAI Error" };
-};
-
-// ==========================================
-// 3. محرك DeepSeek Chat
-// ==========================================
-const tryDeepSeek = async (prompt, history = []) => {
-    const apiKey = process.env.DEEPSEEK_API_KEY;
-    if (!apiKey) return { error: "Missing Key" };
-
-    const messages = [
-        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في البرمجة والتحليل." }
-    ];
-
-    if (history && Array.isArray(history)) {
-        history.forEach(msg => {
-            messages.push({ role: msg.role === 'user' ? 'user' : 'assistant', content: msg.content });
-        });
-    }
-
-    messages.push({ role: "user", content: prompt });
-
-    const postData = JSON.stringify({ model: "deepseek-chat", messages: messages });
-    const options = {
-        hostname: 'api.deepseek.com',
-        port: 443,
-        path: '/v1/chat/completions',
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json; charset=utf-8'
-        }
-    };
-
-    const result = await makeHttpsRequest(options, postData);
-    if (result.status === 200 && result.data.choices?.[0]?.message?.content) {
-        return { result: result.data.choices[0].message.content, source: "DeepSeek Chat" };
-    }
-    if (result.status === 429) return { error: "Quota Exceeded" };
-    return { error: result.data?.error?.message || "DeepSeek Error" };
 };
 
 // ==========================================
@@ -195,47 +98,29 @@ export default async function handler(req, res) {
         const { prompt, history, mediaParts } = req.body;
         const userPrompt = prompt || "قم بتحليل هذا الطلب.";
 
-        // 🔍 1. الفحص الذكي للصور
-        const imageKeywords = ["ارسم", "أنشئ صورة", "انشئ صورة", "صمم صورة", "توليد صورة", "generate image", "draw", "create image", "logo design", "شعار"];
+        // 🔍 1. الفحص الذكي للصور (تحسين الكشف)
+        const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "draw", "image", "generate", "picture"];
         const isImageRequest = userPrompt && imageKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
+        let imageMarkdown = "";
         if (isImageRequest) {
-            const imageResponse = generateFreeImage(userPrompt);
-            return res.status(200).json(imageResponse);
+            imageMarkdown = generateFreeImage(userPrompt);
         }
 
-        // 🧠 2. قائمة المحركات حسب الأولوية والتنقل الذكي (Fallback Engine)
-        const priorityList = [
-            { name: "Gemini", func: () => tryGemini(userPrompt, history, mediaParts) },
-            { name: "ChatGPT", func: () => tryChatGPT(userPrompt, history, mediaParts) },
-            { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) }
-        ];
+        // 🧠 2. جلب الرد النصي مع الذاكرة
+        const textResponse = await tryGemini(userPrompt, history, mediaParts);
 
-        let finalResponse = null;
-        let errors = [];
-
-        for (const model of priorityList) {
-            try {
-                const response = await model.func();
-                if (response.result) {
-                    finalResponse = response;
-                    break;
-                } else {
-                    errors.push(`${model.name}: ${response.error}`);
-                }
-            } catch (e) {
-                errors.push(`${model.name}: ${e.message}`);
-            }
-        }
-
-        if (finalResponse) {
+        if (textResponse.result) {
+            // دمج الصورة مع النص إن وجدت
+            const finalCombinedOutput = imageMarkdown ? `${imageMarkdown}\n${textResponse.result}` : textResponse.result;
+            
             return res.status(200).json({ 
-                result: finalResponse.result.trim().replace(/\uFFFD/g, ''), 
-                source: `Tafkek Smart Engine -> ${finalResponse.source}`
+                result: finalCombinedOutput.trim(), 
+                source: `Tafkek Smart Engine -> ${textResponse.source}`
             });
         } else {
             return res.status(200).json({ 
-                result: `⚠️ تعذر الحصول على رد من المحركات الحالية.\n التفاصيل:\n- ${errors.join('\n- ')}`
+                result: imageMarkdown ? `${imageMarkdown}\n⚠️ تعذر جلب الرد النصي.` : `⚠️ حدث خطأ: ${textResponse.error}`
             });
         }
 
