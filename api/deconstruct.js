@@ -6,16 +6,25 @@ import https from 'https';
 const makeHttpsRequest = (options, postData) => {
     return new Promise((resolve, reject) => {
         const request = https.request(options, response => {
-            response.setEncoding('utf-8');
-            let body = '';
-            response.on('data', chunk => body += chunk);
-            response.on('end', () => {
-                try {
-                    resolve({ status: response.statusCode, data: JSON.parse(body) });
-                } catch (err) {
-                    reject(new Error("فشل في معالجة الاستجابة من السيرفر"));
-                }
-            });
+            let body = response.headers['content-type']?.includes('json') || response.headers['content-type']?.includes('text') ? '' : [];
+            
+            if (typeof body === 'string') {
+                response.setEncoding('utf-8');
+                response.on('data', chunk => body += chunk);
+                response.on('end', () => {
+                    try {
+                        resolve({ status: response.statusCode, data: JSON.parse(body) });
+                    } catch (err) {
+                        resolve({ status: response.statusCode, data: body });
+                    }
+                });
+            } else {
+                response.on('data', chunk => body.push(chunk));
+                response.on('end', () => {
+                    const buffer = Buffer.concat(body);
+                    resolve({ status: response.statusCode, buffer: buffer });
+                });
+            }
         });
         request.on('error', reject);
         if (postData) request.write(postData, 'utf-8');
@@ -26,13 +35,16 @@ const makeHttpsRequest = (options, postData) => {
 // ==========================================
 // 🎨 2. مترجم وتطوير طلبات الصور الذكي
 // ==========================================
-const translateAndExpandPrompt = async (arabicPrompt, isEditing = false) => {
+const translateAndExpandPrompt = async (arabicPrompt) => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) return arabicPrompt;
 
-    const instructions = isEditing 
-        ? `You are an AI image editing assistant. The user wants to MODIFY an existing image. Translate their Arabic modification request into a clear English instruction focusing ONLY on the specific changes requested. Keep it concise. Request: "${arabicPrompt}"`
-        : `You are an expert AI image prompt engineer. Translate the user's image request into a highly detailed, photo-realistic, cinematic English prompt for FLUX. Output ONLY the detailed English prompt text. Request: "${arabicPrompt}"`;
+    const instructions = `
+You are an expert AI image prompt engineer. Translate and enhance the user's image prompt to generate a highly accurate, vivid, photo-realistic image using FLUX.
+Output ONLY the detailed English prompt text.
+
+Request: "${arabicPrompt}"
+`;
 
     const postData = JSON.stringify({
         contents: [{ role: 'user', parts: [{ text: instructions }] }]
@@ -55,28 +67,46 @@ const translateAndExpandPrompt = async (arabicPrompt, isEditing = false) => {
         console.error("Image Prompt Expansion Error:", e);
     }
     
-    return arabicPrompt.replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|عدل|غير|اضف|احذف|draw|image|generate|edit|modify)/gi, '').trim();
+    return arabicPrompt.replace(/(ارسم|انشئ|أنشئ|صمم|توليد|صورة|صوره|صور|شعار|لي|draw|image|generate|picture|logo)/gi, '').trim();
 };
 
 // ==========================================
-// 🖼️ 3. محرك الصور الذكي (يقبل Text-to-Image و Image-to-Image)
+// 🖼️ 3. محرك توليد الصور عبر Hugging Face FLUX
 // ==========================================
-const generateSmartImage = (expandedPrompt, base64Image = null) => {
-    const safePrompt = encodeURIComponent(expandedPrompt);
-    const seed = 42; // تثبيت البذرة للحفاظ على التناسق البصري
-
-    // أ. إذا وجد صورة مرفوعة -> نستخدم تقنية Image-to-Image / Reference
-    if (base64Image) {
-        // نمرر الصورة كمرجع بصري مع تحديد قوة التعديل (strength)
-        const imageRef = encodeURIComponent(`data:image/jpeg;base64,${base64Image}`);
-        const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&model=flux&seed=${seed}&image=${imageRef}&nologo=true`;
-        return `![Edited Image](${imageUrl})\n\n*(تم التعديل بناءً على الصورة المرفوعة)*\n\n`;
+const generateHuggingFaceImage = async (expandedPrompt) => {
+    const hfToken = process.env.HF_TOKEN; // قم بإضافة مفتاح Hugging Face في Vercel
+    if (!hfToken) {
+        // Fallback إلى رابط مجاني بديل ومعدل برؤية أفضل
+        const safePrompt = encodeURIComponent(expandedPrompt);
+        const seed = Math.floor(Math.random() * 999999);
+        return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&seed=${seed}&model=flux-realism&nologo=true)\n\n`;
     }
 
-    // ب. توليد صورة جديدة من الصفر
-    const randomSeed = Math.floor(Math.random() * 999999);
-    const imageUrl = `https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&seed=${randomSeed}&model=flux&nologo=true`;
-    return `![Tafkek Generated Image](${imageUrl})\n\n`;
+    const postData = JSON.stringify({ inputs: expandedPrompt });
+    const options = {
+        hostname: 'api-inference.huggingface.co',
+        port: 443,
+        path: '/models/black-forest-labs/FLUX.1-schnell',
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${hfToken}`,
+            'Content-Type': 'application/json'
+        }
+    };
+
+    try {
+        const response = await makeHttpsRequest(options, postData);
+        if (response.status === 200 && response.buffer) {
+            const base64Image = response.buffer.toString('base64');
+            return `![Generated Image](data:image/jpeg;base64,${base64Image})\n\n`;
+        }
+    } catch (e) {
+        console.error("Hugging Face Engine Error:", e);
+    }
+
+    // fallback
+    const safePrompt = encodeURIComponent(expandedPrompt);
+    return `![Generated Image](https://image.pollinations.ai/prompt/${safePrompt}?width=1024&height=1024&nologo=true)\n\n`;
 };
 
 // ==========================================
@@ -87,7 +117,6 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
     if (!apiKey) return { error: "Missing Key" };
 
     const contents = [];
-
     if (history && Array.isArray(history)) {
         history.forEach(msg => {
             contents.push({
@@ -114,7 +143,7 @@ const tryGemini = async (prompt, history = [], mediaParts = []) => {
         contents: contents,
         tools: [{ googleSearch: {} }],
         systemInstruction: {
-            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة أو تعديل صورة، اعلم أن محرك الصور المدمج يتكفل بذلك تلقائياً." }]
+            parts: [{ text: "أنت نظام Tafkek OS الذكي المتكامل. إذا طلب المستخدم صورة، اعلم أن محرك الصور المدمج سيولدها تلقائياً، فلا تقل أنك لا تستطيع إنشاء الصور. قم بالإجابة على باقي الأجزاء النصية والبرمجية من الطلب بدقة وتنسيق Markdown." }]
         }
     });
 
@@ -144,7 +173,7 @@ const tryChatGPT = async (prompt, history = [], mediaParts = []) => {
     if (!apiKey) return { error: "Missing Key" };
 
     const messages = [
-        { role: "system", content: "أنت نظام Tafkek OS الذكي ومتخصص في حل الأكواد والتحليل المنطقي." }
+        { role: "system", content: "أنت نظام Tafkek OS الذكي والمتخصص في حل الأكواد والتحليل المنطقي. إذا طلب المستخدم صورة، قم بإجابة الأجزاء البرمجية والنصية فقط بأسلوب متناسق." }
     ];
 
     if (history && Array.isArray(history)) {
@@ -246,27 +275,15 @@ export default async function handler(req, res) {
         const { prompt, history, mediaParts } = req.body;
         const userPrompt = prompt || "قم بتحليل هذا الطلب.";
 
-        // 🔍 1. البحث عن صورة مرفوعة في الطلب الحالي (Base64)
-        let inputBase64Image = null;
-        if (mediaParts && Array.isArray(mediaParts) && mediaParts.length > 0) {
-            const imgPart = mediaParts.find(p => p.inlineData && p.inlineData.mimeType.startsWith('image/'));
-            if (imgPart) {
-                inputBase64Image = imgPart.inlineData.data;
-            }
-        }
-
-        // 🔍 2. اكتشاف كلمات التعديل وتوليد الصور
-        const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "عدل", "غير", "اضف", "احذف", "draw", "image", "generate", "picture", "logo", "edit", "modify"];
+        const imageKeywords = ["صورة", "صوره", "صور", "ارسم", "أنشئ", "انشئ", "صمم", "توليد", "شعار", "draw", "image", "generate", "picture", "logo"];
         const isImageRequest = userPrompt && imageKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
         let imageMarkdown = "";
-        if (isImageRequest || inputBase64Image) {
-            const isEditing = !!inputBase64Image;
-            const expandedPrompt = await translateAndExpandPrompt(userPrompt, isEditing);
-            imageMarkdown = generateSmartImage(expandedPrompt, inputBase64Image);
+        if (isImageRequest) {
+            const expandedPrompt = await translateAndExpandPrompt(userPrompt);
+            imageMarkdown = await generateHuggingFaceImage(expandedPrompt);
         }
 
-        // 🎯 3. التوجيه الذكي للمحركات النصية
         const codeKeywords = ["code", "function", "javascript", "python", "c++", "c#", "bug", "error", "كود", "برمجة", "دالة", "خطأ", "حل مشكلة", "تطبيق"];
         const isCodingTask = codeKeywords.some(kw => userPrompt.toLowerCase().includes(kw));
 
@@ -280,7 +297,6 @@ export default async function handler(req, res) {
             { name: "DeepSeek", func: () => tryDeepSeek(userPrompt, history) }
         ];
 
-        // 🔄 4. التنفيذ والتعافي
         let finalTextResult = null;
         let errors = [];
 
@@ -310,7 +326,7 @@ export default async function handler(req, res) {
         } else {
             return res.status(200).json({ 
                 result: imageMarkdown 
-                    ? `${imageMarkdown}\n⚠️ تم التعديل/التوليد بنجاح، لكن تعذر جلب الرد النصي.` 
+                    ? `${imageMarkdown}\n⚠️ تم توليد الصورة، لكن تعذر جلب الرد النصي.` 
                     : `⚠️ تعذر الحصول على رد من جميع المحركات.`
             });
         }
