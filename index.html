@@ -504,486 +504,496 @@
     // 1. تعريف الذاكرة المحلية
     let chatHistory = [];
 
-    async function sendMessageToTafkek(userText, mediaData = null) {
-        // إضافة سؤال المستخدم للذاكرة
-        chatHistory.push({ role: 'user', content: userText });
+    // Neural Animation
+    const canvas = document.getElementById('neural-canvas');
+    const ctx = canvas.getContext('2d');
+    function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-        const response = await fetch('/api/deconstruct', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                prompt: userText,
-                history: chatHistory.slice(-6), // إرسال آخر 6 رسائل فقط للحفاظ على السرعة والذاكرة
-                mediaParts: mediaData
-            })
+    let particles = [];
+    for (let i = 0; i < 35; i++) {
+        particles.push({
+            x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+            vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, radius: Math.random() * 2 + 1
         });
+    }
 
-        const data = await response.json();
-        
-        if (data.result) {
-            // إضافة رد النظام للذاكرة
-            chatHistory.push({ role: 'assistant', content: data.result });
-            
-            // عرض الرد في الشاشة
-            renderMessage(data.result, data.source);
+    function animateNeuralNetwork() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        let accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-blue').trim() || '#38bdf8';
+        ctx.fillStyle = accentColor; ctx.strokeStyle = accentColor;
+
+        for (let i = 0; i < particles.length; i++) {
+            let p = particles[i]; p.x += p.vx; p.y += p.vy;
+            if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+            if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+            ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
+
+            for (let j = i + 1; j < particles.length; j++) {
+                let p2 = particles[j];
+                let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
+                if (dist < 120) {
+                    ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
+                    ctx.globalAlpha = (1 - (dist / 120)) * 0.2; ctx.stroke(); ctx.globalAlpha = 1.0;
+                }
+            }
+        }
+        requestAnimationFrame(animateNeuralNetwork);
+    }
+    animateNeuralNetwork();
+
+    // Firebase Initializing
+    const firebaseConfig = {
+        apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
+        authDomain: "tafkekos.firebaseapp.com",
+        projectId: "tafkekos",
+        storageBucket: "tafkekos.firebasestorage.app",
+        messagingSenderId: "402724924724",
+        appId: "1:402724924724:web:8cf9c04583ff3998c48961",
+        measurementId: "G-WT4BBKEKVK"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+    let savedSessions = [];
+
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            currentUser = user;
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('user-card').style.display = 'flex';
+            document.getElementById('user-name').innerText = user.displayName || 'مستخدم';
+            document.getElementById('user-email').innerText = user.email;
+            document.getElementById('user-avatar').innerText = (user.displayName || user.email)[0].toUpperCase();
+            fetchUserSessionsCloud();
+        } else {
+            currentUser = null;
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('user-card').style.display = 'none';
+            savedSessions = [];
+            renderSessionHistory();
+        }
+    });
+
+    function loginWithGoogle() {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        auth.signInWithPopup(provider).catch(error => alert("خطأ تسجيل الدخول: " + error.message));
+    }
+
+    function logoutUser() { auth.signOut(); }
+
+    function fetchUserSessionsCloud() {
+        if (!currentUser) return;
+        db.collection('users').doc(currentUser.uid).collection('sessions')
+          .orderBy('timestamp', 'desc')
+          .onSnapshot(snapshot => {
+              savedSessions = [];
+              snapshot.forEach(doc => savedSessions.push({ id: doc.id, ...doc.data() }));
+              renderSessionHistory();
+          });
+    }
+
+    async function saveSessionToCloud(title, prompt, result) {
+        if (!currentUser) return;
+        const sessionData = {
+            title: title, toolKey: currentToolKey, prompt: prompt, result: result, pinned: false,
+            charCount: result.length, timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+            date: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+        };
+        await db.collection('users').doc(currentUser.uid).collection('sessions').add(sessionData);
+    }
+
+    async function togglePinSession(id, event) {
+        event.stopPropagation();
+        if (!currentUser) return;
+        const session = savedSessions.find(s => s.id === id);
+        if (session) await db.collection('users').doc(currentUser.uid).collection('sessions').doc(id).update({ pinned: !session.pinned });
+    }
+
+    async function deleteSession(id, event) {
+        event.stopPropagation();
+        if (!currentUser) return;
+        await db.collection('users').doc(currentUser.uid).collection('sessions').doc(id).delete();
+    }
+
+    function renderSessionHistory() {
+        const list = document.getElementById('session-history-list');
+        list.innerHTML = '';
+        if (!currentUser) {
+            list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">يرجى تسجيل الدخول لحفظ واسترجاع محادثاتك.</div>';
+            return;
+        }
+        const sorted = [...savedSessions].sort((a, b) => b.pinned - a.pinned);
+        if (sorted.length === 0) {
+            list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">لا توجد جلسات محفوظة بعد.</div>';
+            return;
+        }
+        sorted.forEach(s => {
+            const item = document.createElement('div');
+            item.className = `session-item ${s.pinned ? 'pinned' : ''}`;
+            item.onclick = () => loadSessionData(s.id);
+            item.innerHTML = `
+                <div class="session-item-header">
+                    <span style="font-weight:600; font-size:12px; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:170px;">${s.title}</span>
+                    <div style="display:flex; gap:3px;">
+                        <button class="icon-btn" onclick="togglePinSession('${s.id}', event)" title="تثبيت">${s.pinned ? '📍' : '📌'}</button>
+                        <button class="icon-btn" onclick="deleteSession('${s.id}', event)" title="حذف">🗑️</button>
+                    </div>
+                </div>
+                <div class="session-meta">
+                    <span>🕒 ${s.date || ''}</span> • <span>📝 ${s.charCount || 0} حرف</span>
+                </div>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    function loadSessionData(id) {
+        const session = savedSessions.find(s => s.id === id);
+        if (!session) return;
+        const chatStream = document.getElementById('chat-stream');
+        chatStream.innerHTML = '';
+        appendUserBubble(session.prompt, []);
+        appendAiBubble(session.result);
+    }
+
+    // ==========================================
+    // ATTACHMENT & VISION PROCESSING SYSTEM
+    // ==========================================
+    let attachedItems = []; 
+    let activeOptionBadge = null;
+
+    function openBottomSheet() {
+        document.getElementById('sheet-overlay').classList.add('active');
+        document.getElementById('gemini-sheet').classList.add('active');
+    }
+
+    function closeBottomSheet() {
+        document.getElementById('sheet-overlay').classList.remove('active');
+        document.getElementById('gemini-sheet').classList.remove('active');
+    }
+
+    function triggerNativeInput(type) {
+        closeBottomSheet();
+        if (type === 'image') document.getElementById('native-image-input').click();
+        else if (type === 'camera') document.getElementById('native-camera-input').click();
+        else if (type === 'file') document.getElementById('native-file-input').click();
+    }
+
+    function handleFileSelect(event, type) {
+        const files = Array.from(event.target.files);
+        files.forEach(file => {
+            const item = {
+                id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+                file: file,
+                type: file.type.startsWith('image/') ? 'image' : 'file',
+                mimeType: file.type,
+                name: file.name,
+                url: null,
+                base64Data: null
+            };
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                item.url = e.target.result;
+                item.base64Data = e.target.result.split(',')[1];
+                renderAttachmentsPreview();
+            };
+            reader.readAsDataURL(file);
+
+            attachedItems.push(item);
+        });
+        renderAttachmentsPreview();
+        event.target.value = '';
+    }
+
+    function selectSheetOption(title, icon) {
+        closeBottomSheet();
+        activeOptionBadge = { title, icon };
+        renderAttachmentsPreview();
+    }
+
+    function removeAttachment(id) {
+        attachedItems = attachedItems.filter(item => item.id !== id);
+        renderAttachmentsPreview();
+    }
+
+    function removeOptionBadge() {
+        activeOptionBadge = null;
+        renderAttachmentsPreview();
+    }
+
+    function renderAttachmentsPreview() {
+        const wrapper = document.getElementById('attachments-preview-wrapper');
+        wrapper.innerHTML = '';
+
+        if (attachedItems.length === 0 && !activeOptionBadge) {
+            wrapper.style.display = 'none';
+            return;
+        }
+
+        wrapper.style.display = 'flex';
+
+        if (activeOptionBadge) {
+            const badge = document.createElement('div');
+            badge.className = 'option-mode-badge';
+            badge.innerHTML = `
+                <span>${activeOptionBadge.icon} ${activeOptionBadge.title}</span>
+                <span style="cursor:pointer; opacity:0.8;" onclick="removeOptionBadge()">✕</span>
+            `;
+            wrapper.appendChild(badge);
+        }
+
+        attachedItems.forEach(item => {
+            if (item.type === 'image') {
+                const card = document.createElement('div');
+                card.className = 'attachment-thumb-card';
+                card.innerHTML = `
+                    <img src="${item.url || ''}" alt="معاينة المرفق">
+                    <button class="attachment-delete-btn" onclick="removeAttachment('${item.id}')">✕</button>
+                `;
+                wrapper.appendChild(card);
+            } else {
+                const card = document.createElement('div');
+                card.className = 'attachment-file-card';
+                card.innerHTML = `
+                    <span>📎 ${item.name}</span>
+                    <span style="cursor:pointer; font-weight:bold; margin-right:4px;" onclick="removeAttachment('${item.id}')">✕</span>
+                `;
+                wrapper.appendChild(card);
+            }
+        });
+    }
+
+    // Chat UI Helpers
+    function autoResizeTextarea(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+
+    function handleKeyDown(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            executeProcess();
         }
     }
 
-        // Neural Animation
-        const canvas = document.getElementById('neural-canvas');
-        const ctx = canvas.getContext('2d');
-        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+    function appendUserBubble(text, mediaItems = [], optionBadge = null) {
+        const chatStream = document.getElementById('chat-stream');
+        const hero = document.getElementById('gemini-hero');
+        if (hero) hero.remove();
 
-        let particles = [];
-        for (let i = 0; i < 35; i++) {
-            particles.push({
-                x: Math.random() * canvas.width, y: Math.random() * canvas.height,
-                vx: (Math.random() - 0.5) * 0.5, vy: (Math.random() - 0.5) * 0.5, radius: Math.random() * 2 + 1
-            });
-        }
+        const row = document.createElement('div');
+        row.className = 'chat-row user-row';
 
-        function animateNeuralNetwork() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            let accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-blue').trim() || '#38bdf8';
-            ctx.fillStyle = accentColor; ctx.strokeStyle = accentColor;
-
-            for (let i = 0; i < particles.length; i++) {
-                let p = particles[i]; p.x += p.vx; p.y += p.vy;
-                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
-                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
-
-                ctx.beginPath(); ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2); ctx.fill();
-
-                for (let j = i + 1; j < particles.length; j++) {
-                    let p2 = particles[j];
-                    let dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-                    if (dist < 120) {
-                        ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y);
-                        ctx.globalAlpha = (1 - (dist / 120)) * 0.2; ctx.stroke(); ctx.globalAlpha = 1.0;
-                    }
-                }
-            }
-            requestAnimationFrame(animateNeuralNetwork);
-        }
-        animateNeuralNetwork();
-
-        // Firebase Initializing
-        const firebaseConfig = {
-            apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
-            authDomain: "tafkekos.firebaseapp.com",
-            projectId: "tafkekos",
-            storageBucket: "tafkekos.firebasestorage.app",
-            messagingSenderId: "402724924724",
-            appId: "1:402724924724:web:8cf9c04583ff3998c48961",
-            measurementId: "G-WT4BBKEKVK"
-        };
-
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
-
-        let currentUser = null;
-        let savedSessions = [];
-
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                currentUser = user;
-                document.getElementById('auth-section').style.display = 'none';
-                document.getElementById('user-card').style.display = 'flex';
-                document.getElementById('user-name').innerText = user.displayName || 'مستخدم';
-                document.getElementById('user-email').innerText = user.email;
-                document.getElementById('user-avatar').innerText = (user.displayName || user.email)[0].toUpperCase();
-                fetchUserSessionsCloud();
-            } else {
-                currentUser = null;
-                document.getElementById('auth-section').style.display = 'block';
-                document.getElementById('user-card').style.display = 'none';
-                savedSessions = [];
-                renderSessionHistory();
-            }
-        });
-
-        function loginWithGoogle() {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(error => alert("خطأ تسجيل الدخول: " + error.message));
-        }
-
-        function logoutUser() { auth.signOut(); }
-
-        function fetchUserSessionsCloud() {
-            if (!currentUser) return;
-            db.collection('users').doc(currentUser.uid).collection('sessions')
-              .orderBy('timestamp', 'desc')
-              .onSnapshot(snapshot => {
-                  savedSessions = [];
-                  snapshot.forEach(doc => savedSessions.push({ id: doc.id, ...doc.data() }));
-                  renderSessionHistory();
-              });
-        }
-
-        async function saveSessionToCloud(title, prompt, result) {
-            if (!currentUser) return;
-            const sessionData = {
-                title: title, toolKey: currentToolKey, prompt: prompt, result: result, pinned: false,
-                charCount: result.length, timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                date: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
-            };
-            await db.collection('users').doc(currentUser.uid).collection('sessions').add(sessionData);
-        }
-
-        async function togglePinSession(id, event) {
-            event.stopPropagation();
-            if (!currentUser) return;
-            const session = savedSessions.find(s => s.id === id);
-            if (session) await db.collection('users').doc(currentUser.uid).collection('sessions').doc(id).update({ pinned: !session.pinned });
-        }
-
-        async function deleteSession(id, event) {
-            event.stopPropagation();
-            if (!currentUser) return;
-            await db.collection('users').doc(currentUser.uid).collection('sessions').doc(id).delete();
-        }
-
-        function renderSessionHistory() {
-            const list = document.getElementById('session-history-list');
-            list.innerHTML = '';
-            if (!currentUser) {
-                list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">يرجى تسجيل الدخول لحفظ واسترجاع محادثاتك.</div>';
-                return;
-            }
-            const sorted = [...savedSessions].sort((a, b) => b.pinned - a.pinned);
-            if (sorted.length === 0) {
-                list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">لا توجد جلسات محفوظة بعد.</div>';
-                return;
-            }
-            sorted.forEach(s => {
-                const item = document.createElement('div');
-                item.className = `session-item ${s.pinned ? 'pinned' : ''}`;
-                item.onclick = () => loadSessionData(s.id);
-                item.innerHTML = `
-                    <div class="session-item-header">
-                        <span style="font-weight:600; font-size:12px; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:170px;">${s.title}</span>
-                        <div style="display:flex; gap:3px;">
-                            <button class="icon-btn" onclick="togglePinSession('${s.id}', event)" title="تثبيت">${s.pinned ? '📍' : '📌'}</button>
-                            <button class="icon-btn" onclick="deleteSession('${s.id}', event)" title="حذف">🗑️</button>
-                        </div>
-                    </div>
-                    <div class="session-meta">
-                        <span>🕒 ${s.date || ''}</span> • <span>📝 ${s.charCount || 0} حرف</span>
-                    </div>
-                `;
-                list.appendChild(item);
-            });
-        }
-
-        function loadSessionData(id) {
-            const session = savedSessions.find(s => s.id === id);
-            if (!session) return;
-            const chatStream = document.getElementById('chat-stream');
-            chatStream.innerHTML = '';
-            appendUserBubble(session.prompt, []);
-            appendAiBubble(session.result);
-        }
-
-        // ==========================================
-        // ATTACHMENT & VISION PROCESSING SYSTEM
-        // ==========================================
-        let attachedItems = []; 
-        let activeOptionBadge = null;
-
-        function openBottomSheet() {
-            document.getElementById('sheet-overlay').classList.add('active');
-            document.getElementById('gemini-sheet').classList.add('active');
-        }
-
-        function closeBottomSheet() {
-            document.getElementById('sheet-overlay').classList.remove('active');
-            document.getElementById('gemini-sheet').classList.remove('active');
-        }
-
-        function triggerNativeInput(type) {
-            closeBottomSheet();
-            if (type === 'image') document.getElementById('native-image-input').click();
-            else if (type === 'camera') document.getElementById('native-camera-input').click();
-            else if (type === 'file') document.getElementById('native-file-input').click();
-        }
-
-        function handleFileSelect(event, type) {
-            const files = Array.from(event.target.files);
-            files.forEach(file => {
-                const item = {
-                    id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
-                    file: file,
-                    type: file.type.startsWith('image/') ? 'image' : 'file',
-                    mimeType: file.type,
-                    name: file.name,
-                    url: null,
-                    base64Data: null // Clean base64 string for Gemini API
-                };
-
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    item.url = e.target.result;
-                    // Extract raw Base64 without the data header scheme (data:image/jpeg;base64,)
-                    item.base64Data = e.target.result.split(',')[1];
-                    renderAttachmentsPreview();
-                };
-                reader.readAsDataURL(file);
-
-                attachedItems.push(item);
-            });
-            renderAttachmentsPreview();
-            event.target.value = '';
-        }
-
-        function selectSheetOption(title, icon) {
-            closeBottomSheet();
-            activeOptionBadge = { title, icon };
-            renderAttachmentsPreview();
-        }
-
-        function removeAttachment(id) {
-            attachedItems = attachedItems.filter(item => item.id !== id);
-            renderAttachmentsPreview();
-        }
-
-        function removeOptionBadge() {
-            activeOptionBadge = null;
-            renderAttachmentsPreview();
-        }
-
-        function renderAttachmentsPreview() {
-            const wrapper = document.getElementById('attachments-preview-wrapper');
-            wrapper.innerHTML = '';
-
-            if (attachedItems.length === 0 && !activeOptionBadge) {
-                wrapper.style.display = 'none';
-                return;
-            }
-
-            wrapper.style.display = 'flex';
-
-            if (activeOptionBadge) {
-                const badge = document.createElement('div');
-                badge.className = 'option-mode-badge';
-                badge.innerHTML = `
-                    <span>${activeOptionBadge.icon} ${activeOptionBadge.title}</span>
-                    <span style="cursor:pointer; opacity:0.8;" onclick="removeOptionBadge()">✕</span>
-                `;
-                wrapper.appendChild(badge);
-            }
-
-            attachedItems.forEach(item => {
+        let mediaHtml = '';
+        if (mediaItems.length > 0) {
+            mediaHtml += `<div class="chat-media-container">`;
+            mediaItems.forEach(item => {
                 if (item.type === 'image') {
-                    const card = document.createElement('div');
-                    card.className = 'attachment-thumb-card';
-                    card.innerHTML = `
-                        <img src="${item.url || ''}" alt="معاينة المرفق">
-                        <button class="attachment-delete-btn" onclick="removeAttachment('${item.id}')">✕</button>
-                    `;
-                    wrapper.appendChild(card);
+                    mediaHtml += `<div class="chat-media-card"><img src="${item.url}" alt="صورة مرفقة"></div>`;
                 } else {
-                    const card = document.createElement('div');
-                    card.className = 'attachment-file-card';
-                    card.innerHTML = `
-                        <span>📎 ${item.name}</span>
-                        <span style="cursor:pointer; font-weight:bold; margin-right:4px;" onclick="removeAttachment('${item.id}')">✕</span>
-                    `;
-                    wrapper.appendChild(card);
+                    mediaHtml += `<div class="chat-file-card">📄 <span>${item.name}</span></div>`;
                 }
             });
+            mediaHtml += `</div>`;
         }
 
-        // Chat UI Helpers
-        function autoResizeTextarea(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }
+        let badgePrefix = optionBadge ? `<b>[${optionBadge.icon} ${optionBadge.title}]</b><br>` : '';
+        let contentText = text ? text.replace(/\n/g, '<br>') : '*(صورة مرفقة للتحليل)*';
 
-        function handleKeyDown(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                executeProcess();
-            }
-        }
+        row.innerHTML = `
+            ${mediaHtml}
+            <div class="bubble">${badgePrefix}${contentText}</div>
+        `;
+        chatStream.appendChild(row);
+        chatStream.scrollTop = chatStream.scrollHeight;
+    }
 
-        function appendUserBubble(text, mediaItems = [], optionBadge = null) {
-            const chatStream = document.getElementById('chat-stream');
-            const hero = document.getElementById('gemini-hero');
-            if (hero) hero.remove();
+    function appendAiBubble(markdownText) {
+        const chatStream = document.getElementById('chat-stream');
+        const row = document.createElement('div');
+        row.className = 'chat-row ai-row';
+        const parsedHtml = window.marked.parse(markdownText);
+        const msgId = 'msg-' + Date.now();
 
-            const row = document.createElement('div');
-            row.className = 'chat-row user-row';
-
-            let mediaHtml = '';
-            if (mediaItems.length > 0) {
-                mediaHtml += `<div class="chat-media-container">`;
-                mediaItems.forEach(item => {
-                    if (item.type === 'image') {
-                        mediaHtml += `<div class="chat-media-card"><img src="${item.url}" alt="صورة مرفقة"></div>`;
-                    } else {
-                        mediaHtml += `<div class="chat-file-card">📄 <span>${item.name}</span></div>`;
-                    }
-                });
-                mediaHtml += `</div>`;
-            }
-
-            let badgePrefix = optionBadge ? `<b>[${optionBadge.icon} ${optionBadge.title}]</b><br>` : '';
-            let contentText = text ? text.replace(/\n/g, '<br>') : '*(صورة مرفقة للتحليل)*';
-
-            row.innerHTML = `
-                ${mediaHtml}
-                <div class="bubble">${badgePrefix}${contentText}</div>
-            `;
-            chatStream.appendChild(row);
-            chatStream.scrollTop = chatStream.scrollHeight;
-        }
-
-        function appendAiBubble(markdownText) {
-            const chatStream = document.getElementById('chat-stream');
-            const row = document.createElement('div');
-            row.className = 'chat-row ai-row';
-            const parsedHtml = window.marked.parse(markdownText);
-            const msgId = 'msg-' + Date.now();
-
-            row.innerHTML = `
-                <div class="bubble">
-                    <div id="${msgId}">${parsedHtml}</div>
-                    <div class="bubble-actions">
-                        <button class="icon-btn" onclick="copyTextFromElement('${msgId}')" title="نسخ">📋</button>
-                    </div>
+        row.innerHTML = `
+            <div class="bubble">
+                <div id="${msgId}">${parsedHtml}</div>
+                <div class="bubble-actions">
+                    <button class="icon-btn" onclick="copyTextFromElement('${msgId}')" title="نسخ">📋</button>
                 </div>
-            `;
-            chatStream.appendChild(row);
-            Prism.highlightAllUnder(row);
-            chatStream.scrollTop = chatStream.scrollHeight;
-        }
+            </div>
+        `;
+        chatStream.appendChild(row);
+        Prism.highlightAllAllUnder ? Prism.highlightAllUnder(row) : null;
+        chatStream.scrollTop = chatStream.scrollHeight;
+    }
 
-        function appendLoaderBubble() {
-            const chatStream = document.getElementById('chat-stream');
-            const loaderRow = document.createElement('div');
-            loaderRow.className = 'chat-row ai-row';
-            loaderRow.id = 'active-loader';
-            loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><span>🔍 جاري تحليل الوسائط والمعالجة...</span></div></div>`;
-            chatStream.appendChild(loaderRow);
-            chatStream.scrollTop = chatStream.scrollHeight;
-        }
+    function appendLoaderBubble(msg = "🔍 جاري رفع الوسائط والمشاهدة...") {
+        const chatStream = document.getElementById('chat-stream');
+        const loaderRow = document.createElement('div');
+        loaderRow.className = 'chat-row ai-row';
+        loaderRow.id = 'active-loader';
+        loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><span>${msg}</span></div></div>`;
+        chatStream.appendChild(loaderRow);
+        chatStream.scrollTop = chatStream.scrollHeight;
+    }
 
-        function removeLoaderBubble() {
-            const loader = document.getElementById('active-loader');
-            if (loader) loader.remove();
-        }
+    function removeLoaderBubble() {
+        const loader = document.getElementById('active-loader');
+        if (loader) loader.remove();
+    }
 
-        function copyTextFromElement(id) {
-            const el = document.getElementById(id);
-            if (el) { navigator.clipboard.writeText(el.innerText); alert('تم نسخ الإجابة بنجاح!'); }
-        }
+    function copyTextFromElement(id) {
+        const el = document.getElementById(id);
+        if (el) { navigator.clipboard.writeText(el.innerText); alert('تم نسخ الإجابة بنجاح!'); }
+    }
 
-        function startVoiceInput() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'ar-SA';
-                recognition.onstart = () => alert('جاري الاستماع الآن...');
-                recognition.onresult = (event) => { document.getElementById('user-input').value = event.results[0][0].transcript; };
-                recognition.start();
-            } else { alert('المتصفح لا يدعم التعرف الصوتي.'); }
-        }
+    function startVoiceInput() {
+        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'ar-SA';
+            recognition.onstart = () => alert('جاري الاستماع الآن...');
+            recognition.onresult = (event) => { document.getElementById('user-input').value = event.results[0][0].transcript; };
+            recognition.start();
+        } else { alert('المتصفح لا يدعم التعرف الصوتي.'); }
+    }
 
-        // Processing Execution Engine (Sends Vision Media to Gemini API)
-        let currentToolKey = 'grounding';
-        const toolsConfig = {
-            'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', apiEndpoint: '/api/deconstruct.js' },
-            'deconstruct': { title: '🧠 التفكيك المعرفي واللغوي', apiEndpoint: '/api/deconstruct-groq.js' },
-            'ecom-deconstruct': { title: '📊 تفكيك اللوجستيات الرقمية', apiEndpoint: '/api/ecom-deconstruct.js' },
-            'loop-destroyer': { title: '⚡ تتبع وحرق الأخطاء البرمجية', apiEndpoint: '/api/loop-destroyer.js' },
-            'clean-image': { title: '🎨 استوديو التصاميم النظيفة', apiEndpoint: '/api/generate-image.js' },
-            'support-agent': { title: '🛠️ المساعد الذكي لقنوات الدعم', apiEndpoint: '/api/support-agent.js' }
-        };
-
-        async function executeProcess() {
-            const inputVal = document.getElementById('user-input').value.trim();
-            if (!inputVal && attachedItems.length === 0 && !activeOptionBadge) return;
-
-            const currentMedia = [...attachedItems];
-            const currentBadge = activeOptionBadge;
-
-            // Render message bubble with attached images in UI
-            appendUserBubble(inputVal, currentMedia, currentBadge);
+    // 🌐 دالة لرفع الصورة سحابياً والحصول على رابط مباشر
+    async function uploadImageToCloud(base64Image) {
+        try {
+            const formData = new FormData();
+            formData.append('image', base64Image);
             
-            // Clear inputs & previews
-            const input = document.getElementById('user-input');
-            input.value = '';
-            input.style.height = 'auto';
-            attachedItems = [];
-            activeOptionBadge = null;
-            renderAttachmentsPreview();
-
-            appendLoaderBubble();
-
-            // Prepare inline vision payload structure for Gemini API
-            const inlineDataPayload = currentMedia
-                .filter(item => item.base64Data)
-                .map(item => ({
-                    inlineData: {
-                        mimeType: item.mimeType || "image/jpeg",
-                        data: item.base64Data
-                    }
-                }));
-
-            try {
-                const response = await fetch(toolsConfig[currentToolKey].apiEndpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        prompt: inputVal || "قم بتحليل هذه الصورة وشرح كل محتوياتها بالتفصيل الدقيق.",
-                        mediaParts: inlineDataPayload, // Gemini Multi-modal Payload
-                        optionMode: currentBadge ? currentBadge.title : null
-                    })
-                });
-                const data = await response.json();
-                const resultText = data.result || 'لم يتم استلام أي رد تحليل.';
-                
-                removeLoaderBubble();
-                appendAiBubble(resultText);
-
-                if (currentUser) await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal || "تحليل صورة", resultText);
-            } catch (err) { 
-                removeLoaderBubble();
-                appendAiBubble(`⚠️ **حدث خطأ أثناء معالجة الصورة:** ${err.message}`); 
+            // رفع الصورة سحابياً عبر ImgBB API المجاني
+            const res = await fetch('https://api.imgbb.com/1/upload?key=8e681c2fdf3ed4987f4f66dbef009df9', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await res.json();
+            if (data && data.data && data.data.url) {
+                return data.data.url; // إرجاع رابط مباشر وقصير ينتهي بـ png/jpg
             }
+        } catch (e) {
+            console.error("Cloud Upload Failed:", e);
+        }
+        return null;
+    }
+
+    let currentToolKey = 'grounding';
+    const toolsConfig = {
+        'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', apiEndpoint: '/api/deconstruct.js' },
+        'deconstruct': { title: '🧠 التفكيك المعرفي واللغوي', apiEndpoint: '/api/deconstruct-groq.js' },
+        'ecom-deconstruct': { title: '📊 تفكيك اللوجستيات الرقمية', apiEndpoint: '/api/ecom-deconstruct.js' },
+        'loop-destroyer': { title: '⚡ تتبع وحرق الأخطاء البرمجية', apiEndpoint: '/api/loop-destroyer.js' },
+        'clean-image': { title: '🎨 استوديو التصاميم النظيفة', apiEndpoint: '/api/generate-image.js' },
+        'support-agent': { title: '🛠️ المساعد الذكي لقنوات الدعم', apiEndpoint: '/api/support-agent.js' }
+    };
+
+    // 🚀 تنفيذ الطلب مع دعم التعديل السحابي التلقائي
+    async function executeProcess() {
+        const inputVal = document.getElementById('user-input').value.trim();
+        if (!inputVal && attachedItems.length === 0 && !activeOptionBadge) return;
+
+        const currentMedia = [...attachedItems];
+        const currentBadge = activeOptionBadge;
+
+        appendUserBubble(inputVal, currentMedia, currentBadge);
+        
+        const input = document.getElementById('user-input');
+        input.value = '';
+        input.style.height = 'auto';
+        attachedItems = [];
+        activeOptionBadge = null;
+        renderAttachmentsPreview();
+
+        appendLoaderBubble("☁️ جاري معالجة الصورة وإعداد التعديل...");
+
+        let uploadedImageUrl = null;
+        const imageItem = currentMedia.find(item => item.type === 'image' && item.base64Data);
+
+        // إذا أرفق المستخدم صورة -> نرفعها سحابياً أولاً للحصول على رابط مباشر
+        if (imageItem) {
+            uploadedImageUrl = await uploadImageToCloud(imageItem.base64Data);
         }
 
-        function switchTool(key, el) {
-            currentToolKey = key;
-            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-            if (el) el.classList.add('active');
-        }
+        const inlineDataPayload = currentMedia
+            .filter(item => item.base64Data)
+            .map(item => ({
+                inlineData: {
+                    mimeType: item.mimeType || "image/jpeg",
+                    data: item.base64Data
+                }
+            }));
 
-        function startNewSession() {
-            const chatStream = document.getElementById('chat-stream');
-            chatStream.innerHTML = `
-                <div class="gemini-hero-center" id="gemini-hero">
-                    <svg class="gemini-sparkle-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 0C12 6.62742 6.62742 12 0 12C6.62742 12 12 17.3726 12 24C12 17.3726 17.3726 12 24 12C17.3726 12 12 6.62742 12 0Z" fill="url(#sparkle-grad)"/>
-                        <defs>
-                            <linearGradient id="sparkle-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#38BDF8"/><stop offset="0.5" stop-color="#818CF8"/><stop offset="1" stop-color="#F43F5E"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                    <div class="gemini-hero-title">جاهز متى شئت</div>
-                </div>
-            `;
-            document.getElementById('user-input').value = '';
-            attachedItems = [];
-            activeOptionBadge = null;
-            renderAttachmentsPreview();
-        }
+        // إضافة السؤال للذاكرة
+        chatHistory.push({ role: 'user', content: inputVal || "تعديل الصورة" });
 
-        function changeTheme(theme) { document.body.className = theme === 'default' ? '' : `theme-${theme}`; }
-        function filterHistory(query) {
-            document.querySelectorAll('.session-item').forEach(el => el.style.display = el.innerText.includes(query) ? 'flex' : 'none');
+        try {
+            const response = await fetch(toolsConfig[currentToolKey].apiEndpoint, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    prompt: inputVal || "قم بتحليل أو تعديل هذه الصورة.",
+                    history: chatHistory.slice(-6),
+                    mediaParts: inlineDataPayload,
+                    imageUrl: uploadedImageUrl, // 👈 إرسال رابط الصورة السحابي الصريح لـ deconstruct.js
+                    optionMode: currentBadge ? currentBadge.title : null
+                })
+            });
+            
+            const data = await response.json();
+            const resultText = data.result || 'لم يتم استلام أي رد تحليل.';
+            
+            // حفظ الرد في الذاكرة
+            chatHistory.push({ role: 'assistant', content: resultText });
+
+            removeLoaderBubble();
+            appendAiBubble(resultText);
+
+            if (currentUser) await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal || "تحليل صورة", resultText);
+        } catch (err) { 
+            removeLoaderBubble();
+            appendAiBubble(`⚠️ **حدث خطأ أثناء المعالجة:** ${err.message}`); 
         }
+    }
+
+    function switchTool(key, el) {
+        currentToolKey = key;
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        if (el) el.classList.add('active');
+    }
+
+    function startNewSession() {
+        chatHistory = [];
+        const chatStream = document.getElementById('chat-stream');
+        chatStream.innerHTML = `
+            <div class="gemini-hero-center" id="gemini-hero">
+                <svg class="gemini-sparkle-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 0C12 6.62742 6.62742 12 0 12C6.62742 12 12 17.3726 12 24C12 17.3726 17.3726 12 24 12C17.3726 12 12 6.62742 12 0Z" fill="url(#sparkle-grad)"/>
+                    <defs>
+                        <linearGradient id="sparkle-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#38BDF8"/><stop offset="0.5" stop-color="#818CF8"/><stop offset="1" stop-color="#F43F5E"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="gemini-hero-title">جاهز متى شئت</div>
+            </div>
+        `;
+        document.getElementById('user-input').value = '';
+        attachedItems = [];
+        activeOptionBadge = null;
+        renderAttachmentsPreview();
+    }
+
+    function changeTheme(theme) { document.body.className = theme === 'default' ? '' : `theme-${theme}`; }
+    function filterHistory(query) {
+        document.querySelectorAll('.session-item').forEach(el => el.style.display = el.innerText.includes(query) ? 'flex' : 'none');
+    }
     </script>
 </body>
 </html>
