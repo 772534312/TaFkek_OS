@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - Gemini Studio (v15.1 Fixed)</title>
+    <title>Tafkek OS - Gemini Studio</title>
     
     <!-- Fonts & Libraries -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,7 +67,6 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #333537; border-radius: 4px; }
 
-        /* Sidebar Right */
         .sidebar {
             width: 320px; background-color: var(--panel-bg);
             border-left: 1px solid var(--border-color);
@@ -126,9 +125,7 @@
             display: flex; align-items: center; gap: 10px; width: 100%; position: relative; overflow: hidden;
         }
         .tool-btn:hover { background: #28292a; color: var(--text-main); }
-        .tool-btn.active {
-            background: #004a77; color: #c2e7ff; font-weight: 600;
-        }
+        .tool-btn.active { background: #004a77; color: #c2e7ff; font-weight: 600; }
 
         .icon-btn {
             background: transparent; border: none; color: var(--text-muted);
@@ -148,16 +145,12 @@
         .session-item-header { display: flex; justify-content: space-between; align-items: center; }
         .session-meta { font-size: 10px; color: var(--text-muted); opacity: 0.7; }
 
-        /* Left Workspace */
         .workspace {
             flex: 1; display: flex; flex-direction: column;
             overflow: hidden; z-index: 2; position: relative; background: #131314;
         }
 
-        /* Header Bar */
-        .gemini-top-bar {
-            padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 10;
-        }
+        .gemini-top-bar { padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
 
         .gemini-model-selector {
             display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 600;
@@ -198,9 +191,7 @@
         .user-row .bubble { background: #28292a; color: #ffffff; border-bottom-left-radius: 6px; }
         .ai-row .bubble { background: transparent; color: #e3e3e3; width: 100%; padding-right: 0; }
 
-        .chat-media-container {
-            display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; justify-content: flex-end;
-        }
+        .chat-media-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 8px; justify-content: flex-end; }
         .chat-media-card {
             position: relative; border-radius: 16px; overflow: hidden;
             max-width: 240px; max-height: 240px; border: 1px solid var(--border-color);
@@ -211,37 +202,21 @@
             border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 16px; font-size: 13px; color: #fff;
         }
 
-        /* تنسيقات حصرية للصور المُولدة */
         .generated-image-container {
-            margin: 12px 0;
-            display: block;
-            border-radius: 16px;
-            overflow: hidden;
-            max-width: 100%;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border-color);
-            background: #1e1f20;
+            margin: 12px 0; display: block; border-radius: 16px; overflow: hidden;
+            max-width: 100%; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color); background: #1e1f20;
         }
-        .generated-image-container img {
-            width: 100%;
-            height: auto;
-            max-height: 500px;
-            object-fit: contain;
-            display: block;
-            border-radius: 16px;
-        }
+        .generated-image-container img { width: 100%; height: auto; max-height: 500px; object-fit: contain; display: block; border-radius: 16px; }
 
         .gemini-loader { display: flex; align-items: center; gap: 10px; color: var(--accent-blue); font-size: 14px; }
 
-        /* Dynamic Floating Input Container */
         .gemini-pill-container {
             padding: 0 20px 20px 20px; width: 100%; max-width: 820px; margin: 0 auto;
             display: flex; flex-direction: column; gap: 10px;
         }
 
-        .quick-chips-bar {
-            display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 2px;
-        }
+        .quick-chips-bar { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 2px; }
         .quick-chip-btn {
             background: #1e1f20; border: 1px solid #333537; color: #e3e3e3;
             padding: 6px 14px; border-radius: 20px; font-size: 12px; font-family: 'Cairo';
@@ -250,19 +225,12 @@
         .quick-chip-btn:hover { background: #28292a; }
 
         .gemini-pill-bar {
-            background-color: var(--gemini-pill-bg);
-            border-radius: 28px; padding: 12px 16px;
-            display: flex; flex-direction: column; gap: 8px;
-            border: 1px solid #333537; transition: all 0.2s ease;
+            background-color: var(--gemini-pill-bg); border-radius: 28px; padding: 12px 16px;
+            display: flex; flex-direction: column; gap: 8px; border: 1px solid #333537; transition: all 0.2s ease;
         }
-        .gemini-pill-bar:focus-within {
-            background-color: #28292a; border-color: #444746; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-        }
+        .gemini-pill-bar:focus-within { background-color: #28292a; border-color: #444746; box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
 
-        .attachments-preview-wrapper {
-            display: flex; align-items: center; gap: 10px; overflow-x: auto;
-            padding: 4px 0; max-width: 100%;
-        }
+        .attachments-preview-wrapper { display: flex; align-items: center; gap: 10px; overflow-x: auto; padding: 4px 0; max-width: 100%; }
 
         .attachment-thumb-card {
             position: relative; width: 64px; height: 64px; border-radius: 16px;
@@ -296,10 +264,7 @@
         }
         .pill-input::placeholder { color: #8e8e93; }
 
-        .pill-toolbar {
-            display: flex; align-items: center; justify-content: space-between; pt-1;
-        }
-
+        .pill-toolbar { display: flex; align-items: center; justify-content: space-between; }
         .pill-toolbar-left { display: flex; align-items: center; gap: 4px; }
 
         .btn-pill-action {
@@ -316,12 +281,9 @@
             display: flex; align-items: center; justify-content: center;
             cursor: not-allowed; transition: all 0.2s;
         }
-        .btn-send-dynamic.active {
-            background: var(--gemini-active-blue); color: #001d35; cursor: pointer;
-        }
+        .btn-send-dynamic.active { background: var(--gemini-active-blue); color: #001d35; cursor: pointer; }
         .btn-send-dynamic.active:hover { background: #ffffff; }
 
-        /* Gemini Bottom Sheet */
         .sheet-overlay {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
             background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px);
@@ -340,11 +302,7 @@
         }
         .gemini-bottom-sheet.active { bottom: 0; }
 
-        .sheet-handle-bar {
-            width: 38px; height: 4px; background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px; margin: 0 auto 10px auto; cursor: pointer;
-        }
-
+        .sheet-handle-bar { width: 38px; height: 4px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; margin: 0 auto 10px auto; cursor: pointer; }
         .sheet-cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
         .sheet-card-btn {
             background: var(--gemini-card-bg); border: none; border-radius: 20px;
@@ -353,18 +311,11 @@
             transition: background 0.2s, transform 0.15s; font-family: 'Cairo';
         }
         .sheet-card-btn:hover { background: rgba(255, 255, 255, 0.12); transform: translateY(-2px); }
-        .sheet-card-icon {
-            width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15);
-            display: flex; align-items: center; justify-content: center; font-size: 18px;
-        }
+        .sheet-card-icon { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; }
         .sheet-card-label { font-size: 13px; font-weight: 600; }
 
         .sheet-menu-list { display: flex; flex-direction: column; gap: 6px; }
-        .sheet-menu-item {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; border-radius: 16px; cursor: pointer;
-            transition: background 0.2s; color: #ffffff;
-        }
+        .sheet-menu-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 16px; cursor: pointer; transition: background 0.2s; color: #ffffff; }
         .sheet-menu-item:hover { background: rgba(255, 255, 255, 0.06); }
         .sheet-item-text { display: flex; flex-direction: column; text-align: right; }
         .sheet-item-title { font-size: 14px; font-weight: 600; }
@@ -449,19 +400,12 @@
             </div>
         </section>
 
-        <!-- Dynamic Gemini Floating Input Container -->
+        <!-- Input Area -->
         <footer class="gemini-pill-container">
-            
             <div class="quick-chips-bar custom-scrollbar">
-                <button onclick="setPrompt('فحص وتفكيك الأخطاء في الكود التالي: ')" class="quick-chip-btn">
-                    <i class="fa-solid fa-code text-blue-400"></i> فحص كود
-                </button>
-                <button onclick="setPrompt('قم بتوليد صورة مع مراعاة خلوها من أي نصوص أو كتابات مشوهة: ')" class="quick-chip-btn">
-                    <i class="fa-solid fa-image text-pink-400"></i> إنشاء صورة نظيفة
-                </button>
-                <button onclick="setPrompt('حلل هذا الملف بشكل دقيق واستخرج النقاط الرئيسية')" class="quick-chip-btn">
-                    <i class="fa-solid fa-file-lines text-emerald-400"></i> تحليل ملف
-                </button>
+                <button onclick="setPrompt('فحص وتفكيك الأخطاء في الكود التالي: ')" class="quick-chip-btn"><i class="fa-solid fa-code text-blue-400"></i> فحص كود</button>
+                <button onclick="setPrompt('قم بتوليد صورة مع مراعاة خلوها من أي نصوص أو كتابات مشوهة: ')" class="quick-chip-btn"><i class="fa-solid fa-image text-pink-400"></i> إنشاء صورة نظيفة</button>
+                <button onclick="setPrompt('حلل هذا الملف بشكل دقيق واستخرج النقاط الرئيسية')" class="quick-chip-btn"><i class="fa-solid fa-file-lines text-emerald-400"></i> تحليل ملف</button>
             </div>
 
             <div class="gemini-pill-bar">
@@ -471,18 +415,10 @@
 
                 <div class="pill-toolbar">
                     <div class="pill-toolbar-left">
-                        <button class="btn-pill-action" title="إضافة خيار أو شريحة" onclick="openBottomSheet()">
-                            <i class="fa-solid fa-circle-plus"></i>
-                        </button>
-                        <button class="btn-pill-action" title="إرفاق صورة" onclick="triggerNativeInput('image')">
-                            <i class="fa-solid fa-image text-pink-400"></i>
-                        </button>
-                        <button class="btn-pill-action" title="إرفاق مستند" onclick="triggerNativeInput('file')">
-                            <i class="fa-solid fa-paperclip"></i>
-                        </button>
-                        <button class="btn-pill-action" title="الإدخال الصوتي" onclick="startVoiceInput()">
-                            <i class="fa-solid fa-microphone"></i>
-                        </button>
+                        <button class="btn-pill-action" title="إضافة خيار أو شريحة" onclick="openBottomSheet()"><i class="fa-solid fa-circle-plus"></i></button>
+                        <button class="btn-pill-action" title="إرفاق صورة" onclick="triggerNativeInput('image')"><i class="fa-solid fa-image text-pink-400"></i></button>
+                        <button class="btn-pill-action" title="إرفاق مستند" onclick="triggerNativeInput('file')"><i class="fa-solid fa-paperclip"></i></button>
+                        <button class="btn-pill-action" title="الإدخال الصوتي" onclick="startVoiceInput()"><i class="fa-solid fa-microphone"></i></button>
                     </div>
 
                     <button class="btn-send-dynamic" id="submit-btn" onclick="executeProcess()" title="إرسال الطلب">
@@ -495,77 +431,41 @@
         </footer>
     </div>
 
-    <!-- Hidden Native File Inputs -->
+    <!-- File Inputs -->
     <input type="file" id="native-image-input" accept="image/*" multiple style="display:none;" onchange="handleFileSelect(event, 'image')">
     <input type="file" id="native-camera-input" accept="image/*" capture="environment" style="display:none;" onchange="handleFileSelect(event, 'camera')">
     <input type="file" id="native-file-input" multiple style="display:none;" onchange="handleFileSelect(event, 'file')">
 
-    <!-- Sheet Overlay -->
+    <!-- Bottom Sheet -->
     <div class="sheet-overlay" id="sheet-overlay" onclick="closeBottomSheet()"></div>
-
-    <!-- Gemini Bottom Sheet -->
     <div class="gemini-bottom-sheet" id="gemini-sheet">
         <div class="sheet-handle-bar" onclick="closeBottomSheet()"></div>
-
         <div class="sheet-cards-row">
-            <button class="sheet-card-btn" onclick="triggerNativeInput('image')">
-                <div class="sheet-card-icon">🖼️</div>
-                <div class="sheet-card-label">الصور</div>
-            </button>
-            <button class="sheet-card-btn" onclick="triggerNativeInput('camera')">
-                <div class="sheet-card-icon">📷</div>
-                <div class="sheet-card-label">الكاميرا</div>
-            </button>
-            <button class="sheet-card-btn" onclick="triggerNativeInput('file')">
-                <div class="sheet-card-icon">📎</div>
-                <div class="sheet-card-label">الملفات</div>
-            </button>
+            <button class="sheet-card-btn" onclick="triggerNativeInput('image')"><div class="sheet-card-icon">🖼️</div><div class="sheet-card-label">الصور</div></button>
+            <button class="sheet-card-btn" onclick="triggerNativeInput('camera')"><div class="sheet-card-icon">📷</div><div class="sheet-card-label">الكاميرا</div></button>
+            <button class="sheet-card-btn" onclick="triggerNativeInput('file')"><div class="sheet-card-icon">📎</div><div class="sheet-card-label">الملفات</div></button>
         </div>
 
         <div class="sheet-menu-list">
             <div class="sheet-menu-item" onclick="selectSheetOption('إنشاء صور نظيفة', '🎨')">
-                <div class="sheet-item-text">
-                    <span class="sheet-item-title">إنشاء صور نظيفة</span>
-                    <span class="sheet-item-desc">بدون نصوص أو نصوص دقيقة جداً</span>
-                </div>
+                <div class="sheet-item-text"><span class="sheet-item-title">إنشاء صور نظيفة</span><span class="sheet-item-desc">بدون نصوص مشوهة</span></div>
                 <span class="sheet-item-icon">🎨</span>
             </div>
             <div class="sheet-menu-item" onclick="selectSheetOption('تفكيك كود برمجي', '💻')">
-                <div class="sheet-item-text">
-                    <span class="sheet-item-title">تفكيك كود برمجي</span>
-                    <span class="sheet-item-desc">منقب الأخطاء وحلقات التكرار</span>
-                </div>
+                <div class="sheet-item-text"><span class="sheet-item-title">تفكيك كود برمجي</span><span class="sheet-item-desc">منقب الأخطاء</span></div>
                 <span class="sheet-item-icon">💻</span>
-            </div>
-            <div class="sheet-menu-item" onclick="selectSheetOption('تحليل مستندات', '📝')">
-                <div class="sheet-item-text">
-                    <span class="sheet-item-title">تحليل مستندات</span>
-                    <span class="sheet-item-desc">قراءة وتفكيك المستندات البرمجية</span>
-                </div>
-                <span class="sheet-item-icon">📝</span>
-            </div>
-            <div class="sheet-menu-item" onclick="selectSheetOption('Deep Research', '🌐')">
-                <div class="sheet-item-text">
-                    <span class="sheet-item-title">Deep Research</span>
-                    <span class="sheet-item-desc">بحث موثق عبر محرك البحث</span>
-                </div>
-                <span class="sheet-item-icon">🌐</span>
             </div>
         </div>
     </div>
 
     <script>
-        // إعدادات مكتبة marked لتوليد السطور بشكل صحيح
         if (typeof window.marked !== 'undefined') {
-            window.marked.setOptions({
-                gfm: true,
-                breaks: true
-            });
+            window.marked.setOptions({ gfm: true, breaks: true });
         }
 
         let chatHistory = [];
 
-        // Neural Canvas Animation
+        // Canvas Animation
         const canvas = document.getElementById('neural-canvas');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -612,8 +512,7 @@
             projectId: "tafkekos",
             storageBucket: "tafkekos.firebasestorage.app",
             messagingSenderId: "402724924724",
-            appId: "1:402724924724:web:8cf9c04583ff3998c48961",
-            measurementId: "G-WT4BBKEKVK"
+            appId: "1:402724924724:web:8cf9c04583ff3998c48961"
         };
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -669,31 +568,14 @@
             await db.collection('users').doc(currentUser.uid).collection('sessions').add(sessionData);
         }
 
-        async function togglePinSession(id, event) {
-            event.stopPropagation();
-            if (!currentUser) return;
-            const session = savedSessions.find(s => s.id === id);
-            if (session) await db.collection('users').doc(currentUser.uid).collection('sessions').doc(id).update({ pinned: !session.pinned });
-        }
-
-        async function deleteSession(id, event) {
-            event.stopPropagation();
-            if (!currentUser) return;
-            await db.collection('users').doc(currentUser.uid).collection('sessions').doc(id).delete();
-        }
-
         function renderSessionHistory() {
             const list = document.getElementById('session-history-list');
             list.innerHTML = '';
             if (!currentUser) {
-                list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">يرجى تسجيل الدخول لحفظ واسترجاع محادثاتك.</div>';
+                list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">يرجى تسجيل الدخول لحفظ محادثاتك.</div>';
                 return;
             }
             const sorted = [...savedSessions].sort((a, b) => b.pinned - a.pinned);
-            if (sorted.length === 0) {
-                list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">لا توجد جلسات محفوظة بعد.</div>';
-                return;
-            }
             sorted.forEach(s => {
                 const item = document.createElement('div');
                 item.className = `session-item ${s.pinned ? 'pinned' : ''}`;
@@ -701,13 +583,6 @@
                 item.innerHTML = `
                     <div class="session-item-header">
                         <span style="font-weight:600; font-size:12px; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:170px;">${s.title}</span>
-                        <div style="display:flex; gap:3px;">
-                            <button class="icon-btn" onclick="togglePinSession('${s.id}', event)" title="تثبيت">${s.pinned ? '📍' : '📌'}</button>
-                            <button class="icon-btn" onclick="deleteSession('${s.id}', event)" title="حذف">🗑️</button>
-                        </div>
-                    </div>
-                    <div class="session-meta">
-                        <span>🕒 ${s.date || ''}</span> • <span>📝 ${s.charCount || 0} حرف</span>
                     </div>
                 `;
                 list.appendChild(item);
@@ -723,7 +598,7 @@
             appendAiBubble(session.result);
         }
 
-        // Attachments Management
+        // Attachments
         let attachedItems = []; 
         let activeOptionBadge = null;
 
@@ -751,7 +626,7 @@
                     id: 'att-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
                     file: file,
                     type: file.type.startsWith('image/') ? 'image' : 'file',
-                    mimeType: file.type,
+                    mimeType: file.type || 'image/jpeg',
                     name: file.name,
                     url: null,
                     base64Data: null
@@ -760,7 +635,8 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     item.url = e.target.result;
-                    item.base64Data = e.target.result.split(',')[1];
+                    // استخراج Base64 بشكل نظيف تماماً
+                    item.base64Data = e.target.result.includes(',') ? e.target.result.split(',')[1] : e.target.result;
                     renderAttachmentsPreview();
                     checkInputChangeState();
                 };
@@ -785,12 +661,6 @@
             checkInputChangeState();
         }
 
-        function removeOptionBadge() {
-            activeOptionBadge = null;
-            renderAttachmentsPreview();
-            checkInputChangeState();
-        }
-
         function renderAttachmentsPreview() {
             const wrapper = document.getElementById('attachments-preview-wrapper');
             wrapper.innerHTML = '';
@@ -805,10 +675,7 @@
             if (activeOptionBadge) {
                 const badge = document.createElement('div');
                 badge.className = 'option-mode-badge';
-                badge.innerHTML = `
-                    <span>${activeOptionBadge.icon} ${activeOptionBadge.title}</span>
-                    <span style="cursor:pointer; opacity:0.8;" onclick="removeOptionBadge()">✕</span>
-                `;
+                badge.innerHTML = `<span>${activeOptionBadge.icon} ${activeOptionBadge.title}</span><span style="cursor:pointer;" onclick="activeOptionBadge=null;renderAttachmentsPreview();checkInputChangeState();">✕</span>`;
                 wrapper.appendChild(badge);
             }
 
@@ -816,18 +683,7 @@
                 if (item.type === 'image') {
                     const card = document.createElement('div');
                     card.className = 'attachment-thumb-card';
-                    card.innerHTML = `
-                        <img src="${item.url || ''}" alt="معاينة">
-                        <button class="attachment-delete-btn" onclick="removeAttachment('${item.id}')">✕</button>
-                    `;
-                    wrapper.appendChild(card);
-                } else {
-                    const card = document.createElement('div');
-                    card.className = 'attachment-file-card';
-                    card.innerHTML = `
-                        <span>📎 ${item.name}</span>
-                        <span style="cursor:pointer; font-weight:bold; margin-right:4px;" onclick="removeAttachment('${item.id}')">✕</span>
-                    `;
+                    card.innerHTML = `<img src="${item.url || ''}"><button class="attachment-delete-btn" onclick="removeAttachment('${item.id}')">✕</button>`;
                     wrapper.appendChild(card);
                 }
             });
@@ -876,9 +732,7 @@
                 mediaHtml += `<div class="chat-media-container">`;
                 mediaItems.forEach(item => {
                     if (item.type === 'image') {
-                        mediaHtml += `<div class="chat-media-card"><img src="${item.url}" alt="صورة مرفقة"></div>`;
-                    } else {
-                        mediaHtml += `<div class="chat-file-card">📄 <span>${item.name}</span></div>`;
+                        mediaHtml += `<div class="chat-media-card"><img src="${item.url}"></div>`;
                     }
                 });
                 mediaHtml += `</div>`;
@@ -887,31 +741,14 @@
             let badgePrefix = optionBadge ? `<b>[${optionBadge.icon} ${optionBadge.title}]</b><br>` : '';
             let contentText = text ? text.replace(/\n/g, '<br>') : '*(صورة مرفقة للتحليل)*';
 
-            row.innerHTML = `
-                ${mediaHtml}
-                <div class="bubble">${badgePrefix}${contentText}</div>
-            `;
+            row.innerHTML = `${mediaHtml}<div class="bubble">${badgePrefix}${contentText}</div>`;
             chatStream.appendChild(row);
             chatStream.scrollTop = chatStream.scrollHeight;
         }
 
-        // دالة معالجة النصوص وتحويل روابط الصور تلقائياً إلى عناصر HTML
         function formatBotResponse(text) {
             if (!text) return '';
-
-            // 1. تحويل صيغة الصور المكتوبة بـ Markdown: ![alt](url)
-            let formattedText = text.replace(
-                /!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/gi,
-                '<div class="generated-image-container"><img src="$2" alt="$1" loading="lazy" /></div>'
-            );
-
-            // 2. التحقق من روابط الصور المباشرة المتبقية وتحويلها تلقائياً
-            const rawImageUrlRegex = /(?<!src=["'])(https?:\/\/[^\s<]+?\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?[^\s<]*)?|https:\/\/image\.pollinations\.ai\/prompt\/[^\s<]+)/gi;
-            formattedText = formattedText.replace(rawImageUrlRegex, (match) => {
-                if (formattedText.includes(`src="${match}"`)) return match;
-                return `<div class="generated-image-container"><img src="${match}" alt="صورة مولدة" loading="lazy" /></div>`;
-            });
-
+            let formattedText = text.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/gi, '<div class="generated-image-container"><img src="$2" alt="$1" loading="lazy" /></div>');
             return formattedText;
         }
 
@@ -920,19 +757,10 @@
             const row = document.createElement('div');
             row.className = 'chat-row ai-row';
             
-            // معالجة روابط الصور أولاً ثم تحويل الـ Markdown إلى HTML
             const processedText = formatBotResponse(markdownText);
             const parsedHtml = window.marked.parse(processedText);
-            const msgId = 'msg-' + Date.now();
 
-            row.innerHTML = `
-                <div class="bubble">
-                    <div id="${msgId}">${parsedHtml}</div>
-                    <div style="display:flex; gap:8px; margin-top:8px;">
-                        <button class="icon-btn" onclick="copyTextFromElement('${msgId}')" title="نسخ"><i class="fa-regular fa-copy"></i></button>
-                    </div>
-                </div>
-            `;
+            row.innerHTML = `<div class="bubble"><div>${parsedHtml}</div></div>`;
             chatStream.appendChild(row);
             Prism.highlightAllUnder(row);
             chatStream.scrollTop = chatStream.scrollHeight;
@@ -943,7 +771,7 @@
             const loaderRow = document.createElement('div');
             loaderRow.className = 'chat-row ai-row';
             loaderRow.id = 'active-loader';
-            loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><i class="fa-solid fa-sparkles animate-spin"></i><span>جاري التحليل والمعالجة التلقائية...</span></div></div>`;
+            loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><i class="fa-solid fa-sparkles animate-spin"></i><span>جاري المعالجة...</span></div></div>`;
             chatStream.appendChild(loaderRow);
             chatStream.scrollTop = chatStream.scrollHeight;
         }
@@ -953,51 +781,7 @@
             if (loader) loader.remove();
         }
 
-        function copyTextFromElement(id) {
-            const el = document.getElementById(id);
-            if (el) { navigator.clipboard.writeText(el.innerText); alert('تم نسخ الإجابة بنجاح!'); }
-        }
-
-        function startVoiceInput() {
-            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-                const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-                const recognition = new SpeechRecognition();
-                recognition.lang = 'ar-SA';
-                recognition.onstart = () => alert('جاري الاستماع الآن...');
-                recognition.onresult = (event) => { 
-                    const text = event.results[0][0].transcript;
-                    setPrompt(text);
-                };
-                recognition.start();
-            } else { alert('المتصفح لا يدعم التعرف الصوتي.'); }
-        }
-
-        // Tools Configuration & Intelligent Routing
         let currentToolKey = 'grounding';
-
-        const toolsConfig = {
-            'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', defaultEndpoint: '/api/process.js' },
-            'deconstruct': { title: '🧠 التفكيك المعرفي واللغوي', defaultEndpoint: '/api/process.js' },
-            'ecom-deconstruct': { title: '📊 تفكيك اللوجستيات الرقمية', defaultEndpoint: '/api/ecom-deconstruct.js' },
-            'loop-destroyer': { title: '⚡ تتبع وحرق الأخطاء البرمجية', defaultEndpoint: '/api/loop-destroyer.js' },
-            'clean-image': { title: '🎨 استوديو التصاميم النظيفة', defaultEndpoint: '/api/generate-image.js' },
-            'support-agent': { title: '🛠️ المساعد الذكي لقنوات الدعم', defaultEndpoint: '/api/support-agent.js' }
-        };
-
-        function resolveApiEndpoint(hasMedia, optionBadgeText) {
-            if (hasMedia) {
-                return '/api/process.js';
-            }
-            
-            if (currentToolKey === 'clean-image') {
-                if (optionBadgeText === 'إنشاء صور نظيفة') {
-                    return '/api/generate-image.js';
-                }
-                return '/api/process.js';
-            }
-
-            return toolsConfig[currentToolKey]?.defaultEndpoint || '/api/process.js';
-        }
 
         async function executeProcess() {
             const inputNode = document.getElementById('user-input');
@@ -1013,17 +797,16 @@
 
             showLoaderBubble();
 
-            const hasMedia = mediaToSend.length > 0;
-            const targetEndpoint = resolveApiEndpoint(hasMedia, badgeToSend ? badgeToSend.title : null);
+            // توحيد نقطة النهاية لموقع الإنتاج المرفوع على Vercel
+            const targetEndpoint = '/api/process';
 
             const inlineDataPayload = mediaToSend.map(item => ({
                 inlineData: {
                     data: item.base64Data,
-                    mimeType: item.mimeType
+                    mimeType: item.mimeType || 'image/jpeg'
                 }
             }));
 
-            // Clear inputs & attachments preview
             attachedItems = [];
             activeOptionBadge = null;
             renderAttachmentsPreview();
@@ -1034,43 +817,27 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
-                        prompt: inputVal || "قم بتحليل هذه الصورة وشرح كل محتوياتها بالتفصيل الدقيق.",
+                        prompt: inputVal || "قم بتحليل هذه الصورة وشرح كافة تفاصيلها.",
                         history: chatHistory.slice(-6),
                         mediaParts: inlineDataPayload,
                         optionMode: badgeToSend ? badgeToSend.title : null
                     })
                 });
 
-                const contentType = response.headers.get("content-type");
-                if (!response.ok || !contentType || !contentType.includes("application/json")) {
-                    const errorHtmlOrText = await response.text();
-                    throw new Error(`خطأ من الخادم (${response.status}): لم يتم العثور على المسار ${targetEndpoint} أو أرجع استجابة غير صالحة.`);
-                }
-
                 const data = await response.json();
-                
-                let resultText = '';
-                if (data.result) {
-                    resultText = data.result;
-                } else if (data.imageUrl) {
-                    resultText = `![التصميم المولد](${data.imageUrl})\n\nتم توليد الصورة بنجاح!`;
-                } else if (data.error) {
-                    resultText = `⚠️ **خطأ في المعالجة:** ${data.error}`;
-                } else {
-                    resultText = 'لم يتم استلام أي رد من نموذج الذكاء الاصطناعي.';
-                }
-                
                 removeLoaderBubble();
-                chatHistory.push({ role: 'assistant', content: resultText });
-                appendAiBubble(resultText);
 
-                if (currentUser && typeof saveSessionToCloud === 'function') {
-                    await saveSessionToCloud(toolsConfig[currentToolKey]?.title || "محادثة", inputVal || "تحليل وسائط", resultText);
+                if (data.result) {
+                    chatHistory.push({ role: 'assistant', content: data.result });
+                    appendAiBubble(data.result);
+                    if (currentUser) saveSessionToCloud("محادثة جديدة", inputVal || "تحليل صورة", data.result);
+                } else if (data.error) {
+                    appendAiBubble(`⚠️ **خطأ:** ${data.error}`);
                 }
 
             } catch (err) { 
                 removeLoaderBubble();
-                appendAiBubble(`⚠️ **حدث خطأ في الاتصال بالخادم:** ${err.message}`); 
+                appendAiBubble(`⚠️ **خطأ الاتصال:** تعذر الوصول للخادم. (${err.message})`); 
             }
         }
 
@@ -1078,30 +845,11 @@
             currentToolKey = key;
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             if (el) el.classList.add('active');
-            document.getElementById('active-tool-title').innerText = toolsConfig[key].title.replace(/^[^\s]+\s/, '');
         }
 
         function startNewSession() {
             chatHistory = [];
-            const chatStream = document.getElementById('chat-stream');
-            chatStream.innerHTML = `
-                <div class="gemini-hero-center" id="gemini-hero">
-                    <svg class="gemini-sparkle-logo" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 0C12 6.62742 6.62742 12 0 12C6.62742 12 12 17.3726 12 24C12 17.3726 17.3726 12 24 12C17.3726 12 12 6.62742 12 0Z" fill="url(#sparkle-grad)"/>
-                        <defs>
-                            <linearGradient id="sparkle-grad" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#38BDF8"/><stop offset="0.5" stop-color="#818CF8"/><stop offset="1" stop-color="#F43F5E"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                    <div class="gemini-hero-title">جاهز متى شئت</div>
-                </div>
-            `;
-            document.getElementById('user-input').value = '';
-            attachedItems = [];
-            activeOptionBadge = null;
-            renderAttachmentsPreview();
-            checkInputChangeState();
+            document.getElementById('chat-stream').innerHTML = '<div class="gemini-hero-center" id="gemini-hero"><div class="gemini-hero-title">جاهز متى شئت</div></div>';
         }
 
         function changeTheme(theme) { document.body.className = theme === 'default' ? '' : `theme-${theme}`; }
