@@ -211,6 +211,26 @@
             border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 16px; font-size: 13px; color: #fff;
         }
 
+        /* تنسيقات حصرية للصور المُولدة */
+        .generated-image-container {
+            margin: 12px 0;
+            display: block;
+            border-radius: 16px;
+            overflow: hidden;
+            max-width: 100%;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border-color);
+            background: #1e1f20;
+        }
+        .generated-image-container img {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: contain;
+            display: block;
+            border-radius: 16px;
+        }
+
         .gemini-loader { display: flex; align-items: center; gap: 10px; color: var(--accent-blue); font-size: 14px; }
 
         /* Dynamic Floating Input Container */
@@ -535,6 +555,14 @@
     </div>
 
     <script>
+        // إعدادات مكتبة marked لتوليد السطور بشكل صحيح
+        if (typeof window.marked !== 'undefined') {
+            window.marked.setOptions({
+                gfm: true,
+                breaks: true
+            });
+        }
+
         let chatHistory = [];
 
         // Neural Canvas Animation
@@ -867,11 +895,34 @@
             chatStream.scrollTop = chatStream.scrollHeight;
         }
 
+        // دالة معالجة النصوص وتحويل روابط الصور تلقائياً إلى عناصر HTML
+        function formatBotResponse(text) {
+            if (!text) return '';
+
+            // 1. تحويل صيغة الصور المكتوبة بـ Markdown: ![alt](url)
+            let formattedText = text.replace(
+                /!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/gi,
+                '<div class="generated-image-container"><img src="$2" alt="$1" loading="lazy" /></div>'
+            );
+
+            // 2. التحقق من روابط الصور المباشرة المتبقية وتحويلها تلقائياً
+            const rawImageUrlRegex = /(?<!src=["'])(https?:\/\/[^\s<]+?\.(?:png|jpg|jpeg|gif|webp|svg)(?:\?[^\s<]*)?|https:\/\/image\.pollinations\.ai\/prompt\/[^\s<]+)/gi;
+            formattedText = formattedText.replace(rawImageUrlRegex, (match) => {
+                if (formattedText.includes(`src="${match}"`)) return match;
+                return `<div class="generated-image-container"><img src="${match}" alt="صورة مولدة" loading="lazy" /></div>`;
+            });
+
+            return formattedText;
+        }
+
         function appendAiBubble(markdownText) {
             const chatStream = document.getElementById('chat-stream');
             const row = document.createElement('div');
             row.className = 'chat-row ai-row';
-            const parsedHtml = window.marked.parse(markdownText);
+            
+            // معالجة روابط الصور أولاً ثم تحويل الـ Markdown إلى HTML
+            const processedText = formatBotResponse(markdownText);
+            const parsedHtml = window.marked.parse(processedText);
             const msgId = 'msg-' + Date.now();
 
             row.innerHTML = `
