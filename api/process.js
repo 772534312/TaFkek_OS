@@ -1,25 +1,10 @@
-import express from 'express';
-import cors from 'cors';
-import dns from 'dns';
-
-dns.setDefaultResultOrder('ipv4first');
-
-const app = express();
-
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
-app.use(cors());
-
-app.use((req, res, next) => {
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
-    next();
-});
+// api/process.js
 
 // =======================================================
 // 🧠 محركات الذكاء الاصطناعي مع فحص نفاد الحصة (Quota Detection)
 // =======================================================
 
-// 1. محرك Gemini (Gemini 2.5 Flash / Pro)
+// 1. محرك Gemini (Gemini Flash / Pro)
 async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
     const key = apiKey || process.env.GEMINI_API_KEY;
     if (!key) throw new Error("مفتاح GEMINI_API_KEY غير متوفر.");
@@ -140,7 +125,7 @@ async function callOpenAI(prompt, history = [], apiKey) {
     return data.choices?.[0]?.message?.content || "استجابة فارغة من OpenAI.";
 }
 
-// 4. محرك Groq الفائق (Llama 3 70B - نموذج إضافي سريح ومجاني)
+// 4. محرك Groq (Llama 3.3 70B)
 async function callGroq(prompt, history = [], apiKey) {
     const key = apiKey || process.env.GROQ_API_KEY;
     if (!key) throw new Error("مفتاح GROQ_API_KEY غير متوفر.");
@@ -176,7 +161,7 @@ async function callGroq(prompt, history = [], apiKey) {
     return data.choices?.[0]?.message?.content || "استجابة فارغة من Groq.";
 }
 
-// 5. محرك Hugging Face (نموذج احتياطي إضافي)
+// 5. محرك Hugging Face
 async function callHuggingFace(prompt, apiKey) {
     const key = apiKey || process.env.HF_API_KEY;
     if (!key) throw new Error("مفتاح HF_API_KEY غير متوفر.");
@@ -200,7 +185,7 @@ async function callHuggingFace(prompt, apiKey) {
     return typeof data === 'string' ? data : JSON.stringify(data);
 }
 
-// 🎨 توليد الصور وتعديلها عبر FLUX
+// 🎨 توليد الصور وتعديلها
 async function generateOrEditImage(prompt, mediaParts = []) {
     let finalPrompt = prompt;
 
@@ -225,68 +210,73 @@ async function generateOrEditImage(prompt, mediaParts = []) {
 }
 
 // =======================================================
-// 🔀 الموجه المتسلسل التلقائي عند نفاد الخطط المجانية (Multi-LLM Fallback Engine)
+// 🔀 الموجه المتسلسل التلقائي (Multi-LLM Fallback Engine)
 // =======================================================
 async function executeSmartRouter(prompt, history, mediaParts, optionMode) {
-    // إذا كان الخيار توليد أو تعديل صور
     if (optionMode === 'إنشاء صور' || optionMode === 'Clean Image Studio' || optionMode === 'استوديو توليد وتعديل الصور الذكي') {
         return await generateOrEditImage(prompt, mediaParts);
     }
 
     const engineChainLogs = [];
 
-    // 1️⃣ المستوى الأول: Gemini 2.5 Flash
+    // 1️⃣ Gemini
     try {
-        const res = await callGemini(prompt, history, mediaParts);
-        return res;
+        return await callGemini(prompt, history, mediaParts);
     } catch (err) {
-        console.warn("⚠️ فشل Gemini، التبديل إلى النموذج التالي:", err.message);
-        engineChainLogs.push(`1. Gemini Exceeded/Failed: ${err.message}`);
+        engineChainLogs.push(`1. Gemini: ${err.message}`);
     }
 
-    // 2️⃣ المستوى الثاني: DeepSeek V3 / R1
+    // 2️⃣ DeepSeek
     try {
-        const res = await callDeepSeek(prompt, history);
-        return res;
+        return await callDeepSeek(prompt, history);
     } catch (err) {
-        console.warn("⚠️ فشل DeepSeek، التبديل إلى النموذج التالي:", err.message);
-        engineChainLogs.push(`2. DeepSeek Exceeded/Failed: ${err.message}`);
+        engineChainLogs.push(`2. DeepSeek: ${err.message}`);
     }
 
-    // 3️⃣ المستوى الثالث: OpenAI GPT-4o
+    // 3️⃣ OpenAI
     try {
-        const res = await callOpenAI(prompt, history);
-        return res;
+        return await callOpenAI(prompt, history);
     } catch (err) {
-        console.warn("⚠️ فشل OpenAI، التبديل إلى النموذج التالي:", err.message);
-        engineChainLogs.push(`3. OpenAI Exceeded/Failed: ${err.message}`);
+        engineChainLogs.push(`3. OpenAI: ${err.message}`);
     }
 
-    // 4️⃣ المستوى الرابع: Groq Llama-3.3 70B (نموذج مجاني وفائق السرعة)
+    // 4️⃣ Groq
     try {
-        const res = await callGroq(prompt, history);
-        return res;
+        return await callGroq(prompt, history);
     } catch (err) {
-        console.warn("⚠️ فشل Groq، التبديل إلى النموذج الاحتياطي الخارجي:", err.message);
-        engineChainLogs.push(`4. Groq Exceeded/Failed: ${err.message}`);
+        engineChainLogs.push(`4. Groq: ${err.message}`);
     }
 
-    // 5️⃣ المستوى الخامس: Hugging Face Llama-3
+    // 5️⃣ Hugging Face
     try {
-        const res = await callHuggingFace(prompt);
-        return res;
+        return await callHuggingFace(prompt);
     } catch (err) {
-        engineChainLogs.push(`5. Hugging Face Exceeded/Failed: ${err.message}`);
+        engineChainLogs.push(`5. Hugging Face: ${err.message}`);
     }
 
-    // إذا نفذت جميع المفاتيح والخطط المجانية
     throw new Error(`❌ تعذر معالجة الطلب. تم استهلاك كافة الخطط المجانية في جميع النماذج المتاحة.\nسجل المحاولات:\n• ${engineChainLogs.join('\n• ')}`);
 }
 
-// Express Route
-app.post('/api/process', async (req, res) => {
+// =======================================================
+// 🚀 Vercel Serverless Function Handler
+// =======================================================
+export default async function handler(req, res) {
+    // إعدادات CORS
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+    if (req.method === 'OPTIONS') {
+        return res.status(200).end();
+    }
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+    }
+
     try {
-        const { prompt, history, mediaParts, optionMode } = req.body;
+        const { prompt, history, mediaParts, optionMode } = req.body || {};
 
         if (!prompt && (!mediaParts || mediaParts.length === 0)) {
             return res.status(200).json({ error: "يرجى كتابة نص أو رفع صورة لتبدأ المعالجة." });
@@ -307,13 +297,4 @@ app.post('/api/process', async (req, res) => {
     } catch (error) {
         return res.status(200).json({ error: error.message });
     }
-});
-
-app.use((err, req, res, next) => {
-    res.status(200).json({ error: `خطأ سيرفر غير متوقع: ${err.message}` });
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Tafkek OS Multi-LLM Engine listening on port ${PORT}`);
-});
+}
