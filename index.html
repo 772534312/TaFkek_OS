@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - Gemini Studio</title>
+    <title>Tafkek OS - Full Vision & Multi-LLM Studio</title>
     
     <!-- Fonts & Libraries -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -143,7 +143,6 @@
         .session-item:hover { background: #28292a; color: var(--text-main); }
         .session-item.pinned { border-right: 3px solid var(--accent-blue); background: rgba(var(--accent-rgb), 0.08); }
         .session-item-header { display: flex; justify-content: space-between; align-items: center; }
-        .session-meta { font-size: 10px; color: var(--text-muted); opacity: 0.7; }
 
         .workspace {
             flex: 1; display: flex; flex-direction: column;
@@ -197,10 +196,6 @@
             max-width: 240px; max-height: 240px; border: 1px solid var(--border-color);
         }
         .chat-media-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .chat-file-card {
-            display: flex; align-items: center; gap: 10px; background: #28292a;
-            border: 1px solid var(--border-color); padding: 10px 14px; border-radius: 16px; font-size: 13px; color: #fff;
-        }
 
         .generated-image-container {
             margin: 12px 0; display: block; border-radius: 16px; overflow: hidden;
@@ -245,12 +240,6 @@
         }
         .attachment-delete-btn:hover { background: #f43f5e; }
 
-        .attachment-file-card {
-            display: flex; align-items: center; gap: 8px; background: #28292e;
-            border: 1px solid var(--border-color); padding: 8px 12px; border-radius: 14px;
-            font-size: 12px; color: var(--accent-blue); flex-shrink: 0;
-        }
-
         .option-mode-badge {
             display: inline-flex; align-items: center; gap: 6px; background: rgba(var(--accent-rgb), 0.15);
             border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 6px 12px;
@@ -274,6 +263,7 @@
             transition: background 0.2s, color 0.2s;
         }
         .btn-pill-action:hover { color: #ffffff; background: #333537; }
+        .btn-pill-action.recording { color: #f43f5e; animation: pulseGlow 1s infinite alternate; }
 
         .btn-send-dynamic {
             background: #28292a; color: #5f6368; border: none;
@@ -405,7 +395,7 @@
             <div class="quick-chips-bar custom-scrollbar">
                 <button onclick="setPrompt('فحص وتفكيك الأخطاء في الكود التالي: ')" class="quick-chip-btn"><i class="fa-solid fa-code text-blue-400"></i> فحص كود</button>
                 <button onclick="setPrompt('قم بتوليد صورة مع مراعاة خلوها من أي نصوص أو كتابات مشوهة: ')" class="quick-chip-btn"><i class="fa-solid fa-image text-pink-400"></i> إنشاء صورة نظيفة</button>
-                <button onclick="setPrompt('حلل هذا الملف بشكل دقيق واستخرج النقاط الرئيسية')" class="quick-chip-btn"><i class="fa-solid fa-file-lines text-emerald-400"></i> تحليل ملف</button>
+                <button onclick="setPrompt('حلل هذا الملف بشكل دقيق واستخرج النقاط الرئيسية: ')" class="quick-chip-btn"><i class="fa-solid fa-file-lines text-emerald-400"></i> تحليل ملف</button>
             </div>
 
             <div class="gemini-pill-bar">
@@ -418,7 +408,7 @@
                         <button class="btn-pill-action" title="إضافة خيار أو شريحة" onclick="openBottomSheet()"><i class="fa-solid fa-circle-plus"></i></button>
                         <button class="btn-pill-action" title="إرفاق صورة" onclick="triggerNativeInput('image')"><i class="fa-solid fa-image text-pink-400"></i></button>
                         <button class="btn-pill-action" title="إرفاق مستند" onclick="triggerNativeInput('file')"><i class="fa-solid fa-paperclip"></i></button>
-                        <button class="btn-pill-action" title="الإدخال الصوتي" onclick="startVoiceInput()"><i class="fa-solid fa-microphone"></i></button>
+                        <button class="btn-pill-action" id="voice-btn" title="الإدخال الصوتي" onclick="startVoiceInput()"><i class="fa-solid fa-microphone"></i></button>
                     </div>
 
                     <button class="btn-send-dynamic" id="submit-btn" onclick="executeProcess()" title="إرسال الطلب">
@@ -464,8 +454,28 @@
         }
 
         let chatHistory = [];
+        let currentToolKey = 'grounding';
 
-        // Canvas Animation
+        // 💡 البرومبت الذكي للأدوات النواة
+        const toolPrompts = {
+            'grounding': 'قم بالبحث والتوثيق الفوري واستخرج المصادر الموثوقة للموضوع التالي: ',
+            'deconstruct': 'قم بتفكيك وتحليل النص والعمق المعرفي للعبارة التالية: ',
+            'ecom-deconstruct': 'قم بتفكيك اللوجستيات الرقمية وخطة الشحن للطلب أو المتجر التالي: ',
+            'loop-destroyer': 'قم بتتبع وحرق الأخطاء البرمجية والـ Infinite Loops في الكود التالي: ',
+            'clean-image': 'قم بتوليد تصميم بصري نظيف ومحتد وبدون أي نصوص مشوهة للمفهوم التالي: ',
+            'support-agent': 'أنت الآن مساعد خدمة عملاء ذكي، أجب على الاستفسار التالي بأسلوب احترافي: '
+        };
+
+        const toolTitles = {
+            'grounding': 'بحث وتوثيق جوجل',
+            'deconstruct': 'التفكيك المعرفي واللغوي',
+            'ecom-deconstruct': 'تفكيك اللوجستيات الرقمية',
+            'loop-destroyer': 'تتبع وحرق الأخطاء البرمجية',
+            'clean-image': 'استوديو التصاميم النظيفة',
+            'support-agent': 'المساعد الذكي لقنوات الدعم'
+        };
+
+        // Canvas Neural Animation
         const canvas = document.getElementById('neural-canvas');
         const ctx = canvas.getContext('2d');
         function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
@@ -505,7 +515,7 @@
         }
         animateNeuralNetwork();
 
-        // Firebase Setup
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
             authDomain: "tafkekos.firebaseapp.com",
@@ -598,7 +608,7 @@
             appendAiBubble(session.result);
         }
 
-        // Attachments
+        // Attachments Logic
         let attachedItems = []; 
         let activeOptionBadge = null;
 
@@ -635,7 +645,6 @@
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     item.url = e.target.result;
-                    // استخراج Base64 بشكل نظيف تماماً
                     item.base64Data = e.target.result.includes(',') ? e.target.result.split(',')[1] : e.target.result;
                     renderAttachmentsPreview();
                     checkInputChangeState();
@@ -748,8 +757,7 @@
 
         function formatBotResponse(text) {
             if (!text) return '';
-            let formattedText = text.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/gi, '<div class="generated-image-container"><img src="$2" alt="$1" loading="lazy" /></div>');
-            return formattedText;
+            return text.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/gi, '<div class="generated-image-container"><img src="$2" alt="$1" loading="lazy" /></div>');
         }
 
         function appendAiBubble(markdownText) {
@@ -781,8 +789,6 @@
             if (loader) loader.remove();
         }
 
-        let currentToolKey = 'grounding';
-
         async function executeProcess() {
             const inputNode = document.getElementById('user-input');
             const inputVal = inputNode.value.trim();
@@ -797,9 +803,6 @@
 
             showLoaderBubble();
 
-            // توحيد نقطة النهاية لموقع الإنتاج المرفوع على Vercel
-            const targetEndpoint = '/api/process';
-
             const inlineDataPayload = mediaToSend.map(item => ({
                 inlineData: {
                     data: item.base64Data,
@@ -813,7 +816,7 @@
             checkInputChangeState();
 
             try {
-                const response = await fetch(targetEndpoint, {
+                const response = await fetch('/api/process', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ 
@@ -841,18 +844,71 @@
             }
         }
 
+        // 🛠️ تبديل الأدوات مع وضع البرومبت المناسب
         function switchTool(key, el) {
             currentToolKey = key;
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             if (el) el.classList.add('active');
+
+            document.getElementById('active-tool-title').innerText = toolTitles[key] || 'Tafkek Vision Pro';
+
+            if (toolPrompts[key]) {
+                setPrompt(toolPrompts[key]);
+            }
         }
+
+        // 🎙️ الإدخال الصوتي
+        function startVoiceInput() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert("المتصفح لا يدعم الإدخال الصوتي المباشر.");
+                return;
+            }
+            const voiceBtn = document.getElementById('voice-btn');
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'ar-SA';
+            
+            recognition.onstart = function() {
+                voiceBtn.classList.add('recording');
+            };
+
+            recognition.onresult = function(event) {
+                const text = event.results[0][0].transcript;
+                const input = document.getElementById('user-input');
+                input.value += (input.value ? ' ' : '') + text;
+                autoResizeTextarea(input);
+                checkInputChangeState();
+                voiceBtn.classList.remove('recording');
+            };
+
+            recognition.onerror = function() {
+                voiceBtn.classList.remove('recording');
+            };
+
+            recognition.onend = function() {
+                voiceBtn.classList.remove('recording');
+            };
+
+            recognition.start();
+        }
+
+        // 🎨 حفظ الثيم في LocalStorage
+        function changeTheme(theme) { 
+            document.body.className = theme === 'default' ? '' : `theme-${theme}`; 
+            localStorage.setItem('tafkek_theme', theme);
+        }
+
+        // استعادة الثيم المحفوظ عند التحميل
+        (function restoreTheme() {
+            const savedTheme = localStorage.getItem('tafkek_theme');
+            if (savedTheme) changeTheme(savedTheme);
+        })();
 
         function startNewSession() {
             chatHistory = [];
             document.getElementById('chat-stream').innerHTML = '<div class="gemini-hero-center" id="gemini-hero"><div class="gemini-hero-title">جاهز متى شئت</div></div>';
         }
 
-        function changeTheme(theme) { document.body.className = theme === 'default' ? '' : `theme-${theme}`; }
         function filterHistory(query) {
             document.querySelectorAll('.session-item').forEach(el => el.style.display = el.innerText.includes(query) ? 'flex' : 'none');
         }
