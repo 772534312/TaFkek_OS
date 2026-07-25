@@ -1,5 +1,4 @@
 export default async function handler(req, res) {
-    // إعدادات الـ CORS الكاملة لمنع مشاكل الحظر في المتصفح
     res.setHeader('Access-Control-Allow-Credentials', true);
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -20,16 +19,12 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'الـ Prompt فارغ' });
         }
 
-        // إضافة فلاتر صارمة لمنع توليد النصوص داخل الصورة لكي تتمكن من كتابة النصوص العربية بنفسك
-        const enhancedPrompt = `${prompt}, clean design, professional digital art, high resolution, 4k, cinematic lighting, strictly no text, no words, no typography, clear background`;
+        const enhancedPrompt = `${prompt}, ultra realistic, highly detailed, clean design, 4k resolution, cinematic lighting, strictly no text, no letters, clear structure`;
+        const finalImageUrl = `https://image.pollinations.ai/p/${encodeURIComponent(enhancedPrompt)}?width=1024&height=1024&nologo=true&seed=${Math.floor(Math.random() * 999999)}`;
 
-        // توليد رابط صورة عالي الجودة ومضمون العمل بنسبة 100%
-        const finalImageUrl = `https://image.pollinations.ai/p/${encodeURIComponent(enhancedPrompt)}?width=1024&height=1024&nologo=true&seed=${Math.floor(Math.random() * 99999)}`;
-
-        // إرجاع الرابط بنجاح للواجهة
         return res.status(200).json({
             imageUrl: finalImageUrl,
-            source: 'Tafkek Engine (Flux Ultra)'
+            source: 'Tafkek Image Engine (FLUX Ultra Precision)'
         });
 
     } catch (error) {
