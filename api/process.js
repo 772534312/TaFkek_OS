@@ -1,16 +1,20 @@
-// =======================================================
-// 🧠 Tafkek OS Core Engine - Multi-LLM Fallback & Vision
-// =======================================================
-
-// 1️⃣ محرك Gemini Vision (الرئيسي للصور والنصوص)
+// ==========================================
+// 1️⃣ محرك Gemini Vision (مع التبديل الذكي للإصدارات)
+// ==========================================
 async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
     const key = apiKey || process.env.GEMINI_API_KEY;
     if (!key) throw new Error("مفتاح GEMINI_API_KEY غير متوفر في متغيرات البيئة.");
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`;
+    // أسماء النماذج مرتبة حسب الأحدث والأكثر استقراراً
+    const geminiModels = [
+        "gemini-2.0-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-1.5-flash"
+    ];
+
     let parts = [];
 
-    // معالجة وتنظيف بيانات الصور المرفقة
+    // تنقية وتجهيز بيانات الصور المرفقة
     if (mediaParts && Array.isArray(mediaParts) && mediaParts.length > 0) {
         mediaParts.forEach(m => {
             if (m.inlineData && m.inlineData.data) {
@@ -43,101 +47,55 @@ async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
 
     contents.push({ role: 'user', parts });
 
-    const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents })
-    });
+    let lastError = null;
 
-    if (response.status === 429 || response.status === 403) {
-        throw new Error(`QUOTA_EXHAUSTED: تجاوزت الحد المسموح أو استنفذت حصة Gemini (${response.status})`);
+    // تجربة النماذج بالتتابع لحل مشكلة 404 وضمان الاستقرار
+    for (const modelName of geminiModels) {
+        try {
+            const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
+            
+            const response = await fetch(endpoint, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ contents })
+            });
+
+            if (response.status === 429 || response.status === 403) {
+                throw new Error(`QUOTA_EXHAUSTED: تجاوزت الحد المسموح لـ Gemini (${response.status})`);
+            }
+
+            if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Gemini [${modelName}] Error [${response.status}]: ${errText}`);
+            }
+
+            const data = await response.json();
+            const resultText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (resultText) return resultText;
+
+        } catch (err) {
+            console.warn(`⚠️ فشل نموذج Gemini (${modelName}):`, err.message);
+            lastError = err;
+            if (err.message.includes("QUOTA_EXHAUSTED")) break;
+        }
     }
 
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`Gemini Vision Error [${response.status}]: ${errText}`);
-    }
-
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || "لم يتم الحصول على استجابة نصية من النموذج.";
+    throw lastError || new Error("تعذر الوصول لجميع إصدارات Gemini Vision.");
 }
 
-// 2️⃣ محرك DeepSeek V3 (احتياطي للتحليل والنصوص)
-async function callDeepSeek(prompt, history = [], apiKey) {
-    const key = apiKey || process.env.DEEPSEEK_API_KEY;
-    if (!key) throw new Error("مفتاح DEEPSEEK_API_KEY غير متوفر.");
-
-    const messages = history.map(h => ({
-        role: h.role === 'assistant' ? 'assistant' : 'user',
-        content: h.content || h.parts?.[0]?.text || ''
-    }));
-    messages.push({ role: "user", content: prompt });
-
-    const response = await fetch("https://api.deepseek.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${key}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ model: "deepseek-chat", messages })
-    });
-
-    if (response.status === 429 || response.status === 402) {
-        throw new Error(`QUOTA_EXHAUSTED: انتهى رصيد/خطة DeepSeek (${response.status})`);
-    }
-
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`DeepSeek Error [${response.status}]: ${errText}`);
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "استجابة فارغة من DeepSeek.";
-}
-
-// 3️⃣ محرك OpenAI GPT-4o
-async function callOpenAI(prompt, history = [], apiKey) {
-    const key = apiKey || process.env.OPENAI_API_KEY;
-    if (!key) throw new Error("مفتاح OPENAI_API_KEY غير متوفر.");
-
-    const messages = history.map(h => ({
-        role: h.role === 'assistant' ? 'assistant' : 'user',
-        content: h.content || h.parts?.[0]?.text || ''
-    }));
-    messages.push({ role: "user", content: prompt });
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${key}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ model: "gpt-4o", messages })
-    });
-
-    if (response.status === 429 || response.status === 401) {
-        throw new Error(`QUOTA_EXHAUSTED: انتهى رصيد OpenAI GPT-4o (${response.status})`);
-    }
-
-    if (!response.ok) {
-        const errText = await response.text();
-        throw new Error(`OpenAI Error [${response.status}]: ${errText}`);
-    }
-
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || "استجابة فارغة من OpenAI.";
-}
-
-// 4️⃣ محرك Groq (Llama-3.3 70B السريع)
+// ==========================================
+// 2️⃣ محرك Groq / OpenAI (كخيار بديل/سريع)
+// ==========================================
 async function callGroq(prompt, history = [], apiKey) {
     const key = apiKey || process.env.GROQ_API_KEY;
     if (!key) throw new Error("مفتاح GROQ_API_KEY غير متوفر.");
 
     const messages = history.map(h => ({
-        role: h.role === 'assistant' ? 'assistant' : 'user',
+        role: h.role === 'model' ? 'assistant' : h.role,
         content: h.content || h.parts?.[0]?.text || ''
-    }));
-    messages.push({ role: "user", content: prompt });
+    })).filter(m => m.content);
+
+    messages.push({ role: 'user', content: prompt });
 
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -145,12 +103,12 @@ async function callGroq(prompt, history = [], apiKey) {
             "Authorization": `Bearer ${key}`,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ model: "llama-3.3-70b-versatile", messages })
+        body: JSON.stringify({
+            model: "llama-3.3-70b-versatile",
+            messages: messages,
+            temperature: 0.7
+        })
     });
-
-    if (response.status === 429) {
-        throw new Error(`QUOTA_EXHAUSTED: انتهت حصة Groq المجانية (${response.status})`);
-    }
 
     if (!response.ok) {
         const errText = await response.text();
@@ -158,89 +116,72 @@ async function callGroq(prompt, history = [], apiKey) {
     }
 
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || "استجابة فارغة من Groq.";
+    return data.choices?.[0]?.message?.content || "لم يتم استلام رد من Groq.";
 }
 
-// =======================================================
-// 🔀 الموجه الذكي (Router & Fallback Pipeline)
-// =======================================================
-async function executeSmartRouter(prompt, history, mediaParts) {
-    const logs = [];
-    const hasImages = mediaParts && mediaParts.length > 0;
-
-    // 1️⃣ المحاولة الأولى: Gemini Vision (يتعامل مع الصور والنصوص)
-    try {
-        return await callGemini(prompt, history, mediaParts);
-    } catch (err) {
-        console.warn("⚠️ فشل Gemini، التوجيه للنموذج التالي:", err.message);
-        logs.push(`Gemini: ${err.message}`);
-    }
-
-    // إذا كانت هناك صورة رفعت وفشلت مع Gemini، يتوقف هنا لأن المحركات الأخرى نصية فقط
-    if (hasImages) {
-        throw new Error(`❌ تعذر تحليل الصورة عبر محرك Vision حالياً.\nالسجل: ${logs.join(', ')}`);
-    }
-
-    // 2️⃣ المحاولة الثانية: DeepSeek
-    try {
-        return await callDeepSeek(prompt, history);
-    } catch (err) {
-        console.warn("⚠️ فشل DeepSeek:", err.message);
-        logs.push(`DeepSeek: ${err.message}`);
-    }
-
-    // 3️⃣ المحاولة الثالثة: OpenAI
-    try {
-        return await callOpenAI(prompt, history);
-    } catch (err) {
-        console.warn("⚠️ فشل OpenAI:", err.message);
-        logs.push(`OpenAI: ${err.message}`);
-    }
-
-    // 4️⃣ المحاولة الرابعة: Groq
-    try {
-        return await callGroq(prompt, history);
-    } catch (err) {
-        console.warn("⚠️ فشل Groq:", err.message);
-        logs.push(`Groq: ${err.message}`);
-    }
-
-    throw new Error(`❌ فشلت كافة المحركات المتاحة لمعالجة الطلب:\n${logs.join('\n')}`);
-}
-
-// =======================================================
-// 🚀 Vercel Endpoint Handler
-// =======================================================
+// ==========================================
+// 3️⃣ الـ API Handler الرئيسي (Serverless Function)
+// ==========================================
 export default async function handler(req, res) {
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
+    // إعدادات CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,POST');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     if (req.method === 'OPTIONS') return res.status(200).end();
-    if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
-        const { prompt, history, mediaParts } = req.body || {};
+        const { prompt, history = [], mediaParts = [], preferredEngine = 'auto' } = req.body;
 
-        if (!prompt && (!mediaParts || mediaParts.length === 0)) {
-            return res.status(400).json({ error: "يرجى كتابة نص أو إرفاق ملف للبدء." });
+        const hasImages = mediaParts && mediaParts.length > 0;
+        let logs = [];
+        let finalResponse = null;
+
+        // إذا كان هناك صور، يجب استخدام Gemini Vision أولاً
+        if (hasImages || preferredEngine === 'gemini') {
+            try {
+                logs.push("محاولة معالجة الطلب عبر محرك Gemini Vision...");
+                finalResponse = await callGemini(prompt, history, mediaParts);
+            } catch (geminiErr) {
+                logs.push(`❌ خطأ Gemini: ${geminiErr.message}`);
+                
+                // التبديل إلى Groq إذا كان الطلب نصياً أو إذا فشل Gemini
+                if (!hasImages && process.env.GROQ_API_KEY) {
+                    logs.push("🔄 التحويل التلقائي (Fallback) إلى محرك Groq...");
+                    finalResponse = await callGroq(prompt, history);
+                } else {
+                    throw geminiErr;
+                }
+            }
+        } else {
+            // المعالجة النصية بأسلوب Auto/Groq
+            try {
+                if (process.env.GROQ_API_KEY) {
+                    logs.push("معالجة الطلب النصي عبر Groq...");
+                    finalResponse = await callGroq(prompt, history);
+                } else {
+                    logs.push("Groq غير متوفر، استخدام Gemini...");
+                    finalResponse = await callGemini(prompt, history, mediaParts);
+                }
+            } catch (err) {
+                logs.push(`❌ خطأ المحرك الأول: ${err.message}`);
+                logs.push("🔄 تجربة Gemini كخيار احتياطي...");
+                finalResponse = await callGemini(prompt, history, mediaParts);
+            }
         }
-
-        const resultText = await executeSmartRouter(
-            prompt || "قم بتحليل المحتوى المرفق واقتراح المطلوب.",
-            history || [],
-            mediaParts || []
-        );
 
         return res.status(200).json({
             success: true,
-            result: resultText
+            text: finalResponse,
+            logs: logs
         });
 
     } catch (error) {
-        console.error("Server API Error:", error.message);
-        return res.status(500).json({ error: error.message });
+        console.error("API Handler Failure:", error);
+        return res.status(500).json({
+            error: "تعذر معالجة الطلب حالياً عبر جميع المحركات المتاحة.",
+            details: error.message
+        });
     }
 }
