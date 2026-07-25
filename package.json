@@ -1,8 +1,12 @@
 {
   "name": "tafkek-os",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "type": "module",
+  "description": "Tafkek OS Multi-Engine Context & AI Platform",
+  "main": "process.js",
   "dependencies": {
-    "@google/generative-ai": "^0.2.1"
+    "@google/generative-ai": "^0.21.0",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
   }
 }
