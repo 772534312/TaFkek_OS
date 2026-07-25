@@ -1,18 +1,20 @@
 // ==========================================
-// 1️⃣ محرك Gemini Vision (مع التبديل الذكي للإصدارات)
+// 1️⃣ محرك Gemini Vision (مع معالجة 429 و 404 والتبديل الذكي)
 // ==========================================
 async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
     const key = apiKey || process.env.GEMINI_API_KEY;
     if (!key) throw new Error("مفتاح GEMINI_API_KEY غير متاح في متغيرات البيئة.");
 
+    // النماذج المعتمدة والمتاحة حالياً
     const geminiModels = [
         "gemini-2.0-flash",
-        "gemini-1.5-flash-latest",
-        "gemini-1.5-flash"
+        "gemini-2.0-flash-lite-preview-02-05",
+        "gemini-1.5-pro"
     ];
 
     let parts = [];
 
+    // تنظيف وتنقية بيانات الصور
     if (mediaParts && Array.isArray(mediaParts) && mediaParts.length > 0) {
         mediaParts.forEach(m => {
             const rawData = m.inlineData?.data || m.base64Data || m.base64;
@@ -49,6 +51,10 @@ async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
                 body: JSON.stringify({ contents })
             });
 
+            if (response.status === 429) {
+                throw new Error("QUOTA_LIMIT_429: تم تجاوز حد الاستخدام المجاني لـ Gemini.");
+            }
+
             if (!response.ok) {
                 const errText = await response.text();
                 throw new Error(`[${modelName}] St:${response.status} - ${errText}`);
@@ -61,6 +67,11 @@ async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
         } catch (err) {
             console.warn(`⚠️ فشل نموذج ${modelName}:`, err.message);
             lastError = err;
+
+            // إذا استنفدت الحصة، يتوقف عن محاولة نفس المفتاح لتفعيل التبديل إلى Groq
+            if (err.message.includes("QUOTA_LIMIT_429")) {
+                break;
+            }
         }
     }
 
@@ -68,11 +79,11 @@ async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
 }
 
 // ==========================================
-// 2️⃣ محرك Groq (كخيار بديل/سريع للنصوص)
+// 2️⃣ محرك Groq (للإجابات النصية والاحتياطية)
 // ==========================================
 async function callGroq(prompt, history = [], apiKey) {
     const key = apiKey || process.env.GROQ_API_KEY;
-    if (!key) throw new Error("مفتاح GROQ_API_KEY غير متاح.");
+    if (!key) throw new Error("مفتاح GROQ_API_KEY غير متاح في متغيرات البيئة.");
 
     const messages = history.map(h => ({
         role: h.role === 'model' ? 'assistant' : h.role,
@@ -104,9 +115,10 @@ async function callGroq(prompt, history = [], apiKey) {
 }
 
 // ==========================================
-// 3️⃣ الـ API Handler الرئيسي
+// 3️⃣ الـ API Handler الرئيسي (Serverless Function)
 // ==========================================
 export default async function handler(req, res) {
+    // إعدادات CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -122,15 +134,32 @@ export default async function handler(req, res) {
         let finalResponse = null;
 
         if (hasImages) {
-            logs.push("بدء معالجة الصور عبر Gemini Vision...");
-            finalResponse = await callGemini(prompt, history, mediaParts);
+            try {
+                logs.push("بدء معالجة الطلب عبر Gemini Vision...");
+                finalResponse = await callGemini(prompt, history, mediaParts);
+            } catch (geminiErr) {
+                logs.push(`❌ فشل محرك Gemini: ${geminiErr.message}`);
+                
+                // التبديل إلى Groq في حال فشل Gemini (حتى مع وجود صور)
+                if (process.env.GROQ_API_KEY) {
+                    logs.push("🔄 التحويل التلقائي (Fallback) إلى Groq لمعالجة النص...");
+                    const fallbackPrompt = prompt 
+                        ? `${prompt}\n\n(ملاحظة: تعذر تحليل الصورة حالياً بسبب قيود حصة محرك الرؤية، وتم إجابة السؤال بناءً على النص فقط).`
+                        : "قم بالإجابة بناءً على السياق المتاح (تعذر تحليل الصورة المرفقة حالياً بسبب ضغط الخدمة).";
+                    
+                    finalResponse = await callGroq(fallbackPrompt, history);
+                } else {
+                    throw geminiErr;
+                }
+            }
         } else {
+            // المعالجة النصية
             logs.push("بدء معالجة طلب نصي...");
             if (process.env.GROQ_API_KEY) {
                 try {
                     finalResponse = await callGroq(prompt, history);
                 } catch (gErr) {
-                    logs.push(`فشل Groq: ${gErr.message}، جاري تجربة Gemini...`);
+                    logs.push(`فشل Groq: ${gErr.message}، جاري التجربة عبر Gemini...`);
                     finalResponse = await callGemini(prompt, history, mediaParts);
                 }
             } else {
@@ -145,9 +174,9 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error("API Error Details:", error);
+        console.error("API Handler Failure:", error);
         return res.status(500).json({
-            error: "تعذر معالجة الطلب حالياً عبر المحركات المتاحة.",
+            error: "تعذر معالجة الطلب حالياً عبر جميع المحركات المتاحة.",
             message: error.message,
             logs: logs
         });
