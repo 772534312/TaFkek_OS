@@ -1,12 +1,12 @@
 {
   "name": "tafkek-os",
-  "version": "3.1.0",
-  "type": "module",
-  "description": "Tafkek OS Multi-Engine Context & AI Platform",
-  "main": "process.js",
+  "version": "1.0.0",
+  "description": "Tafkek OS - Multi-LLM Studio & Vision Core",
+  "main": "api/process.js",
+  "scripts": {
+    "start": "node api/process.js"
+  },
   "dependencies": {
-    "@google/generative-ai": "^0.21.0",
-    "cors": "^2.8.5",
-    "express": "^4.21.2"
+    "@vercel/node": "^3.0.0"
   }
 }
