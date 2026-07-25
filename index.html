@@ -923,112 +923,105 @@
 
         // Tools Configuration & Fixed Intelligent Routing
         let currentToolKey = 'grounding';
-        const toolsConfig = {
-            'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', defaultEndpoint: '/api/process.js' },
-            'deconstruct': { title: '🧠 التفكيك المعرفي واللغوي', defaultEndpoint: '/api/deconstruct-groq.js' },
-            'ecom-deconstruct': { title: '📊 تفكيك اللوجستيات الرقمية', defaultEndpoint: '/api/ecom-deconstruct.js' },
-            'loop-destroyer': { title: '⚡ تتبع وحرق الأخطاء البرمجية', defaultEndpoint: '/api/loop-destroyer.js' },
-            'clean-image': { title: '🎨 استوديو التصاميم النظيفة', defaultEndpoint: '/api/generate-image.js' },
-            'support-agent': { title: '🛠️ المساعد الذكي لقنوات الدعم', defaultEndpoint: '/api/support-agent.js' }
-        };
+       // 1️⃣ إعدادات الأدوات والمسارات المحدثة
+const toolsConfig = {
+    'grounding': { title: '🌐 بحث جوجل والتوثيق الفوري', defaultEndpoint: '/api/process.js' },
+    'deconstruct': { title: '🧠 التفكيك المعرفي واللغوي', defaultEndpoint: '/api/process.js' },
+    'ecom-deconstruct': { title: '📊 تفكيك اللوجستيات الرقمية', defaultEndpoint: '/api/ecom-deconstruct.js' },
+    'loop-destroyer': { title: '⚡ تتبع وحرق الأخطاء البرمجية', defaultEndpoint: '/api/loop-destroyer.js' },
+    'clean-image': { title: '🎨 استوديو التصاميم النظيفة', defaultEndpoint: '/api/generate-image.js' },
+    'support-agent': { title: '🛠️ المساعد الذكي لقنوات الدعم', defaultEndpoint: '/api/support-agent.js' }
+};
 
-        // 🧠 Smart Endpoint Resolver (Fixing Vercel Logs Routing Issues)
-        function resolveApiEndpoint(hasMedia, optionBadgeText) {
-            // 1. إذا كان المستخدم رفـع صورة أو ملف للتحليل البصري
-            if (hasMedia) {
-                return '/api/process.js'; // يوجه مباشرة لمحرك Gemini Vision المتخصص بالوسائط Multi-modal
-            }
-            
-            // 2. إذا تم اختيار أداة "استوديو التصاميم النظيفة" لكن بدون إرفاق صورة
-            if (currentToolKey === 'clean-image') {
-                // إذا كان خيار إنشاء صورة صريح من الشريحة ينقل لـ API توليد الصور
-                if (optionBadgeText === 'إنشاء صور نظيفة') {
-                    return '/api/generate-image.js';
-                }
-                // أما لو كان سؤالاً عاماً أو هندسة أوامر نصوص فيُعالج عبر المحرك المعرفي
-                return '/api/process.js';
-            }
+// 2️⃣ دالة التوجيه الذكي للـ API
+function resolveApiEndpoint(hasMedia, optionBadgeText) {
+    // عند وجود وسائط، يتم التوجيه دائماً للملف الرئيسي process.js
+    if (hasMedia) {
+        return '/api/process.js';
+    }
+    
+    // عند اختيار توليد الصور
+    if (currentToolKey === 'clean-image') {
+        if (optionBadgeText === 'إنشاء صور نظيفة') {
+            return '/api/generate-image.js';
+        }
+        return '/api/process.js';
+    }
 
-            // 3. النمط الافتراضي للأداة المختارة
-            return toolsConfig[currentToolKey].defaultEndpoint || '/api/deconstruct.js';
+    // إرجاع الـ Endpoint المخصص أو افتراضياً process.js
+    return toolsConfig[currentToolKey]?.defaultEndpoint || '/api/process.js';
+}
+
+// 3️⃣ دالة تنفيذ المعالجة وإرسال الطلبات
+async function executeProcess() {
+    const inputVal = userInputNode.value.trim();
+    if (!inputVal && pendingMediaFiles.length === 0) return;
+
+    // إعداد واجهة المستخدم للانتظار
+    appendUserBubble(inputVal, pendingMediaFiles);
+    userInputNode.value = '';
+    showLoaderBubble();
+
+    const hasMedia = pendingMediaFiles.length > 0;
+    const currentBadge = document.querySelector('.option-badge.active');
+    const targetEndpoint = resolveApiEndpoint(hasMedia, currentBadge ? currentBadge.title : null);
+
+    // تجهيز حمولة البيانات المرفقة (الصور/الملفات)
+    const inlineDataPayload = pendingMediaFiles.map(file => ({
+        inlineData: {
+            data: file.base64.split(',')[1],
+            mimeType: file.type
+        }
+    }));
+
+    // تفريغ الملفات المعلقة بعد تجهيزها
+    clearPendingMedia();
+
+    try {
+        const response = await fetch(targetEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                prompt: inputVal || "قم بتحليل هذه الصورة وشرح كل محتوياتها بالتفصيل الدقيق.",
+                history: chatHistory.slice(-6),
+                mediaParts: inlineDataPayload,
+                optionMode: currentBadge ? currentBadge.title : null
+            })
+        });
+
+        // HACK: التحقق المباشر من نوع الاستجابة لمنع خطأ SyntaxError: Unexpected token 'T'
+        const contentType = response.headers.get("content-type");
+        if (!response.ok || !contentType || !contentType.includes("application/json")) {
+            const errorHtmlOrText = await response.text();
+            throw new Error(`خطأ من الخادم (${response.status}): لم يتم العثور على المسار ${targetEndpoint} أو أرجع استجابة غير صالحة.`);
         }
 
-        async function executeProcess() {
-            const inputVal = document.getElementById('user-input').value.trim();
-            if (!inputVal && attachedItems.length === 0 && !activeOptionBadge) return;
-
-            const currentMedia = [...attachedItems];
-            const currentBadge = activeOptionBadge;
-
-            // Display in Chat Stream
-            appendUserBubble(inputVal, currentMedia, currentBadge);
-            
-            // Push to Local Memory
-            chatHistory.push({ role: 'user', content: inputVal || "تحليل وسائط مرفقة" });
-
-            // Reset Inputs
-            const input = document.getElementById('user-input');
-            input.value = '';
-            input.style.height = 'auto';
-            attachedItems = [];
-            activeOptionBadge = null;
-            renderAttachmentsPreview();
-            checkInputChangeState();
-
-            appendLoaderBubble();
-
-            // Multi-modal inline payload
-            const inlineDataPayload = currentMedia
-                .filter(item => item.base64Data)
-                .map(item => ({
-                    inlineData: {
-                        mimeType: item.mimeType || "image/jpeg",
-                        data: item.base64Data
-                    }
-                }));
-
-            // Smart Routing Resolver
-            const targetEndpoint = resolveApiEndpoint(inlineDataPayload.length > 0, currentBadge ? currentBadge.title : null);
-
-            try {
-                const response = await fetch(targetEndpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        prompt: inputVal || "قم بتحليل هذه الصورة وشرح كل محتوياتها بالتفصيل الدقيق.",
-                        history: chatHistory.slice(-6),
-                        mediaParts: inlineDataPayload,
-                        optionMode: currentBadge ? currentBadge.title : null
-                    })
-                });
-
-                const data = await response.json();
-                
-                // Handling potential Error messages from Serverless functions gracefully
-                let resultText = '';
-                if (data.result) {
-                    resultText = data.result;
-                } else if (data.imageUrl) {
-                    resultText = `![التصميم المولد](${data.imageUrl})\n\nتم توليد الصورة النظيفة بنجاح!`;
-                } else if (data.error) {
-                    resultText = `⚠️ **خطأ في المعالجة:** ${data.error}`;
-                } else {
-                    resultText = 'لم يتم استلام أي رد تحليل.';
-                }
-                
-                removeLoaderBubble();
-                
-                // Save assistant response to memory
-                chatHistory.push({ role: 'assistant', content: resultText });
-                
-                appendAiBubble(resultText);
-
-                if (currentUser) await saveSessionToCloud(toolsConfig[currentToolKey].title, inputVal || "تحليل وسائط", resultText);
-            } catch (err) { 
-                removeLoaderBubble();
-                appendAiBubble(`⚠️ **حدث خطأ في الاتصال بالخادم:** ${err.message}`); 
-            }
+        const data = await response.json();
+        
+        let resultText = '';
+        if (data.result) {
+            resultText = data.result;
+        } else if (data.imageUrl) {
+            resultText = `![التصميم المولد](${data.imageUrl})\n\nتم توليد الصورة بنجاح!`;
+        } else if (data.error) {
+            resultText = `⚠️ **خطأ في المعالجة:** ${data.error}`;
+        } else {
+            resultText = 'لم يتم استلام أي رد من نموذج الذكاء الاصطناعي.';
         }
+        
+        removeLoaderBubble();
+        chatHistory.push({ role: 'assistant', content: resultText });
+        appendAiBubble(resultText);
+
+        if (currentUser) {
+            await saveSessionToCloud(toolsConfig[currentToolKey]?.title || "محادثة", inputVal || "تحليل وسائط", resultText);
+        }
+
+    } catch (err) { 
+        removeLoaderBubble();
+        appendAiBubble(`⚠️ **حدث خطأ في الاتصال بالخادم:** ${err.message}`); 
+    }
+}
 
         function switchTool(key, el) {
             currentToolKey = key;
