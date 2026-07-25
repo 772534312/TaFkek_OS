@@ -161,52 +161,14 @@ async function callGroq(prompt, history = [], apiKey) {
     return data.choices?.[0]?.message?.content || "استجابة فارغة من Groq.";
 }
 
-// 🎨 استوديو التصاميم والنظافة البصرية (Pollinations Engine)
-async function generateOrEditImage(prompt, mediaParts = []) {
-    let finalPrompt = prompt || "clean visual presentation design";
-
-    if (mediaParts && mediaParts.length > 0) {
-        try {
-            const imageAnalysis = await callGemini(
-                "Describe this image briefly in detailed English keywords for clean image generation.",
-                [],
-                mediaParts
-            );
-            finalPrompt = `${imageAnalysis}, modified with: ${prompt}`;
-        } catch (e) {
-            console.warn("استمرار التوليد بالاعتماد على الوصف النصي فقط.");
-        }
-    }
-
-    const enhancedPrompt = `${finalPrompt}, clean design, professional art, high resolution 4k, strictly no text, no visual noise, blank background where appropriate`;
-    const seed = Math.floor(Math.random() * 999999);
-    const imageUrl = `https://image.pollinations.ai/p/${encodeURIComponent(enhancedPrompt)}?width=1024&height=1024&nologo=true&seed=${seed}`;
-
-    return `![Generated Image](${imageUrl})\n\n**رابط الصورة المباشر:** [تحميل الصورة عالية الدقة](${imageUrl})`;
-}
-
 // =======================================================
 // 🔀 الموجه الذكي (Router & Fallback Pipeline)
 // =======================================================
-async function executeSmartRouter(prompt, history, mediaParts, optionMode) {
-    const mode = (optionMode || '').toString().toLowerCase();
+async function executeSmartRouter(prompt, history, mediaParts) {
+    const logs = [];
     const hasImages = mediaParts && mediaParts.length > 0;
 
-    const isImageGenerationMode = 
-        mode.includes('صورة') || 
-        mode.includes('صور') || 
-        mode.includes('image') || 
-        mode.includes(' flux') || 
-        mode.includes('توليد') || 
-        mode.includes('تصميم');
-
-    if (isImageGenerationMode) {
-        return await generateOrEditImage(prompt, mediaParts);
-    }
-
-    const logs = [];
-
-    // 1️⃣ المحاولة الأولى: Gemini Vision
+    // 1️⃣ المحاولة الأولى: Gemini Vision (يتعامل مع الصور والنصوص)
     try {
         return await callGemini(prompt, history, mediaParts);
     } catch (err) {
@@ -214,6 +176,7 @@ async function executeSmartRouter(prompt, history, mediaParts, optionMode) {
         logs.push(`Gemini: ${err.message}`);
     }
 
+    // إذا كانت هناك صورة رفعت وفشلت مع Gemini، يتوقف هنا لأن المحركات الأخرى نصية فقط
     if (hasImages) {
         throw new Error(`❌ تعذر تحليل الصورة عبر محرك Vision حالياً.\nالسجل: ${logs.join(', ')}`);
     }
@@ -259,7 +222,7 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
     try {
-        const { prompt, history, mediaParts, optionMode } = req.body || {};
+        const { prompt, history, mediaParts } = req.body || {};
 
         if (!prompt && (!mediaParts || mediaParts.length === 0)) {
             return res.status(400).json({ error: "يرجى كتابة نص أو إرفاق ملف للبدء." });
@@ -268,8 +231,7 @@ export default async function handler(req, res) {
         const resultText = await executeSmartRouter(
             prompt || "قم بتحليل المحتوى المرفق واقتراح المطلوب.",
             history || [],
-            mediaParts || [],
-            optionMode
+            mediaParts || []
         );
 
         return res.status(200).json({
