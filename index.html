@@ -936,7 +936,7 @@
         function resolveApiEndpoint(hasMedia, optionBadgeText) {
             // 1. إذا كان المستخدم رفـع صورة أو ملف للتحليل البصري
             if (hasMedia) {
-                return '/api/deconstruct.js'; // يوجه مباشرة لمحرك Gemini Vision المتخصص بالوسائط Multi-modal
+                return '/api/process.js'; // يوجه مباشرة لمحرك Gemini Vision المتخصص بالوسائط Multi-modal
             }
             
             // 2. إذا تم اختيار أداة "استوديو التصاميم النظيفة" لكن بدون إرفاق صورة
@@ -946,7 +946,7 @@
                     return '/api/generate-image.js';
                 }
                 // أما لو كان سؤالاً عاماً أو هندسة أوامر نصوص فيُعالج عبر المحرك المعرفي
-                return '/api/deconstruct.js';
+                return '/api/process.js';
             }
 
             // 3. النمط الافتراضي للأداة المختارة
