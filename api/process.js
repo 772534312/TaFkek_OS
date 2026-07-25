@@ -3,9 +3,8 @@
 // ==========================================
 async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
     const key = apiKey || process.env.GEMINI_API_KEY;
-    if (!key) throw new Error("مفتاح GEMINI_API_KEY غير متوفر في متغيرات البيئة.");
+    if (!key) throw new Error("مفتاح GEMINI_API_KEY غير متاح في متغيرات البيئة.");
 
-    // أسماء النماذج مرتبة حسب الأحدث والأكثر استقراراً
     const geminiModels = [
         "gemini-2.0-flash",
         "gemini-1.5-flash-latest",
@@ -14,23 +13,14 @@ async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
 
     let parts = [];
 
-    // تنقية وتجهيز بيانات الصور المرفقة
     if (mediaParts && Array.isArray(mediaParts) && mediaParts.length > 0) {
         mediaParts.forEach(m => {
-            if (m.inlineData && m.inlineData.data) {
-                const cleanBase64 = m.inlineData.data.replace(/^data:image\/\w+;base64,/, '');
-                parts.push({
-                    inlineData: {
-                        mimeType: m.inlineData.mimeType || 'image/jpeg',
-                        data: cleanBase64
-                    }
-                });
-            } else if (m.base64Data || m.base64) {
-                const rawData = m.base64Data || m.base64;
+            const rawData = m.inlineData?.data || m.base64Data || m.base64;
+            if (rawData) {
                 const cleanBase64 = rawData.replace(/^data:image\/\w+;base64,/, '');
                 parts.push({
                     inlineData: {
-                        mimeType: m.mimeType || 'image/jpeg',
+                        mimeType: m.mimeType || m.inlineData?.mimeType || 'image/jpeg',
                         data: cleanBase64
                     }
                 });
@@ -49,7 +39,6 @@ async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
 
     let lastError = null;
 
-    // تجربة النماذج بالتتابع لحل مشكلة 404 وضمان الاستقرار
     for (const modelName of geminiModels) {
         try {
             const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`;
@@ -60,13 +49,9 @@ async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
                 body: JSON.stringify({ contents })
             });
 
-            if (response.status === 429 || response.status === 403) {
-                throw new Error(`QUOTA_EXHAUSTED: تجاوزت الحد المسموح لـ Gemini (${response.status})`);
-            }
-
             if (!response.ok) {
                 const errText = await response.text();
-                throw new Error(`Gemini [${modelName}] Error [${response.status}]: ${errText}`);
+                throw new Error(`[${modelName}] St:${response.status} - ${errText}`);
             }
 
             const data = await response.json();
@@ -74,9 +59,8 @@ async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
             if (resultText) return resultText;
 
         } catch (err) {
-            console.warn(`⚠️ فشل نموذج Gemini (${modelName}):`, err.message);
+            console.warn(`⚠️ فشل نموذج ${modelName}:`, err.message);
             lastError = err;
-            if (err.message.includes("QUOTA_EXHAUSTED")) break;
         }
     }
 
@@ -84,11 +68,11 @@ async function callGemini(prompt, history = [], mediaParts = [], apiKey) {
 }
 
 // ==========================================
-// 2️⃣ محرك Groq / OpenAI (كخيار بديل/سريع)
+// 2️⃣ محرك Groq (كخيار بديل/سريع للنصوص)
 // ==========================================
 async function callGroq(prompt, history = [], apiKey) {
     const key = apiKey || process.env.GROQ_API_KEY;
-    if (!key) throw new Error("مفتاح GROQ_API_KEY غير متوفر.");
+    if (!key) throw new Error("مفتاح GROQ_API_KEY غير متاح.");
 
     const messages = history.map(h => ({
         role: h.role === 'model' ? 'assistant' : h.role,
@@ -120,10 +104,9 @@ async function callGroq(prompt, history = [], apiKey) {
 }
 
 // ==========================================
-// 3️⃣ الـ API Handler الرئيسي (Serverless Function)
+// 3️⃣ الـ API Handler الرئيسي
 // ==========================================
 export default async function handler(req, res) {
-    // إعدادات CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -131,42 +114,26 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    try {
-        const { prompt, history = [], mediaParts = [], preferredEngine = 'auto' } = req.body;
+    let logs = [];
 
+    try {
+        const { prompt, history = [], mediaParts = [] } = req.body;
         const hasImages = mediaParts && mediaParts.length > 0;
-        let logs = [];
         let finalResponse = null;
 
-        // إذا كان هناك صور، يجب استخدام Gemini Vision أولاً
-        if (hasImages || preferredEngine === 'gemini') {
-            try {
-                logs.push("محاولة معالجة الطلب عبر محرك Gemini Vision...");
-                finalResponse = await callGemini(prompt, history, mediaParts);
-            } catch (geminiErr) {
-                logs.push(`❌ خطأ Gemini: ${geminiErr.message}`);
-                
-                // التبديل إلى Groq إذا كان الطلب نصياً أو إذا فشل Gemini
-                if (!hasImages && process.env.GROQ_API_KEY) {
-                    logs.push("🔄 التحويل التلقائي (Fallback) إلى محرك Groq...");
-                    finalResponse = await callGroq(prompt, history);
-                } else {
-                    throw geminiErr;
-                }
-            }
+        if (hasImages) {
+            logs.push("بدء معالجة الصور عبر Gemini Vision...");
+            finalResponse = await callGemini(prompt, history, mediaParts);
         } else {
-            // المعالجة النصية بأسلوب Auto/Groq
-            try {
-                if (process.env.GROQ_API_KEY) {
-                    logs.push("معالجة الطلب النصي عبر Groq...");
+            logs.push("بدء معالجة طلب نصي...");
+            if (process.env.GROQ_API_KEY) {
+                try {
                     finalResponse = await callGroq(prompt, history);
-                } else {
-                    logs.push("Groq غير متوفر، استخدام Gemini...");
+                } catch (gErr) {
+                    logs.push(`فشل Groq: ${gErr.message}، جاري تجربة Gemini...`);
                     finalResponse = await callGemini(prompt, history, mediaParts);
                 }
-            } catch (err) {
-                logs.push(`❌ خطأ المحرك الأول: ${err.message}`);
-                logs.push("🔄 تجربة Gemini كخيار احتياطي...");
+            } else {
                 finalResponse = await callGemini(prompt, history, mediaParts);
             }
         }
@@ -178,10 +145,11 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error("API Handler Failure:", error);
+        console.error("API Error Details:", error);
         return res.status(500).json({
-            error: "تعذر معالجة الطلب حالياً عبر جميع المحركات المتاحة.",
-            details: error.message
+            error: "تعذر معالجة الطلب حالياً عبر المحركات المتاحة.",
+            message: error.message,
+            logs: logs
         });
     }
 }
