@@ -9,14 +9,13 @@ export default async function handler(req, res) {
     try {
         const { prompt, model } = req.body;
         const apiKey = process.env.GEMINI_API_KEY;
-        let targetModel = model || "gemini-2.5-pro"; // نفضل Pro لتحليل الوثائق الطويلة والأكواد
+        let targetModel = model || "gemini-2.5-pro";
 
         const postData = JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
-            // إعدادات جيل الذكاء الاصطناعي المتقدم لضبط التفكير المنطقي الصارم
             generationConfig: {
-                temperature: 0.1, // خفض الحرارة ليكون التحليل صارماً ودقيقاً جداً بدون عشوائية
-                maxOutputTokens: 8192, // رفع سقف المخرجات لاستيعاب شروحات برمجية وهياكل ضخمة
+                temperature: 0.1,
+                maxOutputTokens: 8192,
                 topP: 0.95
             },
             systemInstruction: {
@@ -37,7 +36,13 @@ export default async function handler(req, res) {
                 const request = https.request(options, response => {
                     let body = '';
                     response.on('data', chunk => body += chunk);
-                    response.on('end', () => resolve({ status: response.statusCode, data: JSON.parse(body) }));
+                    response.on('end', () => {
+                        try {
+                            resolve({ status: response.statusCode, data: JSON.parse(body) });
+                        } catch (e) {
+                            reject(new Error("فشل فك شفرة الاستجابة من جوجل"));
+                        }
+                    });
                 });
                 request.on('error', reject);
                 request.write(postData);
