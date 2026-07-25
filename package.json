@@ -1,7 +1,7 @@
 {
   "name": "tafkek-os",
   "version": "1.0.0",
-  "description": "Tafkek OS - Multi-LLM Studio & Vision Core",
+  "description": "Tafkek OS - Multi-LLM Studio & Vision Core Engine",
   "main": "api/process.js",
   "scripts": {
     "start": "node api/process.js"
