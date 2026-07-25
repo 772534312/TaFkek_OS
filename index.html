@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tafkek OS - Full Vision & Multi-LLM Studio</title>
+    <title>Tafkek OS - Vision Core & Multi-LLM Studio</title>
     
     <!-- Fonts & Libraries -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -142,7 +142,6 @@
         }
         .session-item:hover { background: #28292a; color: var(--text-main); }
         .session-item.pinned { border-right: 3px solid var(--accent-blue); background: rgba(var(--accent-rgb), 0.08); }
-        .session-item-header { display: flex; justify-content: space-between; align-items: center; }
 
         .workspace {
             flex: 1; display: flex; flex-direction: column;
@@ -197,13 +196,6 @@
         }
         .chat-media-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        .generated-image-container {
-            margin: 12px 0; display: block; border-radius: 16px; overflow: hidden;
-            max-width: 100%; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border-color); background: #1e1f20;
-        }
-        .generated-image-container img { width: 100%; height: auto; max-height: 500px; object-fit: contain; display: block; border-radius: 16px; }
-
         .gemini-loader { display: flex; align-items: center; gap: 10px; color: var(--accent-blue); font-size: 14px; }
 
         .gemini-pill-container {
@@ -239,12 +231,6 @@
             font-size: 11px; cursor: pointer; border: none; font-weight: bold;
         }
         .attachment-delete-btn:hover { background: #f43f5e; }
-
-        .option-mode-badge {
-            display: inline-flex; align-items: center; gap: 6px; background: rgba(var(--accent-rgb), 0.15);
-            border: 1px solid var(--accent-blue); color: var(--accent-blue); padding: 6px 12px;
-            border-radius: 16px; font-size: 12px; font-weight: 600; flex-shrink: 0;
-        }
 
         .pill-input {
             width: 100%; background: transparent; border: none; outline: none;
@@ -303,14 +289,6 @@
         .sheet-card-btn:hover { background: rgba(255, 255, 255, 0.12); transform: translateY(-2px); }
         .sheet-card-icon { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; }
         .sheet-card-label { font-size: 13px; font-weight: 600; }
-
-        .sheet-menu-list { display: flex; flex-direction: column; gap: 6px; }
-        .sheet-menu-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 16px; cursor: pointer; transition: background 0.2s; color: #ffffff; }
-        .sheet-menu-item:hover { background: rgba(255, 255, 255, 0.06); }
-        .sheet-item-text { display: flex; flex-direction: column; text-align: right; }
-        .sheet-item-title { font-size: 14px; font-weight: 600; }
-        .sheet-item-desc { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-        .sheet-item-icon { font-size: 20px; opacity: 0.9; }
     </style>
 </head>
 <body>
@@ -354,7 +332,7 @@
         <button class="tool-btn" onclick="switchTool('deconstruct', this)"><i class="fa-solid fa-brain text-purple-400"></i> التفكيك المعرفي واللغوي</button>
         <button class="tool-btn" onclick="switchTool('ecom-deconstruct', this)"><i class="fa-solid fa-truck-fast text-amber-400"></i> تفكيك اللوجستيات الرقمية</button>
         <button class="tool-btn" onclick="switchTool('loop-destroyer', this)"><i class="fa-solid fa-bug text-red-400"></i> تتبع وحرق الأخطاء البرمجية</button>
-        <button class="tool-btn" onclick="switchTool('clean-image', this)"><i class="fa-solid fa-wand-magic-sparkles text-pink-400"></i> استوديو التصاميم النظيفة</button>
+        <button class="tool-btn" onclick="switchTool('vision-ocr', this)"><i class="fa-solid fa-eye text-pink-400"></i> قراءة وتفكيك الصور والمستندات</button>
         <button class="tool-btn" onclick="switchTool('support-agent', this)"><i class="fa-solid fa-headset text-emerald-400"></i> المساعد الذكي لقنوات الدعم</button>
         
         <div class="section-title-row" style="margin-top: 18px;"><span class="section-title">السجل السحابي للمستخدم</span></div>
@@ -394,8 +372,8 @@
         <footer class="gemini-pill-container">
             <div class="quick-chips-bar custom-scrollbar">
                 <button onclick="setPrompt('فحص وتفكيك الأخطاء في الكود التالي: ')" class="quick-chip-btn"><i class="fa-solid fa-code text-blue-400"></i> فحص كود</button>
-                <button onclick="setPrompt('قم بتوليد صورة مع مراعاة خلوها من أي نصوص أو كتابات مشوهة: ')" class="quick-chip-btn"><i class="fa-solid fa-image text-pink-400"></i> إنشاء صورة نظيفة</button>
-                <button onclick="setPrompt('حلل هذا الملف بشكل دقيق واستخرج النقاط الرئيسية: ')" class="quick-chip-btn"><i class="fa-solid fa-file-lines text-emerald-400"></i> تحليل ملف</button>
+                <button onclick="setPrompt('قم بقراءة وتحليل الصورة المرفقة واستخراج كافة التفاصيل منها: ')" class="quick-chip-btn"><i class="fa-solid fa-eye text-pink-400"></i> قراءة صورة مرفقة</button>
+                <button onclick="setPrompt('حلل هذا المستند بشكل دقيق واستخرج النقاط الرئيسية: ')" class="quick-chip-btn"><i class="fa-solid fa-file-lines text-emerald-400"></i> تحليل ملف</button>
             </div>
 
             <div class="gemini-pill-bar">
@@ -405,7 +383,7 @@
 
                 <div class="pill-toolbar">
                     <div class="pill-toolbar-left">
-                        <button class="btn-pill-action" title="إضافة خيار أو شريحة" onclick="openBottomSheet()"><i class="fa-solid fa-circle-plus"></i></button>
+                        <button class="btn-pill-action" title="إضافة خيارات" onclick="openBottomSheet()"><i class="fa-solid fa-circle-plus"></i></button>
                         <button class="btn-pill-action" title="إرفاق صورة" onclick="triggerNativeInput('image')"><i class="fa-solid fa-image text-pink-400"></i></button>
                         <button class="btn-pill-action" title="إرفاق مستند" onclick="triggerNativeInput('file')"><i class="fa-solid fa-paperclip"></i></button>
                         <button class="btn-pill-action" id="voice-btn" title="الإدخال الصوتي" onclick="startVoiceInput()"><i class="fa-solid fa-microphone"></i></button>
@@ -435,17 +413,6 @@
             <button class="sheet-card-btn" onclick="triggerNativeInput('camera')"><div class="sheet-card-icon">📷</div><div class="sheet-card-label">الكاميرا</div></button>
             <button class="sheet-card-btn" onclick="triggerNativeInput('file')"><div class="sheet-card-icon">📎</div><div class="sheet-card-label">الملفات</div></button>
         </div>
-
-        <div class="sheet-menu-list">
-            <div class="sheet-menu-item" onclick="selectSheetOption('إنشاء صور نظيفة', '🎨')">
-                <div class="sheet-item-text"><span class="sheet-item-title">إنشاء صور نظيفة</span><span class="sheet-item-desc">بدون نصوص مشوهة</span></div>
-                <span class="sheet-item-icon">🎨</span>
-            </div>
-            <div class="sheet-menu-item" onclick="selectSheetOption('تفكيك كود برمجي', '💻')">
-                <div class="sheet-item-text"><span class="sheet-item-title">تفكيك كود برمجي</span><span class="sheet-item-desc">منقب الأخطاء</span></div>
-                <span class="sheet-item-icon">💻</span>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -456,13 +423,12 @@
         let chatHistory = [];
         let currentToolKey = 'grounding';
 
-        // 💡 البرومبت الذكي للأدوات النواة
         const toolPrompts = {
             'grounding': 'قم بالبحث والتوثيق الفوري واستخرج المصادر الموثوقة للموضوع التالي: ',
             'deconstruct': 'قم بتفكيك وتحليل النص والعمق المعرفي للعبارة التالية: ',
             'ecom-deconstruct': 'قم بتفكيك اللوجستيات الرقمية وخطة الشحن للطلب أو المتجر التالي: ',
             'loop-destroyer': 'قم بتتبع وحرق الأخطاء البرمجية والـ Infinite Loops في الكود التالي: ',
-            'clean-image': 'قم بتوليد تصميم بصري نظيف ومحتد وبدون أي نصوص مشوهة للمفهوم التالي: ',
+            'vision-ocr': 'قم بقراءة وتحليل هذه الصورة المرفقة واستخراج كامل النصوص والبيانات منها: ',
             'support-agent': 'أنت الآن مساعد خدمة عملاء ذكي، أجب على الاستفسار التالي بأسلوب احترافي: '
         };
 
@@ -471,7 +437,7 @@
             'deconstruct': 'التفكيك المعرفي واللغوي',
             'ecom-deconstruct': 'تفكيك اللوجستيات الرقمية',
             'loop-destroyer': 'تتبع وحرق الأخطاء البرمجية',
-            'clean-image': 'استوديو التصاميم النظيفة',
+            'vision-ocr': 'تحليل وقراءة المستندات/الصور',
             'support-agent': 'المساعد الذكي لقنوات الدعم'
         };
 
@@ -515,7 +481,7 @@
         }
         animateNeuralNetwork();
 
-        // Firebase Configuration
+        // Firebase Setup
         const firebaseConfig = {
             apiKey: "AIzaSyCJutNsE1b9jhQb6TRkO4HxcTWEDOe1WUE",
             authDomain: "tafkekos.firebaseapp.com",
@@ -571,9 +537,8 @@
         async function saveSessionToCloud(title, prompt, result) {
             if (!currentUser) return;
             const sessionData = {
-                title: title, toolKey: currentToolKey, prompt: prompt, result: result, pinned: false,
-                charCount: result.length, timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                date: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
+                title: title, toolKey: currentToolKey, prompt: prompt, result: result,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
             };
             await db.collection('users').doc(currentUser.uid).collection('sessions').add(sessionData);
         }
@@ -585,15 +550,12 @@
                 list.innerHTML = '<div style="font-size:11px; color:var(--text-muted); text-align:center; padding:10px;">يرجى تسجيل الدخول لحفظ محادثاتك.</div>';
                 return;
             }
-            const sorted = [...savedSessions].sort((a, b) => b.pinned - a.pinned);
-            sorted.forEach(s => {
+            savedSessions.forEach(s => {
                 const item = document.createElement('div');
-                item.className = `session-item ${s.pinned ? 'pinned' : ''}`;
+                item.className = 'session-item';
                 item.onclick = () => loadSessionData(s.id);
                 item.innerHTML = `
-                    <div class="session-item-header">
-                        <span style="font-weight:600; font-size:12px; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:170px;">${s.title}</span>
-                    </div>
+                    <div style="font-weight:600; font-size:12px; color:var(--text-main); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${s.title}</div>
                 `;
                 list.appendChild(item);
             });
@@ -610,7 +572,6 @@
 
         // Attachments Logic
         let attachedItems = []; 
-        let activeOptionBadge = null;
 
         function openBottomSheet() {
             document.getElementById('sheet-overlay').classList.add('active');
@@ -657,13 +618,6 @@
             event.target.value = '';
         }
 
-        function selectSheetOption(title, icon) {
-            closeBottomSheet();
-            activeOptionBadge = { title, icon };
-            renderAttachmentsPreview();
-            checkInputChangeState();
-        }
-
         function removeAttachment(id) {
             attachedItems = attachedItems.filter(item => item.id !== id);
             renderAttachmentsPreview();
@@ -674,19 +628,12 @@
             const wrapper = document.getElementById('attachments-preview-wrapper');
             wrapper.innerHTML = '';
 
-            if (attachedItems.length === 0 && !activeOptionBadge) {
+            if (attachedItems.length === 0) {
                 wrapper.style.display = 'none';
                 return;
             }
 
             wrapper.style.display = 'flex';
-
-            if (activeOptionBadge) {
-                const badge = document.createElement('div');
-                badge.className = 'option-mode-badge';
-                badge.innerHTML = `<span>${activeOptionBadge.icon} ${activeOptionBadge.title}</span><span style="cursor:pointer;" onclick="activeOptionBadge=null;renderAttachmentsPreview();checkInputChangeState();">✕</span>`;
-                wrapper.appendChild(badge);
-            }
 
             attachedItems.forEach(item => {
                 if (item.type === 'image') {
@@ -714,7 +661,7 @@
         function checkInputChangeState() {
             const val = document.getElementById('user-input').value.trim();
             const btn = document.getElementById('submit-btn');
-            if (val !== '' || attachedItems.length > 0 || activeOptionBadge !== null) {
+            if (val !== '' || attachedItems.length > 0) {
                 btn.classList.add('active');
             } else {
                 btn.classList.remove('active');
@@ -728,7 +675,7 @@
             }
         }
 
-        function appendUserBubble(text, mediaItems = [], optionBadge = null) {
+        function appendUserBubble(text, mediaItems = []) {
             const chatStream = document.getElementById('chat-stream');
             const hero = document.getElementById('gemini-hero');
             if (hero) hero.remove();
@@ -747,17 +694,11 @@
                 mediaHtml += `</div>`;
             }
 
-            let badgePrefix = optionBadge ? `<b>[${optionBadge.icon} ${optionBadge.title}]</b><br>` : '';
             let contentText = text ? text.replace(/\n/g, '<br>') : '*(صورة مرفقة للتحليل)*';
 
-            row.innerHTML = `${mediaHtml}<div class="bubble">${badgePrefix}${contentText}</div>`;
+            row.innerHTML = `${mediaHtml}<div class="bubble">${contentText}</div>`;
             chatStream.appendChild(row);
             chatStream.scrollTop = chatStream.scrollHeight;
-        }
-
-        function formatBotResponse(text) {
-            if (!text) return '';
-            return text.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)]+)\)/gi, '<div class="generated-image-container"><img src="$2" alt="$1" loading="lazy" /></div>');
         }
 
         function appendAiBubble(markdownText) {
@@ -765,8 +706,7 @@
             const row = document.createElement('div');
             row.className = 'chat-row ai-row';
             
-            const processedText = formatBotResponse(markdownText);
-            const parsedHtml = window.marked.parse(processedText);
+            const parsedHtml = window.marked.parse(markdownText || '');
 
             row.innerHTML = `<div class="bubble"><div>${parsedHtml}</div></div>`;
             chatStream.appendChild(row);
@@ -779,7 +719,7 @@
             const loaderRow = document.createElement('div');
             loaderRow.className = 'chat-row ai-row';
             loaderRow.id = 'active-loader';
-            loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><i class="fa-solid fa-sparkles animate-spin"></i><span>جاري المعالجة...</span></div></div>`;
+            loaderRow.innerHTML = `<div class="bubble"><div class="gemini-loader"><i class="fa-solid fa-sparkles animate-spin"></i><span>جاري التحليل والمعالجة...</span></div></div>`;
             chatStream.appendChild(loaderRow);
             chatStream.scrollTop = chatStream.scrollHeight;
         }
@@ -792,12 +732,11 @@
         async function executeProcess() {
             const inputNode = document.getElementById('user-input');
             const inputVal = inputNode.value.trim();
-            if (!inputVal && attachedItems.length === 0 && !activeOptionBadge) return;
+            if (!inputVal && attachedItems.length === 0) return;
 
             const mediaToSend = [...attachedItems];
-            const badgeToSend = activeOptionBadge;
 
-            appendUserBubble(inputVal, mediaToSend, badgeToSend);
+            appendUserBubble(inputVal, mediaToSend);
             inputNode.value = '';
             autoResizeTextarea(inputNode);
 
@@ -811,7 +750,6 @@
             }));
 
             attachedItems = [];
-            activeOptionBadge = null;
             renderAttachmentsPreview();
             checkInputChangeState();
 
@@ -822,8 +760,7 @@
                     body: JSON.stringify({ 
                         prompt: inputVal || "قم بتحليل هذه الصورة وشرح كافة تفاصيلها.",
                         history: chatHistory.slice(-6),
-                        mediaParts: inlineDataPayload,
-                        optionMode: badgeToSend ? badgeToSend.title : null
+                        mediaParts: inlineDataPayload
                     })
                 });
 
@@ -844,7 +781,6 @@
             }
         }
 
-        // 🛠️ تبديل الأدوات مع وضع البرومبت المناسب
         function switchTool(key, el) {
             currentToolKey = key;
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
@@ -857,7 +793,6 @@
             }
         }
 
-        // 🎙️ الإدخال الصوتي
         function startVoiceInput() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert("المتصفح لا يدعم الإدخال الصوتي المباشر.");
@@ -881,24 +816,17 @@
                 voiceBtn.classList.remove('recording');
             };
 
-            recognition.onerror = function() {
-                voiceBtn.classList.remove('recording');
-            };
-
-            recognition.onend = function() {
-                voiceBtn.classList.remove('recording');
-            };
+            recognition.onerror = function() { voiceBtn.classList.remove('recording'); };
+            recognition.onend = function() { voiceBtn.classList.remove('recording'); };
 
             recognition.start();
         }
 
-        // 🎨 حفظ الثيم في LocalStorage
         function changeTheme(theme) { 
             document.body.className = theme === 'default' ? '' : `theme-${theme}`; 
             localStorage.setItem('tafkek_theme', theme);
         }
 
-        // استعادة الثيم المحفوظ عند التحميل
         (function restoreTheme() {
             const savedTheme = localStorage.getItem('tafkek_theme');
             if (savedTheme) changeTheme(savedTheme);
